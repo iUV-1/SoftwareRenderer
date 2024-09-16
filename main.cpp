@@ -38,6 +38,18 @@ int main(int argc, char** argv) {
     triangle(t0[0], t0[1], t0[2], image, red);
     triangle(t1[0], t1[1], t1[2], image, white);
     triangle(t2[0], t2[1], t2[2], image, green);
+    for (int i=0; i < model->nfaces(); i++) {
+        std::vector<int> face = model->face(i);
+        for (int j=0; j<3; j++) {
+            Vec3f v0 = model->vert(face[j]);
+            Vec3f v1 = model->vert(face[(j+1)%3]);
+            int x0 = (v0.x+1.)*width/2.;
+            int y0 = (v0.y+1.)*height/2.;
+            int x1 = (v1.x+1.)*width/2.;
+            int y1 = (v1.y+1.)*height/2.;
+            line(x0, y0, x1, y1, image, white);
+        }
+    }
 
     image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
     image.write_tga_file("./output.tga");
@@ -138,18 +150,6 @@ void line(Vec2<int> t0, Vec2<int> t1, TGAImage &image, TGAColor color) {
         }
     }
 }
-/*
-void triangle(Vec2i t0, Vec2i t1, Vec2i t2, TGAImage &image, TGAColor color) {
-    // sort the vertices, t0, t1, t2 lower−to−upper (bubblesort yay!)
-    if (t0.y>t1.y) std::swap(t0, t1);
-    if (t0.y>t2.y) std::swap(t0, t2);
-    if (t1.y>t2.y) std::swap(t1, t2);
-    line(t0, t1, image, green);
-    line(t1, t2, image, green);
-    line(t2, t0, image, red);
-}
-*/
-
 
 void triangle(Vec2<int> t0, Vec2<int> t1, Vec2<int> t2, TGAImage &image, TGAColor color) {
     // sort the verticies by order of increasing height, t0, t1, t2
@@ -159,6 +159,7 @@ void triangle(Vec2<int> t0, Vec2<int> t1, Vec2<int> t2, TGAImage &image, TGAColo
     int total_height = t2.y - t0.y;
     int segment_height = t1.y - t0.y + 1;
     // Loop over a "scanline" of a triangle
+    // First half
     for (int y=t0.y; y<=t1.y; y++) {
         // Interpolation
         float alpha = (float)(y - t0.y) / total_height;
