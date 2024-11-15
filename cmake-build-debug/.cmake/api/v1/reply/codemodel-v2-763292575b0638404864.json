@@ -6,7 +6,7 @@
 			[
 				{
 					"build" : ".",
-					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
 					"minimumCMakeVersion" : 
 					{
 						"string" : "3.28"
@@ -39,7 +39,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "SoftwareRenderer::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-SoftwareRenderer-Debug-17eb96f0cf5daee9c688.json",
+					"jsonFile" : "target-SoftwareRenderer-Debug-cd6d58fcc17636856f73.json",
 					"name" : "SoftwareRenderer",
 					"projectIndex" : 0
 				}
@@ -49,12 +49,12 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "/Users/iuv/Documents/Programming/SoftwareRenderer/cmake-build-debug",
-		"source" : "/Users/iuv/Documents/Programming/SoftwareRenderer"
+		"build" : "C:/Users/iUV/Documents/Programming/SoftwareRenderer/cmake-build-debug",
+		"source" : "C:/Users/iUV/Documents/Programming/SoftwareRenderer"
 	},
 	"version" : 
 	{
 		"major" : 2,
-		"minor" : 7
+		"minor" : 6
 	}
 }

@@ -2,7 +2,10 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "SoftwareRenderer"
+			"path" : "SoftwareRenderer.exe"
+		},
+		{
+			"path" : "SoftwareRenderer.pdb"
 		}
 	],
 	"backtrace" : 1,
@@ -35,7 +38,7 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "-g -std=gnu++20 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk -fcolor-diagnostics"
+					"fragment" : "-g -std=gnu++20 -fdiagnostics-color=always"
 				}
 			],
 			"language" : "CXX",
@@ -67,12 +70,16 @@
 			{
 				"fragment" : "",
 				"role" : "flags"
+			},
+			{
+				"fragment" : "-lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32",
+				"role" : "libraries"
 			}
 		],
 		"language" : "CXX"
 	},
 	"name" : "SoftwareRenderer",
-	"nameOnDisk" : "SoftwareRenderer",
+	"nameOnDisk" : "SoftwareRenderer.exe",
 	"paths" : 
 	{
 		"build" : ".",

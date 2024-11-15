@@ -1,9 +1,0 @@
-# ninja log v5
-28	911	7474450282317031	CMakeFiles/SoftwareRenderer.dir/main.cpp.obj	472774ee83f884d7
-912	1140	7474450284570906	SoftwareRenderer.exe	c58446c36b6b1fd3
-32	1008	7473544004794094	CMakeFiles/SoftwareRenderer.dir/tgaimage.cpp.obj	a541c6ebbd86b93e
-21	1226	7474466022234120	CMakeFiles/SoftwareRenderer.dir/main.cpp.obj	472774ee83f884d7
-27	1471	7474466024669803	CMakeFiles/SoftwareRenderer.dir/model.cpp.obj	d2f34565a3b91987
-1472	1766	7474466027524662	SoftwareRenderer.exe	18d92ef988e3199c
-6	745	7474673899239265	CMakeFiles/SoftwareRenderer.dir/main.cpp.obj	472774ee83f884d7
-745	1072	7474673902483057	SoftwareRenderer.exe	18d92ef988e3199c
