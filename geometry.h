@@ -1,5 +1,5 @@
  //
-// Created by iUV on 9/7/2024.
+// Created by iUV on 9/7/2024.™
 //
 
 #ifndef SOFTWARERENDERER_GEOMETRY_H

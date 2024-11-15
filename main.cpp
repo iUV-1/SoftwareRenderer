@@ -33,12 +33,14 @@ int main(int argc, char** argv) {
             world_coords[j] = v;
         }
         // calculate normal
+        // ^ is an overloaded operator that performs cross product calculation
         Vec3f n = (world_coords[2]-world_coords[0])^(world_coords[1]-world_coords[0]);
         n.normalize();
         // calculate light intensity by cross product between normal and light vector
         float intensity = n*light;
+        float view_dir_intensity = n*Vec3f(0, 0, -1);
         // back face culling
-        if (intensity>0) {
+        if (view_dir_intensity>0) {
             triangle(screen_coords, frame, TGAColor(intensity*255, intensity*255, intensity*255, 255));
         }
     }
