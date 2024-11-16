@@ -134,13 +134,6 @@ void line(Vec2<int> t0, Vec2<int> t1, TGAImage &image, TGAColor color) {
     }
 }
 
-// Vec3f barycentric(Vec2i *pts, Vec2i P) {
-//     Vec3f u = Vec3f(pts[2].u-pts[0].u, pts[1].u-pts[0].u, pts[0].u-P.u)
-//               ^ Vec3f(pts[2].v-pts[0].v, pts[1].v-pts[0].v, pts[0].v-P.v);
-//     if (std::abs(u.z)<1) return Vec3f(-1,1,1);
-//     return Vec3f(1.f-(u.x+u.y)/u.z, u.y/u.z, u.x/u.z);
-// }
-
 Vec3f barycentric(Vec3f A, Vec3f B, Vec3f C, Vec3f P) {
     Vec3f s[2];
     for (int i=2; i--; ) {
@@ -174,6 +167,14 @@ void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAColor color) {
             Vec3f bc_screen  = barycentric(pts[0], pts[1], pts[2], P);
             if (bc_screen.x<0 || bc_screen.y<0 || bc_screen.z<0) continue;
             image.set(P.x, P.y, color);
+            // Broken z-buffer code. Implementing this will break the whole program (why??)
+            // how it will break is it will make some memory in Model.faces() corrupted
+            // Faulty memory access? But why does it do that before everything?
+            for (int i=0; i<3; i++) P.z +=  pts[i][2]*bc_screen[i];
+            if(zbuffer[int(P.x + P.y * width)] < P.z) {
+                zbuffer[int(P.x + P.y * width)] = P.z;
+                image.set(P.x, P.y, color);
+            }
         }
     }
 }
