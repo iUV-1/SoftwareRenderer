@@ -28,11 +28,11 @@ int main(int argc, char** argv) {
     TGAImage frame(width, height, TGAImage::RGB);
     float *zbuffer = new float[width * height];
     Vec3f light(0,0, -1);
-    for (int i=0; i<model->nfaces(); i++) { 
-        std::vector<int> face = model->face(i); 
+    for (int i=0; i<model->nfaces(); i++) {
+        std::vector<int> face = model->face(i);
         Vec3f screen_coords[3];
         Vec3f world_coords[3];
-        for (int j=0; j<3; j++) { 
+        for (int j=0; j<3; j++) {
             Vec3f v = model->vert(face[j]);
             screen_coords[j] = world2screen(v);
             world_coords[j] = v;
@@ -155,11 +155,10 @@ void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAColor const &color
     Vec2f bboxmax(0, 0);
     Vec2f clamp(image.get_width()-1, image.get_height()-1);
     for (int i=0; i<3; i++) {
-        bboxmin.x = std::max(0.f, std::min(bboxmin.x, pts[i].x));
-        bboxmin.y = std::max(0.f, std::min(bboxmin.y, pts[i].y));
-
-        bboxmax.x = std::min(clamp.x, std::max(bboxmax.x, pts[i].x));
-        bboxmax.y = std::min(clamp.y, std::max(bboxmax.y, pts[i].y));
+        for (int j=0; j<2; j++) {
+            bboxmin[j] = std::max(0.f,      std::min(bboxmin[j], pts[i][j]));
+            bboxmax[j] = std::min(clamp[j], std::max(bboxmax[j], pts[i][j]));
+        }
     }
     Vec3f P;
     for (P.x=bboxmin.x; P.x<=bboxmax.x; ++P.x) {
