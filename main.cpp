@@ -13,7 +13,7 @@ const TGAColor green = TGAColor(0,   255, 0,  255);
 
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color);
 void line(Vec2i t0, Vec2i t1, TGAImage &image, TGAColor color);
-void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAColor color);
+void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAColor const &color);
 Vec3f world2screen(Vec3f v);
 Model *model = NULL;
 const int width = 800;
@@ -26,7 +26,7 @@ Vec3f world2screen(Vec3f v) {
 int main(int argc, char** argv) {
     model = new Model("obj/african_head.obj");
     TGAImage frame(width, height, TGAImage::RGB);
-    float *zbuffer = new float(width * height);
+    float *zbuffer = new float[width * height];
     Vec3f light(0,0, -1);
     for (int i=0; i<model->nfaces(); i++) { 
         std::vector<int> face = model->face(i); 
@@ -150,7 +150,7 @@ Vec3f barycentric(Vec3f A, Vec3f B, Vec3f C, Vec3f P) {
     return Vec3f(-1,1,1); // in this case generate negative coordinates, it will be thrown away by the rasterizator}
 }
 
-void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAColor color) {
+void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAColor const &color) {
     Vec2f bboxmin(image.get_width()-1,  image.get_height()-1);
     Vec2f bboxmax(0, 0);
     Vec2f clamp(image.get_width()-1, image.get_height()-1);
@@ -162,17 +162,15 @@ void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAColor color) {
         bboxmax.y = std::min(clamp.y, std::max(bboxmax.y, pts[i].y));
     }
     Vec3f P;
-    for (P.x=bboxmin.x; P.x<=bboxmax.x; P.x++) {
-        for (P.y=bboxmin.y; P.y<=bboxmax.y; P.y++) {
+    for (P.x=bboxmin.x; P.x<=bboxmax.x; ++P.x) {
+        for (P.y=bboxmin.y; P.y<=bboxmax.y; ++P.y) {
             Vec3f bc_screen  = barycentric(pts[0], pts[1], pts[2], P);
             if (bc_screen.x<0 || bc_screen.y<0 || bc_screen.z<0) continue;
-            image.set(P.x, P.y, color);
-            // Broken z-buffer code. Implementing this will break the whole program
-            // how it will break is it will make some memory in Model.faces() corrupted
-            // FIXME: Faulty memory access, will corrupt Model memory. Please fix.
-            for (int i=0; i<3; i++) P.z +=  pts[i][2]*bc_screen[i];
-            if(zbuffer[int(P.x + P.y * width)] < P.z) {
-                zbuffer[int(P.x + P.y * width)] = P.z;
+            P.z = 0;
+            for (int i=0; i<3; ++i) P.z += pts[i][2]*bc_screen[i];
+            auto idx = static_cast<size_t>(P.x + P.y * width);
+            if(zbuffer[idx] < P.z) {
+                zbuffer[idx] = P.z;
                 image.set(P.x, P.y, color);
             }
         }

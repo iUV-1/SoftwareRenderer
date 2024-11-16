@@ -1,0 +1,19 @@
+# ninja log v6
+66	790	7534842023253874	CMakeFiles/SoftwareRenderer.dir/tgaimage.cpp.obj	a541c6ebbd86b93e
+59	835	7534842023188695	CMakeFiles/SoftwareRenderer.dir/main.cpp.obj	472774ee83f884d7
+71	969	7534842023294529	CMakeFiles/SoftwareRenderer.dir/model.cpp.obj	d2f34565a3b91987
+969	1297	7534842032278275	SoftwareRenderer.exe	e35012eb3d96d642
+9	639	7534842618694649	CMakeFiles/SoftwareRenderer.dir/main.cpp.obj	472774ee83f884d7
+640	826	7534842625001915	SoftwareRenderer.exe	e35012eb3d96d642
+7	696	7534844782289091	CMakeFiles/SoftwareRenderer.dir/main.cpp.obj	472774ee83f884d7
+696	890	7534844789176856	SoftwareRenderer.exe	e35012eb3d96d642
+43	1772	7534846983627228	CMakeFiles/SoftwareRenderer.dir/main.cpp.obj	472774ee83f884d7
+1772	2129	7534847000925192	SoftwareRenderer.exe	e35012eb3d96d642
+9	725	7534847384646497	CMakeFiles/SoftwareRenderer.dir/main.cpp.obj	472774ee83f884d7
+726	955	7534847391824216	SoftwareRenderer.exe	e35012eb3d96d642
+22	734	7534850384707121	CMakeFiles/SoftwareRenderer.dir/main.cpp.obj	472774ee83f884d7
+735	931	7534850391846825	SoftwareRenderer.exe	e35012eb3d96d642
+25	689	7534851652096386	CMakeFiles/SoftwareRenderer.dir/main.cpp.obj	472774ee83f884d7
+690	889	7534851658756646	SoftwareRenderer.exe	e35012eb3d96d642
+24	704	7534852217390392	CMakeFiles/SoftwareRenderer.dir/main.cpp.obj	472774ee83f884d7
+704	947	7534852224186867	SoftwareRenderer.exe	e35012eb3d96d642
