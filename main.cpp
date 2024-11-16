@@ -20,7 +20,7 @@ const int height = 800;
 
 int main(int argc, char** argv) {
     model = new Model("obj/african_head.obj");
-    TGAImage frame(1024, 1024, TGAImage::RGB);
+    TGAImage frame(width, height, TGAImage::RGB);
 
     Vec3f light(0,0, -1);
     for (int i=0; i<model->nfaces(); i++) { 
