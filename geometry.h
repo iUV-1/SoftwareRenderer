@@ -43,6 +43,12 @@ template <class t> struct Vec3 {
     float norm () const { return std::sqrt(x*x+y*y+z*z); }
     Vec3<t> & normalize(t l=1) { *this = (*this)*(l/norm()); return *this; }
     template <class > friend std::ostream& operator<<(std::ostream& s, Vec3<t>& v);
+    t& operator[](size_t const &index) {
+        if(index == 0) return x;
+        if(index == 1) return y;
+        if(index == 2) return z;
+        throw std::out_of_range("index out of range");
+    };
 };
 
 typedef Vec2<float> Vec2f;
