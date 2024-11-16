@@ -167,9 +167,9 @@ void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAColor color) {
             Vec3f bc_screen  = barycentric(pts[0], pts[1], pts[2], P);
             if (bc_screen.x<0 || bc_screen.y<0 || bc_screen.z<0) continue;
             image.set(P.x, P.y, color);
-            // Broken z-buffer code. Implementing this will break the whole program (why??)
+            // Broken z-buffer code. Implementing this will break the whole program
             // how it will break is it will make some memory in Model.faces() corrupted
-            // Faulty memory access? But why does it do that before everything?
+            // FIXME: Faulty memory access, will corrupt Model memory. Please fix.
             for (int i=0; i<3; i++) P.z +=  pts[i][2]*bc_screen[i];
             if(zbuffer[int(P.x + P.y * width)] < P.z) {
                 zbuffer[int(P.x + P.y * width)] = P.z;
