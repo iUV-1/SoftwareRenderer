@@ -2,10 +2,7 @@
 // Created by iUV on 9/7/2024.
 //
 
-#ifndef SOFTWARERENDERER_MODEL_H
-#define SOFTWARERENDERER_MODEL_H
 
-#endif //SOFTWARERENDERER_MODEL_H
 #ifndef __MODEL_H__
 #define __MODEL_H__
 
