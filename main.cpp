@@ -20,25 +20,31 @@ const int width = 800;
 const int height = 800;
 
 Vec3f world2screen(Vec3f v) {
-    return Vec3f(int((v.x+1.)*width/2.+.5), int((v.y+1.)*height/2.+.5), v.z);
+    return Vec3f(static_cast<int>((v.x+1.)*width/2 + .5), static_cast<int>((v.y+1.)*height/2. + .5), v.z);
 }
 
 int main(int argc, char** argv) {
-    model = new Model("obj/african_head.obj");
+    if(argc < 2) {
+        model = new Model("obj/african_head.obj");
+    } else {
+        model = new Model(argv[1]);
+    }
     TGAImage frame(width, height, TGAImage::RGB);
     float *zbuffer = new float[width * height];
     Vec3f light(0,0, -1);
-    for (int i=0; i<model->nfaces(); i++) {
+    for (int i=0; i<model->nfaces(); ++i) {
         std::vector<int> face = model->face(i);
         Vec3f screen_coords[3];
         Vec3f world_coords[3];
-        for (int j=0; j<3; j++) {
+        for (int j=0; j<3; ++j) {
             Vec3f v = model->vert(face[j]);
             screen_coords[j] = world2screen(v);
             world_coords[j] = v;
         }
         // calculate normal
         // ^ is an overloaded operator that performs cross product calculation
+        // world_coords[2] - world_coords[0] and the other are 2 vectors pointing from point
+        // world_coords[0].
         Vec3f n = (world_coords[2]-world_coords[0])^(world_coords[1]-world_coords[0]);
         n.normalize();
         // calculate light intensity by dot product between normal and light vector
@@ -51,7 +57,7 @@ int main(int argc, char** argv) {
     }
     frame.flip_vertically(); // i want to have the origin at the left bottom corner of the image
     frame.write_tga_file("./output.tga");
-    delete zbuffer;
+    delete[] zbuffer;
     delete model;
     return 0;
 }

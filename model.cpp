@@ -8,7 +8,7 @@
 #include <vector>
 #include "model.h"
 
-Model::Model(const char *filename) : verts_(), faces_() {
+Model::Model(const char *filename) {
     std::ifstream in;
     in.open (filename, std::ifstream::in);
     if (in.fail()) return;
@@ -31,8 +31,11 @@ Model::Model(const char *filename) : verts_(), faces_() {
                 f.push_back(idx);
             }
             faces_.push_back(f);
-        } else if (!line.compare(0, 2, "vt ")) {
-
+        } else if (!line.compare(0, 3, "vt ")) {
+            iss >> trash;
+            std::pair<float, float> uv;
+            iss >> uv.first >> uv.second;
+            texcoords_.push_back(uv);
         }
     }
     std::cerr << "# v# " << verts_.size() << " f# "  << faces_.size() << std::endl;

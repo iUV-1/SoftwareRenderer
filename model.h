@@ -13,6 +13,7 @@ class Model {
 private:
     std::vector<Vec3f> verts_;
     std::vector< std::vector<int> > faces_;
+    std::vector<std::pair<float, float>> texcoords_;
 public:
     Model(const char *filename);
     ~Model();
