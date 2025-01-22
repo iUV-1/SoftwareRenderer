@@ -13,7 +13,7 @@ const TGAColor green = TGAColor(0,   255, 0,  255);
 
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color);
 void line(Vec2i t0, Vec2i t1, TGAImage &image, TGAColor color);
-void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAColor const &color);
+void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAImage &texture, Vec2f texture_coords[3]);
 Vec3f world2screen(Vec3f v);
 Model *model = NULL;
 const int width = 800;
@@ -29,6 +29,10 @@ int main(int argc, char** argv) {
     } else {
         model = new Model(argv[1]);
     }
+
+    TGAImage tex_file(1024,1024,TGAImage::RGB);
+    tex_file.read_tga_file("obj/UV Grid.tga");
+
     TGAImage frame(width, height, TGAImage::RGB);
     float *zbuffer = new float[width * height];
     Vec3f light(0,0, -1);
@@ -36,8 +40,10 @@ int main(int argc, char** argv) {
         std::vector<int> face = model->face(i);
         Vec3f screen_coords[3];
         Vec3f world_coords[3];
+        Vec2f texture_coords[3];
         for (int j=0; j<3; ++j) {
             Vec3f v = model->vert(face[j]);
+            texture_coords[j] = model->texcoord(face[j]);
             screen_coords[j] = world2screen(v);
             world_coords[j] = v;
         }
@@ -52,7 +58,7 @@ int main(int argc, char** argv) {
         float view_dir_intensity = n*Vec3f(0, 0, -1);
         // back face culling
         if (view_dir_intensity>0) {
-            triangle(screen_coords, frame, zbuffer, TGAColor(intensity*255, intensity*255, intensity*255, 255));
+            triangle(screen_coords, frame, zbuffer, tex_file, texture_coords);
         }
     }
     frame.flip_vertically(); // i want to have the origin at the left bottom corner of the image
@@ -156,7 +162,7 @@ Vec3f barycentric(Vec3f A, Vec3f B, Vec3f C, Vec3f P) {
     return Vec3f(-1,1,1); // in this case generate negative coordinates, it will be thrown away by the rasterizator}
 }
 
-void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAColor const &color) {
+void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAImage &texture, Vec2f texture_coords[3]) {
     Vec2f bboxmin(image.get_width()-1,  image.get_height()-1);
     Vec2f bboxmax(0, 0);
     Vec2f clamp(image.get_width()-1, image.get_height()-1);
@@ -174,9 +180,11 @@ void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAColor const &color
             P.z = 0;
             for (int i=0; i<3; ++i) P.z += pts[i][2]*bc_screen[i];
             auto idx = static_cast<size_t>(P.x + P.y * width);
+            float u = bc_screen.x * texture_coords[0].u + bc_screen.y * texture_coords[1].u + bc_screen.z * texture_coords[2].u;
+            float v = bc_screen.y * texture_coords[0].v + bc_screen.y * texture_coords[1].v + bc_screen.z * texture_coords[2].v;
             if(zbuffer[idx] < P.z) {
                 zbuffer[idx] = P.z;
-                image.set(P.x, P.y, color);
+                image.set(P.x, P.y, texture.get(u, v));
             }
         }
     }

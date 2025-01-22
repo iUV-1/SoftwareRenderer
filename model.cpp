@@ -32,9 +32,12 @@ Model::Model(const char *filename) {
             }
             faces_.push_back(f);
         } else if (!line.compare(0, 3, "vt ")) {
+            // trash vt because trash is a char so we need to do this twice
             iss >> trash;
-            std::pair<float, float> uv;
-            iss >> uv.first >> uv.second;
+            iss >> trash;
+
+            Vec2f uv;
+            iss >> uv.u >> uv.v;
             texcoords_.push_back(uv);
         }
     }
@@ -58,4 +61,8 @@ std::vector<int> Model::face(int idx) {
 
 Vec3f Model::vert(int i) {
     return verts_[i];
+}
+
+Vec2f Model::texcoord(int i) {
+    return texcoords_[i];
 }
