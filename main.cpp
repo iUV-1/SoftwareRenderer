@@ -31,7 +31,11 @@ int main(int argc, char** argv) {
     }
 
     TGAImage tex_file(1024,1024,TGAImage::RGB);
-    tex_file.read_tga_file("obj/UV Grid.tga");
+    if(argc < 3) {
+        tex_file.read_tga_file(argv[2]);
+    } else {
+        tex_file.read_tga_file("obj/african_head_diffuse.tga");
+    }
 
     TGAImage frame(width, height, TGAImage::RGB);
     float *zbuffer = new float[width * height];
@@ -178,13 +182,15 @@ void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAImage &texture, Ve
             Vec3f bc_screen  = barycentric(pts[0], pts[1], pts[2], P);
             if (bc_screen.x<0 || bc_screen.y<0 || bc_screen.z<0) continue;
             P.z = 0;
-            for (int i=0; i<3; ++i) P.z += pts[i][2]*bc_screen[i];
+            for (int i=0; i<3; ++i) {
+                P.z += pts[i][2]*bc_screen[i];
+            }
             auto idx = static_cast<size_t>(P.x + P.y * width);
             float u = bc_screen.x * texture_coords[0].u + bc_screen.y * texture_coords[1].u + bc_screen.z * texture_coords[2].u;
-            float v = bc_screen.y * texture_coords[0].v + bc_screen.y * texture_coords[1].v + bc_screen.z * texture_coords[2].v;
+            float v = bc_screen.x * texture_coords[0].v + bc_screen.y * texture_coords[1].v + bc_screen.z * texture_coords[2].v;
             if(zbuffer[idx] < P.z) {
                 zbuffer[idx] = P.z;
-                image.set(P.x, P.y, texture.get(u, v));
+                image.set(P.x, P.y, texture.get(u*texture.get_width(), v*texture.get_height()));
             }
         }
     }
