@@ -2,6 +2,8 @@
 #include <vector>
 #include <cmath>
 #include <iostream>
+#include <cstdlib>
+#include <limits>
 #include "model.h"
 #include "geometry.h"
 
@@ -14,13 +16,15 @@ const TGAColor green = TGAColor(0,   255, 0,  255);
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color);
 void line(Vec2i t0, Vec2i t1, TGAImage &image, TGAColor color);
 void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAImage &texture, Vec2f texture_coords[3]);
+void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAColor const &color);
+
 Vec3f world2screen(Vec3f v);
-Model *model = NULL;
+Model *model = nullptr;
 const int width = 800;
 const int height = 800;
 
 Vec3f world2screen(Vec3f v) {
-    return Vec3f(static_cast<int>((v.x+1.)*width/2 + .5), static_cast<int>((v.y+1.)*height/2. + .5), v.z);
+    return Vec3f(static_cast<int>((v.x+1.)*width/2.+.5), static_cast<int>((v.y+1.)*height/2. + .5), v.z);
 }
 
 int main(int argc, char** argv) {
@@ -32,13 +36,14 @@ int main(int argc, char** argv) {
 
     TGAImage tex_file(1024,1024,TGAImage::RGB);
     if(argc < 3) {
-        tex_file.read_tga_file(argv[2]);
+        tex_file.read_tga_file("obj/UV Grid.tga");
     } else {
-        tex_file.read_tga_file("obj/african_head_diffuse.tga");
+        tex_file.read_tga_file(argv[2]);
     }
 
     TGAImage frame(width, height, TGAImage::RGB);
-    float *zbuffer = new float[width * height];
+    auto *zbuffer = new float[width * height];
+    for (int i=width*height; i--; zbuffer[i] = -std::numeric_limits<float>::max());
     Vec3f light(0,0, -1);
     for (int i=0; i<model->nfaces(); ++i) {
         std::vector<int> face = model->face(i);
@@ -61,8 +66,10 @@ int main(int argc, char** argv) {
         float intensity = n*light;
         float view_dir_intensity = n*Vec3f(0, 0, -1);
         // back face culling
+        triangle(screen_coords, frame, zbuffer, tex_file, texture_coords);
+        //triangle(screen_coords, frame, zbuffer, TGAColor(intensity*255, intensity*255, intensity*255, 255));
+
         if (view_dir_intensity>0) {
-            triangle(screen_coords, frame, zbuffer, tex_file, texture_coords);
         }
     }
     frame.flip_vertically(); // i want to have the origin at the left bottom corner of the image
@@ -167,8 +174,8 @@ Vec3f barycentric(Vec3f A, Vec3f B, Vec3f C, Vec3f P) {
 }
 
 void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAImage &texture, Vec2f texture_coords[3]) {
-    Vec2f bboxmin(image.get_width()-1,  image.get_height()-1);
-    Vec2f bboxmax(0, 0);
+    Vec2f bboxmin( std::numeric_limits<float>::max(),  std::numeric_limits<float>::max());
+    Vec2f bboxmax(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
     Vec2f clamp(image.get_width()-1, image.get_height()-1);
     for (int i=0; i<3; i++) {
         for (int j=0; j<2; j++) {
@@ -191,6 +198,35 @@ void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAImage &texture, Ve
             if(zbuffer[idx] < P.z) {
                 zbuffer[idx] = P.z;
                 image.set(P.x, P.y, texture.get(u*texture.get_width(), v*texture.get_height()));
+            }
+        }
+    }
+}
+// Overload that is just intensity
+void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAColor const &color) {
+    Vec2f bboxmin( std::numeric_limits<float>::max(),  std::numeric_limits<float>::max());
+    Vec2f bboxmax(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
+    Vec2f clamp(image.get_width()-1, image.get_height()-1);
+    for (int i=0; i<3; i++) {
+        for (int j=0; j<2; j++) {
+            bboxmin[j] = std::max(0.f,      std::min(bboxmin[j], pts[i][j]));
+            bboxmax[j] = std::min(clamp[j], std::max(bboxmax[j], pts[i][j]));
+        }
+    }
+    Vec3f P;
+    for (P.x=bboxmin.x; P.x<=bboxmax.x; ++P.x) {
+        for (P.y=bboxmin.y; P.y<=bboxmax.y; ++P.y) {
+            Vec3f bc_screen  = barycentric(pts[0], pts[1], pts[2], P);
+            if (bc_screen.x<0 || bc_screen.y<0 || bc_screen.z<0) continue;
+            P.z = 0;
+            for (int i=0; i<3; ++i) {
+                P.z += pts[i][2]*bc_screen[i];
+            }
+            auto idx = static_cast<size_t>(P.x + P.y * width);
+            if(zbuffer[idx] < P.z) {
+                zbuffer[idx] = P.z;
+                //image.set(P.x, P.y, texture.get(u*texture.get_width(), v*texture.get_height()));
+                image.set(P.x, P.y, color);
             }
         }
     }
