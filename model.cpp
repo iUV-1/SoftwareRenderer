@@ -23,14 +23,22 @@ Model::Model(const char *filename) {
             for (int i=0;i<3;i++) iss >> v.raw[i];
             verts_.push_back(v);
         } else if (!line.compare(0, 2, "f ")) {
+            // v_idx is the vertex index from that face
+            // t_idx is the texture index from that face
+            // n_idx is the normal index from that face
             std::vector<int> f;
-            int itrash, idx;
+            std::vector<int> t;
+            int v_idx, t_idx, n_idx;
             iss >> trash;
-            while (iss >> idx >> trash >> itrash >> trash >> itrash) {
-                idx--; // in wavefront obj all indices start at 1, not zero
-                f.push_back(idx);
+            while (iss >> v_idx >> trash >> t_idx >> trash >> n_idx) {
+                v_idx--; // in wavefront obj all indices start at 1, not zero
+                t_idx--;
+                n_idx--;
+                f.push_back(v_idx);
+                t.push_back(t_idx);
             }
             faces_.push_back(f);
+            faces_texture.push_back(t);
         } else if (!line.compare(0, 3, "vt ")) {
             // trash vt because trash is a char so we need to do this twice
             iss >> trash;
@@ -57,6 +65,10 @@ int Model::nfaces() {
 
 std::vector<int> Model::face(int idx) {
     return faces_[idx];
+}
+
+std::vector<int> Model::face_tex(int idx) {
+    return faces_texture[idx];
 }
 
 Vec3f Model::vert(int i) {

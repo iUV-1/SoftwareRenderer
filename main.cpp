@@ -47,12 +47,13 @@ int main(int argc, char** argv) {
     Vec3f light(0,0, -1);
     for (int i=0; i<model->nfaces(); ++i) {
         std::vector<int> face = model->face(i);
+        std::vector<int> face_tex = model->face_tex(i);
         Vec3f screen_coords[3];
         Vec3f world_coords[3];
         Vec2f texture_coords[3];
         for (int j=0; j<3; ++j) {
             Vec3f v = model->vert(face[j]);
-            texture_coords[j] = model->texcoord(face[j]);
+            texture_coords[j] = model->texcoord(face_tex[j]);
             screen_coords[j] = world2screen(v);
             world_coords[j] = v;
         }
