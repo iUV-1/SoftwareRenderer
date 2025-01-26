@@ -146,7 +146,6 @@ bool TGAImage::load_rle_data(std::ifstream &in) {
 }
 
 bool TGAImage::write_tga_file(const char *filename, bool rle) {
-    std::cout << "doing something" << std::endl;
     unsigned char developer_area_ref[4] = {0, 0, 0, 0};
     unsigned char extension_area_ref[4] = {0, 0, 0, 0};
     unsigned char footer[18] = {'T','R','U','E','V','I','S','I','O','N','-','X','F','I','L','E','.','\0'};

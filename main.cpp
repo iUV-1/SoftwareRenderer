@@ -4,6 +4,9 @@
 #include <iostream>
 #include <cstdlib>
 #include <limits>
+#include <chrono>
+#include <ctime>
+#include <sstream>
 #include "model.h"
 #include "geometry.h"
 
@@ -41,6 +44,9 @@ int main(int argc, char** argv) {
         tex_file.read_tga_file(argv[2]);
     }
 
+    tex_file.flip_vertically();
+
+
     TGAImage frame(width, height, TGAImage::RGB);
     auto *zbuffer = new float[width * height];
     for (int i=width*height; i--; zbuffer[i] = -std::numeric_limits<float>::max());
@@ -74,7 +80,15 @@ int main(int argc, char** argv) {
         }
     }
     frame.flip_vertically(); // i want to have the origin at the left bottom corner of the image
-    frame.write_tga_file("./output.tga");
+    // Get timing of the render
+    auto now = std::chrono::system_clock::now();
+    auto finish_time = std::chrono::system_clock::to_time_t(now);
+    std::tm local_time = *std::localtime(&finish_time);
+    std::stringstream sstream;
+    sstream << "../output/" << local_time.tm_mon + 1 << "-" << local_time.tm_mday << "_"
+            << local_time.tm_hour << "-" << local_time.tm_min << ".tga";
+    frame.write_tga_file(sstream.str().c_str());
+
     delete[] zbuffer;
     delete model;
     return 0;
