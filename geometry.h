@@ -10,6 +10,7 @@
 #define __GEOMETRY_H__
 
 #include <cmath>
+#include <vector>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -71,4 +72,108 @@ template <class t> std::ostream& operator<<(std::ostream& s, Vec3<t>& v) {
     return s;
 }
 
+template <typename T> class Matrix {
+public:
+    std::vector<std::vector<T>> data;
+    size_t rows, cols;
+
+    Matrix(size_t rows, size_t columns, T defaultVal = T{}): rows(rows), cols(columns),data(rows, std::vector<T>(columns, defaultVal)) {}
+
+    // init a row Matrix from a 3D vector
+    explicit Matrix(Vec3<T> vec): Matrix(1, 3){
+        data[0][0] = vec.x;
+        data[1][0] = vec.y;
+        data[2][0] = vec.z;
+    }
+    std::vector<T>& operator[](size_t row) {return data[row];}
+    const std::vector<T>& operator[](size_t row) const {return data[row];} // return a const reference to a row
+
+    Matrix<T> multiply(Matrix<T> matrix) {
+        if (cols != matrix.rows) {
+            // unable to do it, what should i return?
+            return matrix;
+        }
+
+        Matrix<T> result = Matrix(rows, matrix.cols);
+        for(int i = 0; i < result.rows; i++) {
+            for (int j = 0; j < result.cols; j++){
+                for (int k = 0; k < cols; k++) {
+                    result[i][j] += data[i][k] * matrix[k][j];
+                }
+            }
+        }
+        return result;
+    }
+
+    void display() const {
+        for (size_t i = 0; i < rows; i++) {
+            for (size_t j = 0; j < cols; j++) {
+                std::cout << data[i][j] << " ";
+            }
+            std::cout << std::endl;
+        }
+    }
+};
+
+template <class T> std::ostream& operator<<(std::ostream& os, Matrix<T> m) {
+    for (size_t i = 0; i < m.rows; i++) {
+        for (size_t j = 0; j < m.cols; j++) {
+            os << m[i][j] << " ";
+        }
+        os << "\n";
+        return os;
+    }
+}
+
+// 3x3 matrix derived from Matrix class
+template <typename T> class Matrix3x3: public Matrix<T> {
+public:
+    Matrix3x3() : Matrix<T>(3, 3) {}
+
+    // optimized calculation just for 3x3
+    Matrix3x3 multiply(const Matrix3x3 &other) {
+        Matrix3x3 result;
+
+        const auto& A = this->data;
+        const auto& B = other.data;
+
+        result(0, 0) = A[0][0] * B[0][0] + A[0][1] * B[1][0] + A[0][2] * B[2][0];
+        result(0, 1) = A[0][0] * B[0][1] + A[0][1] * B[1][1] + A[0][2] * B[2][1];
+        result(0, 2) = A[0][0] * B[0][2] + A[0][1] * B[1][2] + A[0][2] * B[2][2];
+
+        result(1, 0) = A[1][0] * B[0][0] + A[1][1] * B[1][0] + A[1][2] * B[2][0];
+        result(1, 1) = A[1][0] * B[0][1] + A[1][1] * B[1][1] + A[1][2] * B[2][1];
+        result(1, 2) = A[1][0] * B[0][2] + A[1][1] * B[1][2] + A[1][2] * B[2][2];
+
+        result(2, 0) = A[2][0] * B[0][0] + A[2][1] * B[1][0] + A[2][2] * B[2][0];
+        result(2, 1) = A[2][0] * B[0][1] + A[2][1] * B[1][1] + A[2][2] * B[2][1];
+        result(2, 2) = A[2][0] * B[0][2] + A[2][1] * B[1][2] + A[2][2] * B[2][2];
+
+        return result;
+    }
+};
+
+// 4x4 matrix derived from Matrix class
+template <typename T> class Matrix4x4: public Matrix<T> {
+public:
+     Matrix4x4() : Matrix<T>(4, 4) {}
+
+     // optimized calculation just for 4x4
+     Matrix4x4 multiply4x4(const Matrix4x4 &other) {
+         Matrix4x4 result;
+
+         const auto& A = this->data;
+         const auto& B = other.data;
+
+         for (int i = 0; i < 4; i++) {
+             result[i][0] = A[i][0] * B[0][0] + A[i][1] * B[1][0] + A[i][2] * B[2][0] + A[i][3] * B[3][0];
+             result[i][1] = A[i][0] * B[0][1] + A[i][1] * B[1][1] + A[i][2] * B[2][1] + A[i][3] * B[3][1];
+             result[i][2] = A[i][0] * B[0][2] + A[i][1] * B[1][2] + A[i][2] * B[2][2] + A[i][3] * B[3][2];
+             result[i][3] = A[i][0] * B[0][3] + A[i][1] * B[1][3] + A[i][2] * B[2][3] + A[i][3] * B[3][3];
+         }
+
+
+         return result;
+     }
+};
 #endif //__GEOMETRY_H__

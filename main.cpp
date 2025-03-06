@@ -14,6 +14,34 @@ const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red   = TGAColor(255, 0,   0,   255);
 const TGAColor green = TGAColor(0,   255, 0,  255);
 
+Matrix<float> homogonize(Vec3f v) {
+    Matrix<float> result = Matrix<float>(4, 1);
+    result[0][0] = v.x;
+    result[1][0] = v.y;
+    result[2][0] = v.z;
+    result[3][0] = 1;
+    return result;
+}
+
+Vec3f dehomogonize(Matrix<float> m) {
+    Vec3f result;
+    result.x = m[0][0] / m[3][0];
+    result.y = m[1][0] / m[3][0];
+    result.z = m[2][0] / m[3][0];
+    return result;
+}
+
+Vec3f project(Vec3f v, Matrix4x4<float> transfrom) {
+    // row matrix
+    Matrix<float> homogonized = homogonize(v);
+    Matrix<float> transformed = transfrom.multiply(homogonized);
+    Vec3f result = dehomogonize(transformed);
+    return result;
+}
+
+Matrix4x4<float> transformMatrix;
+float c;
+
 #define Vec2i Vec2<int>
 
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color);
@@ -46,6 +74,14 @@ int main(int argc, char** argv) {
 
     tex_file.flip_vertically();
 
+    // make it a identity matrix first
+    transformMatrix[0][0] = 1;
+    transformMatrix[1][1] = 1;
+    transformMatrix[2][2] = 1;
+    transformMatrix[3][3] = 1;
+    // camera position
+    c = 5;
+    transformMatrix[3][2] = -1/c;
 
     TGAImage frame(width, height, TGAImage::RGB);
     auto *zbuffer = new float[width * height];
@@ -60,8 +96,8 @@ int main(int argc, char** argv) {
         for (int j=0; j<3; ++j) {
             Vec3f v = model->vert(face[j]);
             texture_coords[j] = model->texcoord(face_tex[j]);
-            screen_coords[j] = world2screen(v);
-            world_coords[j] = v;
+            screen_coords[j] = world2screen(project(v, transformMatrix));
+            world_coords[j] = project(v, transformMatrix);
         }
         // calculate normal
         // ^ is an overloaded operator that performs cross product calculation
