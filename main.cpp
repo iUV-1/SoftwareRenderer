@@ -17,13 +17,9 @@ const TGAColor green = TGAColor(0,   255, 0,  255);
 
 // this is due to gross coding from my end
 // TODO: implement proper coding standards and untangle this mess
-Vec3f rasterize(Vec3f v, Matrix4x4f m_viewport, Matrix4x4f m_proj, Matrix4x4f m_modelview) {
-    Vec3f result;
-    Matrix4x4f transform;
-    transform = m_viewport*m_proj*m_modelview;
-    Matrix<float> homogonized = homogonize(v);
-    Matrix<float> transformed = transform.multiply(homogonized);
-    result = dehomogonize(transformed);
+Vec3f rasterize(Vec3f v, Matrix4x4f &m_viewport, Matrix4x4f const &m_proj, Matrix4x4f const &m_modelview) {
+    Matrix<float> homogonized = m_viewport*m_proj*m_modelview*homogonize(v);
+    Vec3f result = dehomogonize(homogonized);
     // Round the result to apply to screen
     result.x = std::round(result.x);
     result.y = std::round(result.y);

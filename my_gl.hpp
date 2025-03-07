@@ -13,7 +13,6 @@ void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAColor const &color
 Matrix<float> homogonize(Vec3f v);
 Vec3f dehomogonize(Matrix<float> const &m);
 Vec3f project(Vec3f v, Matrix4x4f transfrom);
-Vec3f rasterize(Vec3f v, Matrix4x4f m_viewport, Matrix4x4f m_proj, Matrix4x4f m_modelview);
 Matrix4x4f LookAt(Vec3f eye, Vec3f center, Vec3f up);
 Matrix4x4f world2screen(Vec3f v, int w, int h, float depth);
 #endif //SOFTWARERENDERER_MY_GL_HPP

@@ -74,6 +74,9 @@ template <class t> std::ostream& operator<<(std::ostream& s, Vec3<t>& v) {
     return s;
 }
 
+template <typename T>
+class Matrix4x4;
+
 template <typename T> class Matrix {
 public:
     std::vector<std::vector<T>> data;
@@ -90,7 +93,7 @@ public:
     std::vector<T>& operator[](size_t row) {return data[row];}
     const std::vector<T>& operator[](size_t row) const {return data[row];} // return a const reference to a row
 
-    Matrix<T> multiply(Matrix<T> matrix) {
+    Matrix<T> multiply(Matrix<T> matrix) const {
         if (cols != matrix.rows) {
             // unable to do it, what should i return?
             return matrix;
@@ -116,8 +119,10 @@ public:
         }
     }
 
-    inline Matrix<T> operator*(Matrix<T> const &other) { return this->multiply(other); }
+    Matrix<T> operator*(Matrix<T> const &other) { return this->multiply(other); }
 
+    template<class U>
+    friend Matrix<U> operator*( Matrix const &cur,  Matrix4x4<U> const &other);
 };
 
 template <class T> std::ostream& operator<<(std::ostream& os, Matrix<T> m) {
@@ -179,7 +184,6 @@ public:
              result[i][3] = A[i][0] * B[0][3] + A[i][1] * B[1][3] + A[i][2] * B[2][3] + A[i][3] * B[3][3];
          }
 
-
          return result;
      }
 
@@ -193,7 +197,9 @@ public:
          return result;
      }
 
-     inline Matrix4x4<T> operator*(const Matrix4x4<T> &other) { return this->multiply4x4(other); };
+     inline Matrix4x4<T> operator*( Matrix4x4<T> const &other) { return this->multiply4x4(other); };
+     template <typename U>
+     friend  Matrix<U> operator* ( Matrix4x4<U> const &cur,  Matrix<U> const &other);
 };
 
 typedef Matrix4x4<float> Matrix4x4f;

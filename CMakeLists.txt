@@ -11,4 +11,5 @@ add_executable(SoftwareRenderer main.cpp
         geometry.h
         my_gl.cpp
         my_gl.hpp
-        my_gl.cpp)
+        my_gl.cpp
+        geometry.cpp)

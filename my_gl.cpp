@@ -31,8 +31,8 @@ Vec3f dehomogonize(Matrix<float> const &m) {
 Vec3f project(Vec3f v, Matrix4x4f transfrom) {
     // row matrix
     Matrix<float> homogonized = homogonize(v);
-    Matrix<float> transformed = transfrom.multiply(homogonized); // Matrix4x4f multiply by homogonized vector
-
+    //Matrix<float> transformed = transfrom.multiply(homogonized); // Matrix4x4f multiply by homogonized vector
+    Matrix<float> transformed = transfrom*homogonized;
     Vec3f result = dehomogonize(transformed);
     return result;
 }
