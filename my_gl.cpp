@@ -7,11 +7,7 @@
 #include "tgaimage.h"
 #include <iostream>
 
-/*void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color);
-void line(Vec2i t0, Vec2i t1, TGAImage &image, TGAColor color);
-void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAImage &texture, Vec2f texture_coords[3]);
-void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAColor const &color);*/
-
+// Create a homogonized matrix from a vector
 Matrix<float> homogonize(Vec3f v) {
     Matrix<float> result = Matrix<float>(4, 1);
     result[0][0] = v.x;
@@ -21,6 +17,8 @@ Matrix<float> homogonize(Vec3f v) {
     return result;
 }
 
+
+// De-homogonize it
 Vec3f dehomogonize(Matrix<float> const &m) {
     Vec3f result;
     result.x = m[0][0] / m[3][0];
@@ -29,6 +27,7 @@ Vec3f dehomogonize(Matrix<float> const &m) {
     return result;
 }
 
+// Old function. Meant to project the points using a projection matrix
 Vec3f project(Vec3f v, Matrix4x4f transfrom) {
     // row matrix
     Matrix<float> homogonized = homogonize(v);
@@ -55,6 +54,7 @@ Vec3f project(Vec3f v, Matrix4x4f transfrom) {
     return result;
 }*/
 
+// Similar to gluLookAt, create a camera transformation matrix
 // Formula (8.4) in textbook
 Matrix4x4f LookAt(Vec3f eye, Vec3f center, Vec3f up) {
     Vec3f z = (eye-center).normalize();
@@ -165,6 +165,8 @@ void line(Vec2<int> t0, Vec2<int> t1, TGAImage &image, TGAColor color) {
     }
 }
 
+// Calculate barycentric value of a point in a triangle
+// Returns (-1, 1, 1) in case the triangle is degenerate
 Vec3f barycentric(Vec3f A, Vec3f B, Vec3f C, Vec3f P) {
     Vec3f s[2];
     for (int i=2; i--; ) {

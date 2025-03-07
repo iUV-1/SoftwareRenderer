@@ -32,10 +32,10 @@ Vec3f rasterize(Vec3f v, Matrix4x4f m_viewport, Matrix4x4f m_proj, Matrix4x4f m_
     return result;
 }
 
-auto M_projection = Matrix4x4f::identity();
 float c;
 
 Model *model = nullptr;
+
 const int width = 800;
 const int height = 800;
 
@@ -56,20 +56,22 @@ int main(int argc, char** argv) {
 
     tex_file.flip_vertically();
 
+    auto M_projection = Matrix4x4f::identity();
     // set coefficient for projection on the z axis
     c = 5;
     M_projection[3][2] = -1 / c;
 
-    TGAImage frame(width, height, TGAImage::RGB);
+
     auto *zbuffer = new float[width * height];
-    for (int i=width*height; i--; zbuffer[i] = -std::numeric_limits<float>::max());
+    std::fill(zbuffer, zbuffer + width*height, -std::numeric_limits<float>::max()); // set every value in zbuffer to -inf
     Vec3f light(0,0, -1);
 
+    TGAImage frame(width, height, TGAImage::RGB);
     // camera setting
     Vec3f eye(3, 2, 3);
     Vec3f cam(0, 0, 0);
     Vec3f up(0, 1, 0);
-    
+
     for (int i=0; i<model->nfaces(); ++i) {
         std::vector<int> face = model->face(i);
         std::vector<int> face_tex = model->face_tex(i);
@@ -89,7 +91,7 @@ int main(int argc, char** argv) {
         // ^ is an overloaded operator that performs cross product calculation
         // world_coords[2] - world_coords[0] and the other are 2 vectors pointing from point
         // world_coords[0].
-        Vec3f n = (world_coords[2]-world_coords[0])^(world_coords[1]-world_coords[0]);
+        Vec3f n = (screen_coords[2]-screen_coords[0])^(screen_coords[1]-screen_coords[0]);
         n.normalize();
         // calculate light intensity by dot product between normal and light vector
         float intensity = n*light;
