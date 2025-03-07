@@ -39,7 +39,7 @@ Vec3f project(Vec3f v, Matrix4x4<float> transfrom) {
     return result;
 }
 
-Matrix4x4<float> transformMatrix;
+Matrix4x4<float> transformMatrix = Matrix4x4<float>::identity();
 float c;
 
 #define Vec2i Vec2<int>
@@ -74,12 +74,7 @@ int main(int argc, char** argv) {
 
     tex_file.flip_vertically();
 
-    // make it a identity matrix first
-    transformMatrix[0][0] = 1;
-    transformMatrix[1][1] = 1;
-    transformMatrix[2][2] = 1;
-    transformMatrix[3][3] = 1;
-    // camera position
+    // set coefficient for projection on the z axis
     c = 5;
     transformMatrix[3][2] = -1/c;
 
@@ -96,8 +91,8 @@ int main(int argc, char** argv) {
         for (int j=0; j<3; ++j) {
             Vec3f v = model->vert(face[j]);
             texture_coords[j] = model->texcoord(face_tex[j]);
-            screen_coords[j] = world2screen(project(v, transformMatrix));
             world_coords[j] = project(v, transformMatrix);
+            screen_coords[j] = world2screen(world_coords[j]);
         }
         // calculate normal
         // ^ is an overloaded operator that performs cross product calculation

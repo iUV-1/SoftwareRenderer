@@ -121,8 +121,8 @@ template <class T> std::ostream& operator<<(std::ostream& os, Matrix<T> m) {
             os << m[i][j] << " ";
         }
         os << "\n";
-        return os;
     }
+    return os;
 }
 
 // 3x3 matrix derived from Matrix class
@@ -131,7 +131,7 @@ public:
     Matrix3x3() : Matrix<T>(3, 3) {}
 
     // optimized calculation just for 3x3
-    Matrix3x3 multiply(const Matrix3x3 &other) {
+    Matrix3x3 multiply3x3(const Matrix3x3 &other) {
         Matrix3x3 result;
 
         const auto& A = this->data;
@@ -175,5 +175,16 @@ public:
 
          return result;
      }
+
+     // create a 4x4 identity matrix
+     static Matrix4x4 identity() {
+         Matrix4x4 result;
+
+         for (int i = 4; i--; ) {
+             result[i][i] = 1;
+         }
+         return result;
+     }
+
 };
 #endif //__GEOMETRY_H__
