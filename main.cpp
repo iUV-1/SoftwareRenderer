@@ -23,7 +23,7 @@ Matrix<float> homogonize(Vec3f v) {
     return result;
 }
 
-Vec3f dehomogonize(Matrix<float> m) {
+Vec3f dehomogonize(Matrix<float> const &m) {
     Vec3f result;
     result.x = m[0][0] / m[3][0];
     result.y = m[1][0] / m[3][0];
@@ -31,18 +31,48 @@ Vec3f dehomogonize(Matrix<float> m) {
     return result;
 }
 
-Vec3f project(Vec3f v, Matrix4x4<float> transfrom) {
+Vec3f project(Vec3f v, Matrix4x4f transfrom) {
     // row matrix
     Matrix<float> homogonized = homogonize(v);
-    Matrix<float> transformed = transfrom.multiply(homogonized);
+    Matrix<float> transformed = transfrom.multiply(homogonized); // Matrix4x4f multiply by homogonized vector
+
     Vec3f result = dehomogonize(transformed);
     return result;
 }
 
-Matrix4x4<float> transformMatrix = Matrix4x4<float>::identity();
-float c;
+// this is due to gross coding from my end
+// TODO: implement proper coding standards and untangle this mess
+Vec3f rasterize(Vec3f v, Matrix4x4f m_viewport, Matrix4x4f m_proj, Matrix4x4f m_modelview) {
+    Vec3f result;
+    Matrix4x4f transform;
+    transform = m_viewport*m_proj*m_modelview;
+    Matrix<float> homogonized = homogonize(v);
+    Matrix<float> transformed = transform.multiply(homogonized);
+    result = dehomogonize(transformed);
+    return result;
+}
 
-#define Vec2i Vec2<int>
+// Formula (8.4) in textbook
+Matrix4x4f LookAt(Vec3f eye, Vec3f center, Vec3f up) {
+    Vec3f z = (eye-center).normalize();
+    Vec3f x = (up^z).normalize();
+    Vec3f y = (z^x).normalize();
+    // Inverse rotation matrix
+    auto Minv = Matrix4x4f::identity();
+    // Translation matrix
+    auto Tr = Matrix4x4f::identity();
+    for (int i = 0; i < 3; i++) {
+        Minv[0][i] = x[i];
+        Minv[1][i] = y[i];
+        Minv[2][i] = z[i];
+        Tr[i][3] = -eye[i];
+    }
+    Matrix4x4f M_cam = Minv * Tr;
+    return M_cam;
+}
+
+auto M_projection = Matrix4x4f::identity();
+float c;
 
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color);
 void line(Vec2i t0, Vec2i t1, TGAImage &image, TGAColor color);
@@ -56,6 +86,19 @@ const int height = 800;
 
 Vec3f world2screen(Vec3f v) {
     return Vec3f(static_cast<int>((v.x+1.)*width/2.+.5), static_cast<int>((v.y+1.)*height/2. + .5), v.z);
+}
+// Matrix representation of viewport transformation
+// Also includes depth for z-buffer
+Matrix4x4f world2screen(Vec3f v, int w, int h) {
+    Matrix4x4f m = Matrix4x4f::identity();
+    m[0][3] = v.x+w/2.f;
+    m[1][3] = v.y+h/2.f;
+    m[2][3] = v.z/2.f;
+
+    m[0][0] = w/2.f;
+    m[1][1] = h/2.f;
+    m[2][2] = v.z/2.f;
+    return m;
 }
 
 int main(int argc, char** argv) {
@@ -76,23 +119,37 @@ int main(int argc, char** argv) {
 
     // set coefficient for projection on the z axis
     c = 5;
-    transformMatrix[3][2] = -1/c;
+    M_projection[3][2] = -1 / c;
 
     TGAImage frame(width, height, TGAImage::RGB);
     auto *zbuffer = new float[width * height];
     for (int i=width*height; i--; zbuffer[i] = -std::numeric_limits<float>::max());
     Vec3f light(0,0, -1);
+
+    // camera setting
+    Vec3f eye(0, 0, -1);
+    Vec3f cam(0, 0, 0);
+    Vec3f up(0, 1, 0);
+
+
     for (int i=0; i<model->nfaces(); ++i) {
         std::vector<int> face = model->face(i);
         std::vector<int> face_tex = model->face_tex(i);
         Vec3f screen_coords[3];
         Vec3f world_coords[3];
         Vec2f texture_coords[3];
+
+
         for (int j=0; j<3; ++j) {
             Vec3f v = model->vert(face[j]);
+            Matrix4x4f M_viewport = world2screen(v, width, height);
+            Matrix4x4f M_modelView = LookAt(eye, cam, up);
+
+
             texture_coords[j] = model->texcoord(face_tex[j]);
-            world_coords[j] = project(v, transformMatrix);
-            screen_coords[j] = world2screen(world_coords[j]);
+            world_coords[j] = project(v, M_projection);
+//            screen_coords[j] = world2screen(world_coords[j]);
+            screen_coords[j] = rasterize(v, M_viewport, M_projection, M_modelView);
         }
         // calculate normal
         // ^ is an overloaded operator that performs cross product calculation

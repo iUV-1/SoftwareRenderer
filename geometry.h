@@ -41,6 +41,7 @@ template <class t> struct Vec3 {
     };
     Vec3() : x(0), y(0), z(0) {}
     Vec3(t _x, t _y, t _z) : x(_x),y(_y),z(_z) {}
+
     inline Vec3<t> operator ^(const Vec3<t> &v) const { return Vec3<t>(y*v.z-z*v.y, z*v.x-x*v.z, x*v.y-y*v.x); }
     inline Vec3<t> operator +(const Vec3<t> &v) const { return Vec3<t>(x+v.x, y+v.y, z+v.z); }
     inline Vec3<t> operator -(const Vec3<t> &v) const { return Vec3<t>(x-v.x, y-v.y, z-v.z); }
@@ -113,6 +114,9 @@ public:
             std::cout << std::endl;
         }
     }
+
+    inline Matrix<T> operator*(Matrix<T> const &other) { return this->multiply(other); }
+
 };
 
 template <class T> std::ostream& operator<<(std::ostream& os, Matrix<T> m) {
@@ -153,6 +157,8 @@ public:
     }
 };
 
+typedef Matrix3x3<float> Matrix3x3if;
+
 // 4x4 matrix derived from Matrix class
 template <typename T> class Matrix4x4: public Matrix<T> {
 public:
@@ -186,5 +192,8 @@ public:
          return result;
      }
 
+     inline Matrix4x4<T> operator*(const Matrix4x4<T> &other) { return this->multiply4x4(other); };
 };
+
+typedef Matrix4x4<float> Matrix4x4f;
 #endif //__GEOMETRY_H__
