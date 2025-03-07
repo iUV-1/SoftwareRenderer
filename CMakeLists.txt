@@ -8,4 +8,7 @@ add_executable(SoftwareRenderer main.cpp
         tgaimage.cpp
         model.cpp
         model.h
-        geometry.h)
+        geometry.h
+        my_gl.cpp
+        my_gl.hpp
+        my_gl.cpp)
