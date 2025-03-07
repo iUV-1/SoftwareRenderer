@@ -49,6 +49,11 @@ Vec3f rasterize(Vec3f v, Matrix4x4f m_viewport, Matrix4x4f m_proj, Matrix4x4f m_
     Matrix<float> homogonized = homogonize(v);
     Matrix<float> transformed = transform.multiply(homogonized);
     result = dehomogonize(transformed);
+    // Round the result to apply to screen
+    result.x = std::round(result.x);
+    result.y = std::round(result.y);
+    result.z = std::round(result.z);
+
     return result;
 }
 
@@ -88,16 +93,16 @@ Vec3f world2screen(Vec3f v) {
     return Vec3f(static_cast<int>((v.x+1.)*width/2.+.5), static_cast<int>((v.y+1.)*height/2. + .5), v.z);
 }
 // Matrix representation of viewport transformation
-// Also includes depth for z-buffer
-Matrix4x4f world2screen(Vec3f v, int w, int h) {
+// Also includes depth because viewport is a box
+Matrix4x4f world2screen(Vec3f v, int w, int h, float depth) {
     Matrix4x4f m = Matrix4x4f::identity();
     m[0][3] = v.x+w/2.f;
     m[1][3] = v.y+h/2.f;
-    m[2][3] = v.z/2.f;
+    m[2][3] = depth/2.f;
 
     m[0][0] = w/2.f;
     m[1][1] = h/2.f;
-    m[2][2] = v.z/2.f;
+    m[2][2] = depth/2.f;
     return m;
 }
 
@@ -131,6 +136,7 @@ int main(int argc, char** argv) {
     Vec3f cam(0, 0, 0);
     Vec3f up(0, 1, 0);
 
+    Matrix4x4f identity = Matrix4x4f::identity();
 
     for (int i=0; i<model->nfaces(); ++i) {
         std::vector<int> face = model->face(i);
@@ -142,7 +148,7 @@ int main(int argc, char** argv) {
 
         for (int j=0; j<3; ++j) {
             Vec3f v = model->vert(face[j]);
-            Matrix4x4f M_viewport = world2screen(v, width, height);
+            Matrix4x4f M_viewport = world2screen(v, width, height, 255.0f);
             Matrix4x4f M_modelView = LookAt(eye, cam, up);
 
 
