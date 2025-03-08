@@ -94,8 +94,8 @@ int main(int argc, char** argv) {
         float view_dir_intensity = eye*n;
         // back face culling
         //triangle(screen_coords, frame, zbuffer, TGAColor(intensity*255, intensity*255, intensity*255, 255));
-        triangle(screen_coords, frame, zbuffer, tex_file, texture_coords, width);
-        if (view_dir_intensity>0) {
+        if (view_dir_intensity<0) {
+            triangle(screen_coords, frame, zbuffer, tex_file, texture_coords, width);
         }
     }
     frame.flip_vertically(); // i want to have the origin at the left bottom corner of the image

@@ -37,22 +37,6 @@ Vec3f project(Vec3f v, Matrix4x4f transfrom) {
     return result;
 }
 
-// this is due to gross coding from my end
-// TODO: implement proper coding standards and untangle this mess
-/*Vec3f rasterize(Vec3f v, Matrix4x4f m_viewport, Matrix4x4f m_proj, Matrix4x4f m_modelview) {
-    Vec3f result;
-    Matrix4x4f transform;
-    transform = m_viewport*m_proj*m_modelview;
-    Matrix<float> homogonized = homogonize(v);
-    Matrix<float> transformed = transform.multiply(homogonized);
-    result = dehomogonize(transformed);
-    // Round the result to apply to screen
-    result.x = std::round(result.x);
-    result.y = std::round(result.y);
-    result.z = std::round(result.z);
-
-    return result;
-}*/
 
 // Similar to gluLookAt, create a camera transformation matrix
 // Formula (8.4) in textbook
