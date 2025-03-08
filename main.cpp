@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
         float view_dir_intensity = eye*n;
         // back face culling
         //triangle(screen_coords, frame, zbuffer, TGAColor(intensity*255, intensity*255, intensity*255, 255));
-        if (view_dir_intensity<0) {
+        if (view_dir_intensity<1) {
             triangle(screen_coords, frame, zbuffer, tex_file, texture_coords, width);
         }
     }
