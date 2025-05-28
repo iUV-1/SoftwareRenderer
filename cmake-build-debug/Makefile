@@ -129,6 +129,30 @@ SoftwareRenderer/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/SoftwareRenderer.dir/build.make CMakeFiles/SoftwareRenderer.dir/build
 .PHONY : SoftwareRenderer/fast
 
+geometry.o: geometry.cpp.o
+.PHONY : geometry.o
+
+# target to build an object file
+geometry.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SoftwareRenderer.dir/build.make CMakeFiles/SoftwareRenderer.dir/geometry.cpp.o
+.PHONY : geometry.cpp.o
+
+geometry.i: geometry.cpp.i
+.PHONY : geometry.i
+
+# target to preprocess a source file
+geometry.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SoftwareRenderer.dir/build.make CMakeFiles/SoftwareRenderer.dir/geometry.cpp.i
+.PHONY : geometry.cpp.i
+
+geometry.s: geometry.cpp.s
+.PHONY : geometry.s
+
+# target to generate assembly for a file
+geometry.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SoftwareRenderer.dir/build.make CMakeFiles/SoftwareRenderer.dir/geometry.cpp.s
+.PHONY : geometry.cpp.s
+
 main.o: main.cpp.o
 .PHONY : main.o
 
@@ -177,6 +201,30 @@ model.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/SoftwareRenderer.dir/build.make CMakeFiles/SoftwareRenderer.dir/model.cpp.s
 .PHONY : model.cpp.s
 
+my_gl.o: my_gl.cpp.o
+.PHONY : my_gl.o
+
+# target to build an object file
+my_gl.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SoftwareRenderer.dir/build.make CMakeFiles/SoftwareRenderer.dir/my_gl.cpp.o
+.PHONY : my_gl.cpp.o
+
+my_gl.i: my_gl.cpp.i
+.PHONY : my_gl.i
+
+# target to preprocess a source file
+my_gl.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SoftwareRenderer.dir/build.make CMakeFiles/SoftwareRenderer.dir/my_gl.cpp.i
+.PHONY : my_gl.cpp.i
+
+my_gl.s: my_gl.cpp.s
+.PHONY : my_gl.s
+
+# target to generate assembly for a file
+my_gl.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/SoftwareRenderer.dir/build.make CMakeFiles/SoftwareRenderer.dir/my_gl.cpp.s
+.PHONY : my_gl.cpp.s
+
 tgaimage.o: tgaimage.cpp.o
 .PHONY : tgaimage.o
 
@@ -210,12 +258,18 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... SoftwareRenderer"
+	@echo "... geometry.o"
+	@echo "... geometry.i"
+	@echo "... geometry.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
 	@echo "... model.o"
 	@echo "... model.i"
 	@echo "... model.s"
+	@echo "... my_gl.o"
+	@echo "... my_gl.i"
+	@echo "... my_gl.s"
 	@echo "... tgaimage.o"
 	@echo "... tgaimage.i"
 	@echo "... tgaimage.s"

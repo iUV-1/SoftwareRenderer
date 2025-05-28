@@ -57,6 +57,12 @@ struct TGAColor {
         }
         return *this;
     }
+
+    TGAColor & operator *(const float val) {
+        raw[0] *= val;
+        raw[1] *= val;
+        raw[2] *= val;
+    }
 };
 
 

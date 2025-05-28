@@ -7,6 +7,10 @@
 #include "tgaimage.h"
 #include <iostream>
 
+Matrix4x4f ModelView;
+Matrix4x4f Projection;
+Matrix4x4f Viewport;
+
 // Create a homogonized matrix from a vector
 Matrix<float> homogonize(Vec3f v) {
     Matrix<float> result = Matrix<float>(4, 1);
@@ -15,6 +19,10 @@ Matrix<float> homogonize(Vec3f v) {
     result[2][0] = v.z;
     result[3][0] = 1;
     return result;
+}
+
+IShader::~IShader() {
+
 }
 
 
@@ -28,19 +36,23 @@ Vec3f dehomogonize(Matrix<float> const &m) {
 }
 
 // Old function. Meant to project the points using a projection matrix
-Vec3f project(Vec3f v, Matrix4x4f transfrom) {
+Vec3f project(Vec3f v) {
     // row matrix
     Matrix<float> homogonized = homogonize(v);
     //Matrix<float> transformed = transfrom.multiply(homogonized); // Matrix4x4f multiply by homogonized vector
-    Matrix<float> transformed = transfrom*homogonized;
+    Matrix<float> transformed = Projection*homogonized;
     Vec3f result = dehomogonize(transformed);
     return result;
 }
 
+void Project(float coeff) {
+    Projection = Matrix4x4f::identity();
+    Projection[3][2] = -1/coeff;
+}
 
 // Similar to gluLookAt, create a camera transformation matrix
 // Formula (8.4) in textbook
-Matrix4x4f LookAt(Vec3f eye, Vec3f center, Vec3f up) {
+void LookAt(Vec3f eye, Vec3f center, Vec3f up) {
     Vec3f z = (eye-center).normalize();
     Vec3f x = (up^z).normalize();
     Vec3f y = (z^x).normalize();
@@ -54,23 +66,33 @@ Matrix4x4f LookAt(Vec3f eye, Vec3f center, Vec3f up) {
         Minv[2][i] = z[i];
         Tr[i][3] = -eye[i];
     }
-    Matrix4x4f M_cam = Minv * Tr;
-    return M_cam;
+    ModelView = Minv * Tr;
+    //return M_cam;
 }
 
 // Matrix representation of viewport transformation
 // Also includes depth because viewport is a box
-Matrix4x4f world2screen(Vec3f v, int w, int h, float depth) {
-    Matrix4x4f m = Matrix4x4f::identity();
-    m[0][3] = v.x+w/2.f;
-    m[1][3] = v.y+h/2.f;
-    m[2][3] = depth/2.f;
+void world2screen(Vec3f v, int w, int h, float depth) {
+    Viewport = Matrix4x4f::identity();
+    Viewport[0][3] = v.x+w/2.f;
+    Viewport[1][3] = v.y+h/2.f;
+    Viewport[2][3] = depth/2.f;
 
-    m[0][0] = w/2.f;
-    m[1][1] = h/2.f;
-    m[2][2] = depth/2.f;
-    return m;
+    Viewport[0][0] = w/2.f;
+    Viewport[1][1] = h/2.f;
+    Viewport[2][2] = depth/2.f;
 }
+// Matrix4x4f world2screen(Vec3f v, int w, int h, float depth) {
+//     Matrix4x4f m = Matrix4x4f::identity();
+//     m[0][3] = v.x+w/2.f;
+//     m[1][3] = v.y+h/2.f;
+//     m[2][3] = depth/2.f;
+//
+//     m[0][0] = w/2.f;
+//     m[1][1] = h/2.f;
+//     m[2][2] = depth/2.f;
+//     return m;
+// }
 
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
     bool steep = false;

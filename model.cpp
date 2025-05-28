@@ -8,6 +8,8 @@
 #include <vector>
 #include "model.h"
 
+#include "my_gl.hpp"
+
 Model::Model(const char *filename) {
     std::ifstream in;
     in.open (filename, std::ifstream::in);
@@ -28,6 +30,7 @@ Model::Model(const char *filename) {
             // n_idx is the normal index from that face
             std::vector<int> f;
             std::vector<int> t;
+            std::vector<int> n;
             int v_idx, t_idx, n_idx;
             iss >> trash;
             while (iss >> v_idx >> trash >> t_idx >> trash >> n_idx) {
@@ -36,9 +39,11 @@ Model::Model(const char *filename) {
                 n_idx--;
                 f.push_back(v_idx);
                 t.push_back(t_idx);
+                n.push_back(n_idx);
             }
             faces_.push_back(f);
             faces_texture.push_back(t);
+            faces_normal.push_back(n);
         } else if (!line.compare(0, 3, "vt ")) {
             // trash vt because trash is a char so we need to do this twice
             iss >> trash;
@@ -47,6 +52,12 @@ Model::Model(const char *filename) {
             Vec2f uv;
             iss >> uv.u >> uv.v;
             texcoords_.push_back(uv);
+        } else if (!line.compare(0, 3, "vn ")) {
+            iss >> trash;
+            iss >> trash;
+            Vec3f normal;
+            iss >> normal.x >> normal.y >> normal.z;
+            normals_.push_back(normal);
         }
     }
     std::cerr << "# v# " << verts_.size() << " f# "  << faces_.size() << std::endl;
@@ -73,6 +84,14 @@ std::vector<int> Model::face_tex(int idx) {
 
 Vec3f Model::vert(int i) {
     return verts_[i];
+}
+
+Vec3f Model::vert(int iface, int nthvert) {
+    return verts_[faces_[iface][nthvert]];
+}
+
+Vec3f Model::normal(int iface, int nthvert) {
+    return normals_[faces_[iface][nthvert]];
 }
 
 Vec2f Model::texcoord(int i) {
