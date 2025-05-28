@@ -65,6 +65,9 @@ Vec3f rasterize(GouraudShader *shader, int iface, int nthvert) {
 }
 
 int main(int argc, char** argv) {
+    // Time the render
+    auto before = std::chrono::system_clock::now();
+
     if(argc < 2) {
         model = new Model("obj/african_head.obj");
     } else {
@@ -135,6 +138,11 @@ int main(int argc, char** argv) {
     sstream << "../output/" << local_time.tm_mon + 1 << "-" << local_time.tm_mday << "_"
             << local_time.tm_hour << "-" << local_time.tm_min << ".tga";
     frame.write_tga_file(sstream.str().c_str());
+
+    // How long the render takes
+    std::chrono::duration<double> diff = now - before;
+    auto ms = duration_cast<std::chrono::milliseconds>(diff);
+    std::cout << "Elapsed time: " << ms.count() << " ms" << std::endl;
 
     delete[] zbuffer;
     delete model;
