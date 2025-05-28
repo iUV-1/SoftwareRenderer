@@ -11,9 +11,16 @@ extern Matrix4x4f ModelView;
 extern Matrix4x4f Projection;
 extern Matrix4x4f Viewport;
 
+/* Interface for both vertex and fragment shader*/
+struct IShader {
+    virtual ~IShader();
+    virtual Matrix<float> vertex(int iface, int nthvert) = 0;
+    virtual bool fragment(Vec3f bar, TGAColor &color) = 0;
+};
+
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color);
 void line(Vec2i t0, Vec2i t1, TGAImage &image, TGAColor color);
-void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAImage &texture, Vec2f texture_coords[3], int width);
+void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAImage &texture, Vec2f texture_coords[3], int width, IShader &shader);
 void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAColor const &color, int width);
 Matrix<float> homogonize(Vec3f v);
 Vec3f dehomogonize(Matrix<float> const &m);
@@ -22,10 +29,5 @@ void Project(float coeff);
 void LookAt(Vec3f eye, Vec3f center, Vec3f up);
 void world2screen(Vec3f v, int w, int h, float depth);
 
-/* Interface for both vertex and fragment shader*/
-struct IShader {
-    virtual ~IShader();
-    virtual Matrix<float> vertex(int iface, int nthvert) = 0;
-    virtual bool fragment(Vec3f bar, TGAColor &color) = 0;
-};
+
 #endif //SOFTWARERENDERER_MY_GL_HPP

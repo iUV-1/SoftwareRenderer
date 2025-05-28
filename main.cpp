@@ -1,4 +1,3 @@
-#include "tgaimage.h"
 #include <vector>
 #include <cmath>
 #include <iostream>
@@ -6,14 +5,11 @@
 #include <chrono>
 #include <ctime>
 #include <sstream>
+
 #include "model.h"
 #include "geometry.h"
 #include "my_gl.hpp"
-
-const TGAColor white = TGAColor(255, 255, 255, 255);
-const TGAColor red   = TGAColor(255, 0,   0,   255);
-const TGAColor green = TGAColor(0,   255, 0,  255);
-
+#include "tgaimage.h"
 
 // this is due to gross coding from my end
 // TODO: implement proper coding standards and untangle this mess
@@ -37,7 +33,7 @@ Model *model = nullptr;
 const int width = 800;
 const int height = 800;
 
-Vec3f light_dir;
+Vec3f light_dir = Vec3f(0.0, 0.0, 1.0);
 
 struct GouraudShader: IShader {
     Vec3f varying_intensity;
@@ -125,7 +121,8 @@ int main(int argc, char** argv) {
         // back face culling
         //triangle(screen_coords, frame, zbuffer, TGAColor(intensity*255, intensity*255, intensity*255, 255));
         if (view_dir_intensity<1) {
-            triangle(screen_coords, frame, zbuffer, tex_file, texture_coords, width);
+            triangle(screen_coords, frame, zbuffer,
+            tex_file, texture_coords, width, shader);
         }
     }
     // set origin to the bottom left corner
