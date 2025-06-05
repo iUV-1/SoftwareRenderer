@@ -1,7 +1,7 @@
 //
 // Created by iUV on 3/7/2025.
 //
-#include "TGAImage.h"
+#include "tgaimage.h"
 #include "geometry.h"
 
 #ifndef SOFTWARERENDERER_MY_GL_HPP
@@ -28,6 +28,6 @@ Vec3f project(Vec3f v);
 void Project(float coeff);
 void LookAt(Vec3f eye, Vec3f center, Vec3f up);
 void world2screen(Vec3f v, int w, int h, float depth);
-
+void SetViewport(int width, int height, float depth);
 
 #endif //SOFTWARERENDERER_MY_GL_HPP

@@ -5,7 +5,6 @@
 #include "my_gl.hpp"
 #include "geometry.h"
 #include "tgaimage.h"
-#include <iostream>
 
 Matrix4x4f ModelView;
 Matrix4x4f Projection;
@@ -80,6 +79,19 @@ void world2screen(Vec3f v, int w, int h, float depth) {
 
     Viewport[0][0] = w/2.f;
     Viewport[1][1] = h/2.f;
+    Viewport[2][2] = depth/2.f;
+}
+
+// Set Viewport Matrix (M_vp)
+// Section 8.1 in textbook
+void SetViewport(int width, int height, float depth) {
+    Viewport = Matrix4x4f::identity();
+    Viewport[0][0] = width/2.f;
+    Viewport[1][1] = height/2.f;
+    Viewport[0][3] = (width-1)/2.f;
+    Viewport[1][3] = (height-1)/2.f;
+
+    Viewport[2][3] = depth/2.f;
     Viewport[2][2] = depth/2.f;
 }
 // Matrix4x4f world2screen(Vec3f v, int w, int h, float depth) {
@@ -213,9 +225,8 @@ void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAImage &texture, Ve
             float v = bc_screen.x * texture_coords[0].v + bc_screen.y * texture_coords[1].v + bc_screen.z * texture_coords[2].v;
             if(zbuffer[idx] < P.z) {
                 zbuffer[idx] = P.z;
-                TGAColor color;
                 // Get texture color
-                color = texture.get(u*texture.get_width(), v*texture.get_height());
+                TGAColor color = texture.get(u*texture.get_width(), v*texture.get_height());
                 // Use shader
                 shader.fragment(bc_screen, color);
                 image.set(P.x, P.y, color);

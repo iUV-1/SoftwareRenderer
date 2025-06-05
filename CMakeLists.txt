@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.28)
 project(SoftwareRenderer)
 
 set(CMAKE_CXX_STANDARD 20)
-
-add_compile_options(-Wall -Wextra -O2)
+add_link_options(-fsanitize=address -g)
+add_compile_options(-Wall -Wextra -O2 -fsanitize=address -g)
 
 add_executable(SoftwareRenderer main.cpp
         tgaimage.h

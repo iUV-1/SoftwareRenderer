@@ -958,6 +958,7 @@ CMakeFiles/SoftwareRenderer.dir/geometry.cpp.o: /Users/iuv/Documents/Programming
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/include/stdarg.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/include/stddef.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/include/stdint.h \
+  /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/share/asan_ignorelist.txt \
   /Users/iuv/Documents/Programming/SoftwareRenderer/geometry.h
 
 CMakeFiles/SoftwareRenderer.dir/main.cpp.o: /Users/iuv/Documents/Programming/SoftwareRenderer/main.cpp \
@@ -1961,7 +1962,7 @@ CMakeFiles/SoftwareRenderer.dir/main.cpp.o: /Users/iuv/Documents/Programming/Sof
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/include/stdarg.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/include/stddef.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/include/stdint.h \
-  /Users/iuv/Documents/Programming/SoftwareRenderer/TGAImage.h \
+  /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/share/asan_ignorelist.txt \
   /Users/iuv/Documents/Programming/SoftwareRenderer/geometry.h \
   /Users/iuv/Documents/Programming/SoftwareRenderer/model.h \
   /Users/iuv/Documents/Programming/SoftwareRenderer/my_gl.hpp \
@@ -2945,10 +2946,11 @@ CMakeFiles/SoftwareRenderer.dir/model.cpp.o: /Users/iuv/Documents/Programming/So
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/include/stdarg.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/include/stddef.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/include/stdint.h \
-  /Users/iuv/Documents/Programming/SoftwareRenderer/TGAImage.h \
+  /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/share/asan_ignorelist.txt \
   /Users/iuv/Documents/Programming/SoftwareRenderer/geometry.h \
   /Users/iuv/Documents/Programming/SoftwareRenderer/model.h \
-  /Users/iuv/Documents/Programming/SoftwareRenderer/my_gl.hpp
+  /Users/iuv/Documents/Programming/SoftwareRenderer/my_gl.hpp \
+  /Users/iuv/Documents/Programming/SoftwareRenderer/tgaimage.h
 
 CMakeFiles/SoftwareRenderer.dir/my_gl.cpp.o: /Users/iuv/Documents/Programming/SoftwareRenderer/my_gl.cpp \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/usr/include/Availability.h \
@@ -3927,7 +3929,7 @@ CMakeFiles/SoftwareRenderer.dir/my_gl.cpp.o: /Users/iuv/Documents/Programming/So
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/include/stdarg.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/include/stddef.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/include/stdint.h \
-  /Users/iuv/Documents/Programming/SoftwareRenderer/TGAImage.h \
+  /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/share/asan_ignorelist.txt \
   /Users/iuv/Documents/Programming/SoftwareRenderer/geometry.h \
   /Users/iuv/Documents/Programming/SoftwareRenderer/my_gl.hpp \
   /Users/iuv/Documents/Programming/SoftwareRenderer/tgaimage.h
@@ -4909,6 +4911,7 @@ CMakeFiles/SoftwareRenderer.dir/tgaimage.cpp.o: /Users/iuv/Documents/Programming
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/include/stdarg.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/include/stddef.h \
   /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/include/stdint.h \
+  /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/share/asan_ignorelist.txt \
   /Users/iuv/Documents/Programming/SoftwareRenderer/tgaimage.h
 
 
@@ -4919,8 +4922,6 @@ CMakeFiles/SoftwareRenderer.dir/tgaimage.cpp.o: /Users/iuv/Documents/Programming
 /Users/iuv/Documents/Programming/SoftwareRenderer/tgaimage.h:
 
 /Users/iuv/Documents/Programming/SoftwareRenderer/model.h:
-
-/Users/iuv/Documents/Programming/SoftwareRenderer/TGAImage.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/usr/include/c++/v1/sstream:
 
@@ -6013,6 +6014,8 @@ CMakeFiles/SoftwareRenderer.dir/tgaimage.cpp.o: /Users/iuv/Documents/Programming
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/usr/include/sys/_types/_u_int16_t.h:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/usr/include/c++/v1/stdint.h:
+
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/share/asan_ignorelist.txt:
 
 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/usr/include/c++/v1/__atomic/atomic_flag.h:
 

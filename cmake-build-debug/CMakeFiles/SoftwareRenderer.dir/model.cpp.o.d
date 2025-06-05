@@ -1,4 +1,5 @@
 CMakeFiles/SoftwareRenderer.dir/model.cpp.o: \
+  /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/share/asan_ignorelist.txt \
   /Users/iuv/Documents/Programming/SoftwareRenderer/model.cpp \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/usr/include/c++/v1/iostream \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/usr/include/c++/v1/__assert \
@@ -980,4 +981,4 @@ CMakeFiles/SoftwareRenderer.dir/model.cpp.o: \
   /Users/iuv/Documents/Programming/SoftwareRenderer/model.h \
   /Users/iuv/Documents/Programming/SoftwareRenderer/geometry.h \
   /Users/iuv/Documents/Programming/SoftwareRenderer/my_gl.hpp \
-  /Users/iuv/Documents/Programming/SoftwareRenderer/TGAImage.h
+  /Users/iuv/Documents/Programming/SoftwareRenderer/tgaimage.h

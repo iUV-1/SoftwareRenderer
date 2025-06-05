@@ -1,5 +1,4 @@
 #include <vector>
-#include <cmath>
 #include <iostream>
 #include <limits>
 #include <chrono>
@@ -11,27 +10,12 @@
 #include "my_gl.hpp"
 #include "tgaimage.h"
 
-// this is due to gross coding from my end
-// TODO: implement proper coding standards and untangle this mess
-// Vec3f rasterize(Vec3f v, Matrix4x4f &m_viewport, Matrix4x4f const &m_proj, Matrix4x4f const &m_modelview) {
-//     Matrix<float> homogonized = m_viewport*m_proj*m_modelview*homogonize(v);
-//     Vec3f result = dehomogonize(homogonized);
-//     // Round the result to apply to screen
-//     result.x = std::round(result.x);
-//     result.y = std::round(result.y);
-//     result.z = std::round(result.z);
-//
-//     return result;
-// }
-
-
-
 float c;
 
 Model *model = nullptr;
 
-const int width = 800;
-const int height = 800;
+const int width = 1920;
+const int height = 1920;
 
 Vec3f light_dir = Vec3f(0.0, 0.0, 1.0);
 
@@ -44,10 +28,11 @@ struct GouraudShader: IShader {
         varying_intensity[nthvert] = std::max(0.f, n*light_dir);
         return Viewport*Projection*ModelView*homogonize(v);
     }
-    // bar is barycentric of that vertex
+    // bar is the barycentric of that vertex
     bool fragment(Vec3f bar, TGAColor &color) override {
         float intensity = varying_intensity*bar;
-        color = TGAColor(255, 255, 255, 255) * intensity;
+        //color = TGAColor(255, 255, 255, 255) * intensity;
+        color = color * intensity;
         return false;
     }
 };
@@ -97,9 +82,11 @@ int main(int argc, char** argv) {
     // Setup GL
     LookAt(eye, cam, up);
     Project(5);
+    SetViewport(width, height, 255.0f);
 
     GouraudShader shader = GouraudShader();
     light_dir.normalize();
+    auto render = std::chrono::system_clock::now();
     for (int i=0; i<model->nfaces(); ++i) {
         std::vector<int> face = model->face(i);
         std::vector<int> face_tex = model->face_tex(i);
@@ -109,7 +96,7 @@ int main(int argc, char** argv) {
 
         for (int j=0; j<3; ++j) {
             Vec3f v = model->vert(face[j]);
-            world2screen(v, width, height, 255.0f);
+            //world2screen(v, width, height, 255.0f);
             screen_coords[j] = rasterize(&shader, i, j);
             texture_coords[j] = model->texcoord(face_tex[j]);
         }
@@ -143,6 +130,9 @@ int main(int argc, char** argv) {
     std::chrono::duration<double> diff = now - before;
     auto ms = duration_cast<std::chrono::milliseconds>(diff);
     std::cout << "Elapsed time: " << ms.count() << " ms" << std::endl;
+    diff = now-render;
+    ms = duration_cast<std::chrono::milliseconds>(diff);
+    std::cout << "Render time: " << ms.count() << " ms" << std::endl;
 
     delete[] zbuffer;
     delete model;

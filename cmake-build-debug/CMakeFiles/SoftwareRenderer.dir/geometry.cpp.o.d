@@ -1,4 +1,5 @@
 CMakeFiles/SoftwareRenderer.dir/geometry.cpp.o: \
+  /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/share/asan_ignorelist.txt \
   /Users/iuv/Documents/Programming/SoftwareRenderer/geometry.cpp \
   /Users/iuv/Documents/Programming/SoftwareRenderer/geometry.h \
   /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/usr/include/c++/v1/cmath \
