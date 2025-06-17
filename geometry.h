@@ -85,7 +85,7 @@ public:
     Matrix(size_t rows, size_t columns, T defaultVal = T{}): rows(rows), cols(columns),data(rows, std::vector<T>(columns, defaultVal)) {}
 
     // init a row Matrix from a 3D vector
-    explicit Matrix(Vec3<T> vec): Matrix(1, 3){
+    explicit Matrix(Vec3<T> vec): Matrix(3, 1){
         data[0][0] = vec.x;
         data[1][0] = vec.y;
         data[2][0] = vec.z;
@@ -95,6 +95,7 @@ public:
 
     Matrix<T> multiply(Matrix<T> matrix) const {
         if (cols != matrix.rows) {
+            std::cout << "Matrix multiplication mismatch!!" << std::endl;
             // unable to do it, what should i return?
             return matrix;
         }

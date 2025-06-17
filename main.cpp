@@ -13,6 +13,8 @@
 float c;
 
 Model *model = nullptr;
+TGAImage tex_file(1024,1024,TGAImage::RGB);
+
 
 const int width = 1920;
 const int height = 1080;
@@ -20,10 +22,16 @@ const int height = 1080;
 Vec3f light_dir = Vec3f(0.0, 0.0, 1.0);
 
 struct GouraudShader: IShader {
-    Vec3f varying_intensity;
+    Vec3f varying_intensity; // intensity of a vertex
+    Matrix<float> varying_uv = Matrix<float>(2, 3); // 2x3 matrix containing uv coordinate of 3 vertex (a trig)
+    Matrix4x4f uniform_M; // Projection*ModelView
+    Matrix4x4f uniform_MIT; // same as above but invert_transpose()
     Matrix<float> vertex(int iface, int nthvert) override{
         Vec3f v = model->vert(iface, nthvert);
         Vec3f n = model->normal(iface, nthvert);
+        // TODO: UNFUCK THIS
+        varying_uv[0][nthvert] = model->texcoord(model->face_tex(iface)[nthvert]).x;
+        varying_uv[1][nthvert] = model->texcoord(model->face_tex(iface)[nthvert]).y;
         // Cap at 0
         varying_intensity[nthvert] = std::max(0.f, n*light_dir);
         return Viewport*Projection*ModelView*homogonize(v);
@@ -32,7 +40,13 @@ struct GouraudShader: IShader {
     bool fragment(Vec3f bar, TGAColor &color) override {
         float intensity = varying_intensity*bar;
         //color = TGAColor(255, 255, 255, 255) * intensity;
-        color = color * intensity;
+        // Convert barycentric vector to matrix
+        Matrix<float> bary = Matrix<float>(bar); // 1x3 row matrix that represent a vector
+        Matrix<float> uv = varying_uv*bary; // 1x2 Matrix (Basically a Vec2f)
+
+        // omfg...
+        TGAColor texColor = tex_file.get(uv[0][0] * tex_file.get_width(), uv[1][0] * tex_file.get_height());
+        color = texColor * intensity;
         return false;
     }
 };
@@ -59,7 +73,7 @@ int main(int argc, char** argv) {
         model = new Model(argv[1]);
     }
 
-    TGAImage tex_file(1024,1024,TGAImage::RGB);
+    //TGAImage tex_file(1024,1024,TGAImage::RGB);
     if(argc < 3) {
         tex_file.read_tga_file("obj/UV Grid.tga");
     } else {
@@ -67,6 +81,14 @@ int main(int argc, char** argv) {
     }
 
     tex_file.flip_vertically();
+
+    // TGAImage normal_file(1024, 1024, TGAImage::RGB);
+    // if(argc < 4) {
+    //     // TODO: ADD PLACEHOLDER NORMAL MAP
+    //     normal_file.read_tga_file("placeholder");
+    // } else {
+    //     normal_file.read_tga_file(argv[4]);
+    // }
 
     // Setup zbuffer
     auto *zbuffer = new float[width * height];

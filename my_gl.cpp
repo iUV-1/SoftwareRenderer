@@ -210,13 +210,14 @@ void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAImage &texture, Ve
                 P.z += pts[i][2]*bc_screen[i];
             }
             auto idx = static_cast<size_t>(P.x + P.y * width);
-            float u = bc_screen.x * texture_coords[0].u + bc_screen.y * texture_coords[1].u + bc_screen.z * texture_coords[2].u;
-            float v = bc_screen.x * texture_coords[0].v + bc_screen.y * texture_coords[1].v + bc_screen.z * texture_coords[2].v;
+            //float u = bc_screen.x * texture_coords[0].u + bc_screen.y * texture_coords[1].u + bc_screen.z * texture_coords[2].u;
+            //float v = bc_screen.x * texture_coords[0].v + bc_screen.y * texture_coords[1].v + bc_screen.z * texture_coords[2].v;
             if(zbuffer[idx] < P.z) {
                 zbuffer[idx] = P.z;
                 // Get texture color
-                TGAColor color = texture.get(u*texture.get_width(), v*texture.get_height());
+                //TGAColor color = texture.get(u*texture.get_width(), v*texture.get_height());
                 // Use shader
+                TGAColor color;
                 shader.fragment(bc_screen, color);
                 image.set(P.x, P.y, color);
             }
