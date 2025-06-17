@@ -61,6 +61,10 @@
 				},
 				{
 					"backtrace" : 3,
+					"fragment" : "-O2"
+				},
+				{
+					"backtrace" : 3,
 					"fragment" : "-fsanitize=address"
 				},
 				{

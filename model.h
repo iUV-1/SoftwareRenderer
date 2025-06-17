@@ -27,6 +27,7 @@ public:
     Vec3f normal(int i);
     Vec3f normal(int iface, int nthvert);
     Vec2f texcoord(int i);
+    Vec2f texcoord(int iface, int nthvert);
     std::vector<int> face(int idx);
     std::vector<int> face_tex(int idx);
 };

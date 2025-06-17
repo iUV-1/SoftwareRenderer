@@ -97,3 +97,7 @@ Vec3f Model::normal(int iface, int nthvert) {
 Vec2f Model::texcoord(int i) {
     return texcoords_[i];
 }
+
+Vec2f Model::texcoord(int iface, int nthvert) {
+    return texcoords_[faces_[iface][nthvert]];
+}
