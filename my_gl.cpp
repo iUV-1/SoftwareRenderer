@@ -94,17 +94,6 @@ void SetViewport(int width, int height, float depth) {
     Viewport[2][3] = depth/2.f;
     Viewport[2][2] = depth/2.f;
 }
-// Matrix4x4f world2screen(Vec3f v, int w, int h, float depth) {
-//     Matrix4x4f m = Matrix4x4f::identity();
-//     m[0][3] = v.x+w/2.f;
-//     m[1][3] = v.y+h/2.f;
-//     m[2][3] = depth/2.f;
-//
-//     m[0][0] = w/2.f;
-//     m[1][1] = h/2.f;
-//     m[2][2] = depth/2.f;
-//     return m;
-// }
 
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
     bool steep = false;
@@ -198,7 +187,7 @@ Vec3f barycentric(Vec3f A, Vec3f B, Vec3f C, Vec3f P) {
 
         return Vec3f(1.f-(u.x+u.y)/u.z, u.y/u.z, u.x/u.z);
 
-    return Vec3f(-1,1,1); // in this case generate negative coordinates, it will be thrown away by the rasterizator}
+    return Vec3f(-1,1,1); // in this case generate negative coordinates, it will be thrown away by the rasterizator
 }
 
 void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAImage &texture, Vec2f texture_coords[3], int width, IShader &shader) {

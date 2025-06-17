@@ -15,7 +15,7 @@ float c;
 Model *model = nullptr;
 
 const int width = 1920;
-const int height = 1920;
+const int height = 1080;
 
 Vec3f light_dir = Vec3f(0.0, 0.0, 1.0);
 

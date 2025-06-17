@@ -1,0 +1,14 @@
+# ninja log v6
+13	699	7595677249134317	CMakeFiles/SoftwareRenderer.dir/tgaimage.cpp.obj	a541c6ebbd86b93e
+29	752	7646583950989372	build.ninja	6a366d7796f93e6e
+13	903	7630943015826590	CMakeFiles/SoftwareRenderer.dir/model.cpp.obj	d2f34565a3b91987
+29	1336	7646578569651730	CMakeFiles/SoftwareRenderer.dir/main.cpp.obj	472774ee83f884d7
+1337	1568	7646578582724229	SoftwareRenderer.exe	be373a2de8f798e1
+66	845	7631104480134451	CMakeFiles/SoftwareRenderer.dir/my_gl.cpp.obj	f3daae0bdb36d8b5
+22	764	7630943015916594	CMakeFiles/SoftwareRenderer.dir/geometry.cpp.obj	c910a0913f770e9d
+32	799	7646584303398715	CMakeFiles/SoftwareRenderer.dir/tgaimage.cpp.obj	31300abf6eb88f0a
+46	843	7646584303537846	CMakeFiles/SoftwareRenderer.dir/geometry.cpp.obj	f5ad1f69f7de9550
+41	878	7646584303494274	CMakeFiles/SoftwareRenderer.dir/my_gl.cpp.obj	a157bfbffef07e88
+37	1006	7646584303446320	CMakeFiles/SoftwareRenderer.dir/model.cpp.obj	c9abf690975dec50
+27	1453	7646584303347803	CMakeFiles/SoftwareRenderer.dir/main.cpp.obj	4511f84d32b279c1
+1453	1981	7646584317600707	SoftwareRenderer.exe	1915db18c300c6df
