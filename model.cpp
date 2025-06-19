@@ -99,5 +99,5 @@ Vec2f Model::texcoord(int i) {
 }
 
 Vec2f Model::texcoord(int iface, int nthvert) {
-    return texcoords_[faces_[iface][nthvert]];
+    return texcoords_[faces_texture[iface][nthvert]];
 }
