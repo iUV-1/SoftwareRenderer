@@ -26,17 +26,16 @@ struct GouraudShader: IShader {
     Matrix<float> varying_uv = Matrix<float>(2, 3); // 2x3 matrix containing uv coordinate of 3 vertex (a trig)
     Matrix4x4f uniform_M; // Projection*ModelView
     Matrix4x4f uniform_MIT; // same as above but invert_transpose()
-    Matrix4x4f uniform_view;
 
     Matrix<float> vertex(int iface, int nthvert) override{
         Vec3f v = model->vert(iface, nthvert);
         Vec3f n = model->normal(iface, nthvert);
-        // Set the column of varying_uv to texture position in Vec2f
+        // Set the column of varying_uv to tex8ture position in Vec2f
         varying_uv[0][nthvert] = model->texcoord(iface, nthvert).x;
         varying_uv[1][nthvert] = model->texcoord(iface, nthvert).y;
         // Cap at 0
         varying_intensity[nthvert] = std::max(0.f, n*light_dir);
-        return uniform_view*homogonize(v);
+        return Viewport*uniform_M*homogonize(v);
     }
     // bar is the barycentric of that vertex
     bool fragment(Vec3f bar, TGAColor &color) override {
@@ -48,12 +47,11 @@ struct GouraudShader: IShader {
         // Matrix<float> uv = varying_uv*Matrix(bar) <- Slower!
         Matrix<float> uv = varying_uv*bary; // 1x2 Matrix (Basically a Vec2f)
 
-        // normal vector
+        /// Insanely costly calculations
         // Transform the normal vector to the eye space
-        Vec3f n = dehomogonize(uniform_MIT*homogonize(model->normal(uv[0][0], uv[1][0]))).normalize();
-        // light vector
+        //Vec3f n = dehomogonize(uniform_MIT*homogonize(model->normal(uv[0][0], uv[1][0]))).normalize();
         // Same as above
-        Vec3f l = dehomogonize(uniform_M *homogonize(light_dir)).normalize();
+        //Vec3f l = dehomogonize(uniform_M *homogonize(light_dir)).normalize();
         // omfg...
         //float intensity = std::max(0.f, n*l);
         TGAColor texColor = tex_file.get(uv[0][0] * tex_file.get_width(), uv[1][0] * tex_file.get_height());
@@ -121,7 +119,6 @@ int main(int argc, char** argv) {
     shader.uniform_M = Projection*ModelView;
     shader.uniform_MIT = shader.uniform_M;
     shader.uniform_MIT.inverseTranspose();
-    shader.uniform_view = Viewport*Projection*ModelView;
     light_dir.normalize();
     auto render = std::chrono::system_clock::now();
     for (int i=0; i<model->nfaces(); ++i) {

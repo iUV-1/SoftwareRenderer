@@ -12,7 +12,7 @@ Matrix4x4f Viewport;
 
 // Create a homogonized matrix from a vector
 Matrix<float> homogonize(Vec3f v) {
-    Matrix<float> result = Matrix<float>(4, 1);
+    Matrix<float> result(4, 1);
     result[0][0] = v.x;
     result[1][0] = v.y;
     result[2][0] = v.z;
