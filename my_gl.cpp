@@ -193,6 +193,7 @@ Vec3f barycentric(Vec3f A, Vec3f B, Vec3f C, Vec3f P) {
 void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, int width, IShader &shader) {
     Vec2f bboxmin( std::numeric_limits<float>::max(),  std::numeric_limits<float>::max());
     Vec2f bboxmax(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
+    std::cout << pts[0] << pts[1] << pts[2] << std::endl;
     Vec2f clamp(image.get_width()-1, image.get_height()-1);
     for (int i=0; i<3; i++) {
         for (int j=0; j<2; j++) {

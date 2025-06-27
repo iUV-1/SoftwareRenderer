@@ -16,8 +16,8 @@ Model *model = nullptr;
 TGAImage tex_file(1024,1024,TGAImage::RGB);
 TGAImage normal_file(1024, 1024, TGAImage::RGB);
 
-const int width = 800;
-const int height = 800;
+const int width = 255;
+const int height = 255;
 
 Vec3f light_dir = Vec3f(0.0, 0.0, 1.0);
 
@@ -72,7 +72,44 @@ Vec3f rasterize(GouraudShader *shader, int iface, int nthvert) {
     return result;
 }
 
+struct RainbowShader: IShader {
+    Matrix<float> vertex(int iface, int nthvert) override{
+        Matrix<float> dummy = Matrix4x4f();
+        return dummy;
+    }
+
+    bool fragment(Vec3f bar, TGAColor &color) override{
+        TGAColor rainbow(bar.x * 255, bar.y * 255, bar.z * 255, 255);
+        color = rainbow;
+        return false;
+    }
+};
+
 int main(int argc, char** argv) {
+
+    /* the famous rainbow triangle */
+    if (true) {
+        float *zbuffer = new float[width*height];
+        std::fill(zbuffer, zbuffer + width*height, -std::numeric_limits<float>::max()); // set every value in zbuffer to -inf
+
+        Vec3f pt1(0, 0, 0);
+        Vec3f pt2(128, 256, 0);
+        Vec3f pt3(256, 0, 0);
+        Vec3f trig[3] = {pt1, pt2, pt3};
+
+        RainbowShader shader = RainbowShader();
+
+        auto frame = new TGAImage(width, width, TGAImage::RGB);
+
+        triangle(trig, *frame, zbuffer, width, shader);
+        frame->flip_vertically();
+        // Get timing of the render
+        frame->write_tga_file("rainbow triangle.tga");
+        delete[] zbuffer;
+        delete frame;
+        return 0;
+    }
+
     // Time the render
     auto before = std::chrono::system_clock::now();
 

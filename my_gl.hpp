@@ -25,6 +25,7 @@ void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAColor const &color
 Matrix<float> homogonize(Vec3f v);
 Vec3f dehomogonize(Matrix<float> const &m);
 Vec3f project(Vec3f v);
+Vec3f barycentric(Vec3f A, Vec3f B, Vec3f C, Vec3f P);
 void Project(float coeff);
 void LookAt(Vec3f eye, Vec3f center, Vec3f up);
 void world2screen(Vec3f v, int w, int h, float depth);

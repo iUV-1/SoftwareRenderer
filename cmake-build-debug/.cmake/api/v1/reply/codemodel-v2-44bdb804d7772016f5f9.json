@@ -39,11 +39,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "SoftwareRenderer::@6890427a1f51a3e7e1df",
-<<<<<<<< HEAD:for publishing/src/cmake-build-debug/.cmake/api/v1/reply/codemodel-v2-4ce8368f6484a3a2f3e9.json
-					"jsonFile" : "target-SoftwareRenderer-Debug-57537b5d5adb4e200757.json",
-========
-					"jsonFile" : "target-SoftwareRenderer-Debug-e91b25533adfc97ad87f.json",
->>>>>>>> d835614f3784fd963200dbbb7bfa92d83b42ddca:cmake-build-debug/.cmake/api/v1/reply/codemodel-v2-d7989308171dd5050857.json
+					"jsonFile" : "target-SoftwareRenderer-Debug-595c46540a312aa449fe.json",
 					"name" : "SoftwareRenderer",
 					"projectIndex" : 0
 				}
@@ -53,8 +49,8 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "C:/Users/iUV/Documents/Programming/SoftwareRenderer/cmake-build-debug",
-		"source" : "C:/Users/iUV/Documents/Programming/SoftwareRenderer"
+		"build" : "C:/Users/iUV/Documents/Programming/_SoftwareRenderer/cmake-build-debug",
+		"source" : "C:/Users/iUV/Documents/Programming/_SoftwareRenderer"
 	},
 	"version" : 
 	{

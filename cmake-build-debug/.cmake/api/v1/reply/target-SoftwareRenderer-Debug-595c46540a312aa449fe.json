@@ -65,13 +65,6 @@
 				{
 					"backtrace" : 3,
 					"fragment" : "-O2"
-<<<<<<<< HEAD:cmake-build-debug/.cmake/api/v1/reply/target-SoftwareRenderer-Debug-5d5ef974d023bdbec99e.json
-========
-				},
-				{
-					"backtrace" : 3,
-					"fragment" : "-fsanitize=address"
->>>>>>>> d835614f3784fd963200dbbb7bfa92d83b42ddca:cmake-build-debug/.cmake/api/v1/reply/target-SoftwareRenderer-Debug-e91b25533adfc97ad87f.json
 				},
 				{
 					"backtrace" : 3,
@@ -93,7 +86,8 @@
 				2,
 				3,
 				6,
-				8
+				8,
+				9
 			]
 		}
 	],
@@ -139,7 +133,8 @@
 				2,
 				3,
 				6,
-				8
+				8,
+				9
 			]
 		},
 		{
@@ -203,6 +198,12 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "geometry.cpp",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "that_triangle.cpp",
 			"sourceGroupIndex" : 0
 		}
 	],
