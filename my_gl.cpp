@@ -12,7 +12,7 @@ Matrix4x4f Viewport;
 
 // Create a homogonized matrix from a vector
 Matrix<float> homogonize(Vec3f v) {
-    Matrix<float> result = Matrix<float>(4, 1);
+    Matrix<float> result(4, 1);
     result[0][0] = v.x;
     result[1][0] = v.y;
     result[2][0] = v.z;
@@ -190,7 +190,7 @@ Vec3f barycentric(Vec3f A, Vec3f B, Vec3f C, Vec3f P) {
     return Vec3f(-1,1,1); // in this case generate negative coordinates, it will be thrown away by the rasterizator
 }
 
-void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAImage &texture, Vec2f texture_coords[3], int width, IShader &shader) {
+void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, int width, IShader &shader) {
     Vec2f bboxmin( std::numeric_limits<float>::max(),  std::numeric_limits<float>::max());
     Vec2f bboxmax(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
     Vec2f clamp(image.get_width()-1, image.get_height()-1);
@@ -210,12 +210,8 @@ void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAImage &texture, Ve
                 P.z += pts[i][2]*bc_screen[i];
             }
             auto idx = static_cast<size_t>(P.x + P.y * width);
-            //float u = bc_screen.x * texture_coords[0].u + bc_screen.y * texture_coords[1].u + bc_screen.z * texture_coords[2].u;
-            //float v = bc_screen.x * texture_coords[0].v + bc_screen.y * texture_coords[1].v + bc_screen.z * texture_coords[2].v;
             if(zbuffer[idx] < P.z) {
                 zbuffer[idx] = P.z;
-                // Get texture color
-                //TGAColor color = texture.get(u*texture.get_width(), v*texture.get_height());
                 // Use shader
                 TGAColor color;
                 shader.fragment(bc_screen, color);
