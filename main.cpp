@@ -15,11 +15,12 @@ float c;
 Model *model = nullptr;
 TGAImage tex_file(1024,1024,TGAImage::RGB);
 TGAImage normal_file(1024, 1024, TGAImage::RGB);
+bool use_normal_map = false;
 
 const int width = 800;
 const int height = 800;
 
-Vec3f light_dir = Vec3f(0.0, 0.0, 1.0);
+Vec3f light = Vec3f(0.0, 0.0, 1.0);
 
 struct GouraudShader: IShader {
     Vec3f varying_intensity; // intensity of a vertex
@@ -34,13 +35,13 @@ struct GouraudShader: IShader {
         varying_uv[0][nthvert] = model->texcoord(iface, nthvert).x;
         varying_uv[1][nthvert] = model->texcoord(iface, nthvert).y;
         // Cap at 0
-        varying_intensity[nthvert] = std::max(0.f, n*light_dir);
+        //varying_intensity[nthvert] = std::max(0.f, n*light);
         return Viewport*uniform_M*homogonize(v, 1.);
     }
     // bar is the barycentric of that vertex
     bool fragment(Vec3f bar, TGAColor &color) override {
         // Cap at 0
-        float intensity = std::max(0.f, varying_intensity*bar);
+        //float intensity = std::max(0.f, varying_intensity*bar);
         // Convert barycentric vector to a matrix
         // NOTE: Somehow making a new variable is faster than making it inline?
         Matrix bary(bar); // 1x3 row matrix that represent a vector
@@ -49,11 +50,19 @@ struct GouraudShader: IShader {
 
         /// Insanely costly calculations
         // Transform the normal vector to the eye space
-        //Vec3f n = dehomogonize(uniform_MIT*homogonize(model->normal(uv[0][0], uv[1][0]), 0.)).normalize();
+        Vec3f normal_vector;
+        if(!use_normal_map)
+            normal_vector = model->normal(uv[0][0], uv[1][0]);
+        else {
+            TGAColor normal_color = normal_file.get(uv[0][0] * normal_file.get_width(), uv[1][0] * normal_file.get_height());
+            normal_vector = Vec3f(normal_color.r, normal_color.g, normal_color.b);
+        }
+        Vec3f n = dehomogonize(uniform_MIT*homogonize(normal_vector, 0.)).normalize();
+
         // Same as above
-        //Vec3f l = dehomogonize(uniform_M *homogonize(light_dir, 0.)).normalize();
+        Vec3f l = dehomogonize(uniform_M *homogonize(light, 0.)).normalize();
         // omfg...
-        //float intensity = std::max(0.f, n*l);
+        float intensity = std::max(0.f, n*l);
         TGAColor texColor = tex_file.get(uv[0][0] * tex_file.get_width(), uv[1][0] * tex_file.get_height());
         color = texColor * intensity;
         return false;
@@ -128,13 +137,15 @@ int main(int argc, char** argv) {
 
     tex_file.flip_vertically();
 
-    // TGAImage normal_file(1024, 1024, TGAImage::RGB);
-    // if(argc < 4) {
-    //     // TODO: ADD PLACEHOLDER NORMAL MAP
-    //     normal_file.read_tga_file("placeholder");
-    // } else {
-    //     normal_file.read_tga_file(argv[4]);
-    // }
+    if(argc < 4) {
+        // If not, just use the normal vector included in the model
+        //normal_file.read_tga_file("placeholder");
+    } else {
+        normal_file.read_tga_file(argv[3]);
+        normal_file.flip_vertically();
+        use_normal_map = true;
+
+    }
 
     // Setup zbuffer
     float zbuffer[width*height];
@@ -156,7 +167,7 @@ int main(int argc, char** argv) {
     shader.uniform_M = Projection*ModelView;
     shader.uniform_MIT = shader.uniform_M;
     shader.uniform_MIT.inverseTranspose();
-    light_dir.normalize();
+    //light.normalize();
     auto render = std::chrono::system_clock::now();
     for (int i=0; i<model->nfaces(); ++i) {
         Vec3f screen_coords[3];
