@@ -79,12 +79,6 @@ build CMakeFiles/SoftwareRenderer.dir/geometry.cpp.obj: CXX_COMPILER__SoftwareRe
   OBJECT_DIR = CMakeFiles\SoftwareRenderer.dir
   OBJECT_FILE_DIR = CMakeFiles\SoftwareRenderer.dir
 
-build CMakeFiles/SoftwareRenderer.dir/that_triangle.cpp.obj: CXX_COMPILER__SoftwareRenderer_unscanned_Debug C$:/Users/iUV/Documents/Programming/_SoftwareRenderer/that_triangle.cpp || cmake_object_order_depends_target_SoftwareRenderer
-  DEP_FILE = CMakeFiles\SoftwareRenderer.dir\that_triangle.cpp.obj.d
-  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always -Wall -Wextra -O2 -g
-  OBJECT_DIR = CMakeFiles\SoftwareRenderer.dir
-  OBJECT_FILE_DIR = CMakeFiles\SoftwareRenderer.dir
-
 
 # =============================================================================
 # Link build statements for EXECUTABLE target SoftwareRenderer
@@ -93,7 +87,7 @@ build CMakeFiles/SoftwareRenderer.dir/that_triangle.cpp.obj: CXX_COMPILER__Softw
 #############################################
 # Link the executable SoftwareRenderer.exe
 
-build SoftwareRenderer.exe: CXX_EXECUTABLE_LINKER__SoftwareRenderer_Debug CMakeFiles/SoftwareRenderer.dir/main.cpp.obj CMakeFiles/SoftwareRenderer.dir/tgaimage.cpp.obj CMakeFiles/SoftwareRenderer.dir/model.cpp.obj CMakeFiles/SoftwareRenderer.dir/my_gl.cpp.obj CMakeFiles/SoftwareRenderer.dir/geometry.cpp.obj CMakeFiles/SoftwareRenderer.dir/that_triangle.cpp.obj
+build SoftwareRenderer.exe: CXX_EXECUTABLE_LINKER__SoftwareRenderer_Debug CMakeFiles/SoftwareRenderer.dir/main.cpp.obj CMakeFiles/SoftwareRenderer.dir/tgaimage.cpp.obj CMakeFiles/SoftwareRenderer.dir/model.cpp.obj CMakeFiles/SoftwareRenderer.dir/my_gl.cpp.obj CMakeFiles/SoftwareRenderer.dir/geometry.cpp.obj
   FLAGS = -g
   LINK_FLAGS = -g
   LINK_LIBRARIES = -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32

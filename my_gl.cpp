@@ -11,12 +11,12 @@ Matrix4x4f Projection;
 Matrix4x4f Viewport;
 
 // Create a homogonized matrix from a vector
-Matrix<float> homogonize(Vec3f v) {
+Matrix<float> homogonize(Vec3f v, float h) {
     Matrix<float> result(4, 1);
     result[0][0] = v.x;
     result[1][0] = v.y;
     result[2][0] = v.z;
-    result[3][0] = 1;
+    result[3][0] = h;
     return result;
 }
 
@@ -37,7 +37,7 @@ Vec3f dehomogonize(Matrix<float> const &m) {
 // Old function. Meant to project the points using a projection matrix
 Vec3f project(Vec3f v) {
     // row matrix
-    Matrix<float> homogonized = homogonize(v);
+    Matrix<float> homogonized = homogonize(v, 1);
     //Matrix<float> transformed = transfrom.multiply(homogonized); // Matrix4x4f multiply by homogonized vector
     Matrix<float> transformed = Projection*homogonized;
     Vec3f result = dehomogonize(transformed);
@@ -193,7 +193,7 @@ Vec3f barycentric(Vec3f A, Vec3f B, Vec3f C, Vec3f P) {
 void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, int width, IShader &shader) {
     Vec2f bboxmin( std::numeric_limits<float>::max(),  std::numeric_limits<float>::max());
     Vec2f bboxmax(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
-    std::cout << pts[0] << pts[1] << pts[2] << std::endl;
+    //std::cout << pts[0] << pts[1] << pts[2] << std::endl;
     Vec2f clamp(image.get_width()-1, image.get_height()-1);
     for (int i=0; i<3; i++) {
         for (int j=0; j<2; j++) {

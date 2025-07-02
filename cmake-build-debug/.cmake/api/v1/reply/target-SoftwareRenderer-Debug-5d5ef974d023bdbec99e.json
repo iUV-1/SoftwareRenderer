@@ -86,8 +86,7 @@
 				2,
 				3,
 				6,
-				8,
-				9
+				8
 			]
 		}
 	],
@@ -133,8 +132,7 @@
 				2,
 				3,
 				6,
-				8,
-				9
+				8
 			]
 		},
 		{
@@ -198,12 +196,6 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "geometry.cpp",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "that_triangle.cpp",
 			"sourceGroupIndex" : 0
 		}
 	],
