@@ -20,7 +20,7 @@ bool use_normal_map = false;
 const int width = 800;
 const int height = 800;
 
-Vec3f light = Vec3f(0.0, 0.0, 1.0);
+Vec3f light = Vec3f(0.0, 0.0, 2.0);
 
 // Gouraud Shader uses vertex data to calculate light value
 struct GouraudShader: IShader {
@@ -55,7 +55,7 @@ struct GouraudShader: IShader {
     }
 };
 
-/*
+
 // Phong Shader uses interpolation and fragment to better represent color on that triangle
 struct PhongShader: IShader {
     Matrix<float> varying_uv = Matrix<float>(2, 3); // 2x3 matrix containing uv coordinate of 3 vertex (a trig)
@@ -95,15 +95,14 @@ struct PhongShader: IShader {
         float diff = std::max(0.f, n * l); // diffuse intensity value
         // specular is supposed to be the specular map of that model
         // but the specular map isnt provided by the course so...
-        float spec = pow(std::max(r.z, 0.f), specular(uv)); // specular value
+        float spec = pow(std::max(r.z, 0.f), 0.f); // specular value
         TGAColor texColor = tex_file.get(uv[0][0] * tex_file.get_width(), uv[1][0] * tex_file.get_height());
         std::min(255.f, 255.f);
-        for (int i = 0; i < 3; i++) color[i] = std::min(5 + texColor[i]*(diff + .6*spec), 255);
-        //color = texColor * diff;
+        for (int i = 0; i < 3; i++) color[i] = std::min<float>(5 + texColor[i]*(diff + .0*spec), 255.f);
         return false;
     }
 };
- */
+
 
 struct RainbowShader: IShader {
     Matrix<float> vertex(int iface, int nthvert) override{
@@ -173,10 +172,9 @@ int main(int argc, char** argv) {
 
     tex_file.flip_vertically();
 
-    if(argc < 4) {
-        // If not, just use the normal vector included in the model
-        //normal_file.read_tga_file("placeholder");
-    } else {
+    // Check if normal map is included in the args
+    // If not, use the model embeded normal
+    if(argc >= 3) {
         normal_file.read_tga_file(argv[3]);
         normal_file.flip_vertically();
         use_normal_map = true;
@@ -189,7 +187,7 @@ int main(int argc, char** argv) {
     auto frame = TGAImage(width, height, TGAImage::RGB);
 
     // camera setting
-    Vec3f eye(3, 2, 3);
+    Vec3f eye(0, 0, 2);
     Vec3f cam(0, 0, 0);
     Vec3f up(0, 1, 0);
 
@@ -198,7 +196,8 @@ int main(int argc, char** argv) {
     Project(5);
     SetViewport(width, height, 255.0f);
 
-    GouraudShader shader = GouraudShader();
+  GouraudShader shader = GouraudShader();
+//    PhongShader shader = PhongShader();
     shader.uniform_M = Projection*ModelView;
     shader.uniform_MIT = shader.uniform_M;
     shader.uniform_MIT.inverseTranspose();
@@ -219,8 +218,10 @@ int main(int argc, char** argv) {
         // calculate eye intensity by dot product between normal and eye vector
         float view_dir_intensity = eye*n;
         // back face culling
+
         if (view_dir_intensity<1) {
             triangle(screen_coords, frame, zbuffer, width, shader);
+
         }
     }
     // set origin to the bottom left corner

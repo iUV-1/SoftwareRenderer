@@ -64,6 +64,13 @@ struct TGAColor {
         b *= val;
         return *this;
     }
+
+    unsigned char & operator [](const int i) {
+        if(i == 0) return r;
+        if(i == 1) return g;
+        if(i == 2) return b;
+        // if its not either one of these 3, you're fucked.
+    }
 };
 
 
