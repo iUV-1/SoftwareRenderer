@@ -120,8 +120,9 @@ public:
         }
     }
 
-    Matrix<T> operator*(Matrix<T> const &other) { return this->multiply(other); }
 
+
+    Matrix<T> operator*(Matrix<T> const &other) { return this->multiply(other); }
     template<class U>
     friend Matrix<U> operator*( Matrix const &cur,  Matrix4x4<U> const &other);
 };
@@ -243,10 +244,22 @@ public:
          }
      }
 
+
      inline Matrix4x4<T> operator*( Matrix4x4<T> const &other) { return this->multiply4x4(other); };
      template <typename U>
      friend  Matrix<U> operator* ( Matrix4x4<U> const &cur,  Matrix<U> const &other);
 };
 
+ template <typename T>
+ Matrix<T> operator* ( Matrix<T> const &cur,  Matrix4x4<T> const &other) {
+     return cur.multiply(other);
+ }
+
+ template<typename T>
+ Matrix<T> operator* ( Matrix4x4<T> const &cur,  Matrix<T> const &other) {
+     return cur.multiply(other);
+ }
+ template Matrix<float> operator*( Matrix<float> const & ,  Matrix4x4<float> const &);
+ template Matrix<float> operator*( Matrix4x4<float> const &,  Matrix<float> const &);
 typedef Matrix4x4<float> Matrix4x4f;
 #endif //__GEOMETRY_H__

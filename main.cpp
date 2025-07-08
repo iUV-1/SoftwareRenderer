@@ -13,7 +13,7 @@
 float c;
 
 Model *model = nullptr;
-TGAImage tex_file(1024,1024,TGAImage::RGB);
+TGAImage tex_file(1024 ,1024,TGAImage::RGB);
 TGAImage normal_file(1024, 1024, TGAImage::RGB);
 bool use_normal_map = false;
 
@@ -22,6 +22,7 @@ const int height = 800;
 
 Vec3f light = Vec3f(0.0, 0.0, 1.0);
 
+// Gouraud Shader uses vertex data to calculate light value
 struct GouraudShader: IShader {
     Vec3f varying_intensity; // intensity of a vertex
     Matrix<float> varying_uv = Matrix<float>(2, 3); // 2x3 matrix containing uv coordinate of 3 vertex (a trig)
@@ -35,51 +36,74 @@ struct GouraudShader: IShader {
         varying_uv[0][nthvert] = model->texcoord(iface, nthvert).x;
         varying_uv[1][nthvert] = model->texcoord(iface, nthvert).y;
         // Cap at 0
-        //varying_intensity[nthvert] = std::max(0.f, n*light);
+        varying_intensity[nthvert] = std::max(0.f, n*light);
         return Viewport*uniform_M*homogonize(v, 1.);
     }
     // bar is the barycentric of that vertex
     bool fragment(Vec3f bar, TGAColor &color) override {
         // Cap at 0
-        //float intensity = std::max(0.f, varying_intensity*bar);
+        float intensity = std::max(0.f, varying_intensity*bar);
         // Convert barycentric vector to a matrix
         // NOTE: Somehow making a new variable is faster than making it inline?
-        Matrix bary(bar); // 1x3 row matrix that represent a vector
+        Matrix<float> bary = Matrix(bar); // 1x3 row matrix that represent a vector
         // Matrix<float> uv = varying_uv*Matrix(bar) <- Slower!
         Matrix<float> uv = varying_uv*bary; // 1x2 Matrix (Basically a Vec2f)
 
-        /// Insanely costly calculations
-        // Transform the normal vector to the eye space
-        Vec3f normal_vector;
-        if(!use_normal_map)
-            normal_vector = model->normal(uv[0][0], uv[1][0]);
-        else {
-            TGAColor normal_color = normal_file.get(uv[0][0] * normal_file.get_width(), uv[1][0] * normal_file.get_height());
-            normal_vector = Vec3f(normal_color.r, normal_color.g, normal_color.b);
-        }
-        Vec3f n = dehomogonize(uniform_MIT*homogonize(normal_vector, 0.)).normalize();
-
-        // Same as above
-        Vec3f l = dehomogonize(uniform_M *homogonize(light, 0.)).normalize();
-        // omfg...
-        float intensity = std::max(0.f, n*l);
         TGAColor texColor = tex_file.get(uv[0][0] * tex_file.get_width(), uv[1][0] * tex_file.get_height());
         color = texColor * intensity;
         return false;
     }
 };
 
-Vec3f rasterize(GouraudShader *shader, int iface, int nthvert) {
-    // Apply vertex shader
-    Matrix<float> homogonized = shader->vertex(iface, nthvert);
-    Vec3f result = dehomogonize(homogonized);
-    // Round the result to apply to screen
-    result.x = std::round(result.x);
-    result.y = std::round(result.y);
-    result.z = std::round(result.z);
+/*
+// Phong Shader uses interpolation and fragment to better represent color on that triangle
+struct PhongShader: IShader {
+    Matrix<float> varying_uv = Matrix<float>(2, 3); // 2x3 matrix containing uv coordinate of 3 vertex (a trig)
+    Matrix4x4f uniform_M; // Projection*ModelView
+    Matrix4x4f uniform_MIT; // same as above but invert_transpose()
 
-    return result;
-}
+    Matrix<float> vertex(int iface, int nthvert) override{
+        Vec3f v = model->vert(iface, nthvert);
+        // Set the column of varying_uv to texture position in Vec2f
+        varying_uv[0][nthvert] = model->texcoord(iface, nthvert).x;
+        varying_uv[1][nthvert] = model->texcoord(iface, nthvert).y;
+        return Viewport*uniform_M*homogonize(v, 1.);
+    }
+    // bar is the barycentric of that vertex
+    bool fragment(Vec3f bar, TGAColor &color) override {
+        // Convert barycentric vector to a matrix
+        // NOTE: Somehow making a new variable is faster than making it inline?
+        Matrix<float> bary = Matrix(bar); // 1x3 row matrix that represent a vector
+        // Matrix<float> uv = varying_uv*Matrix(bar) <- Slower!
+        Matrix<float> uv = varying_uv*bary; // 1x2 Matrix (Basically a Vec2f)
+
+        /// Insanely costly calculations
+        // Get the normal vector of that mesh based on the setting
+        Vec3f n;
+        if(!use_normal_map)
+            n = model->normal(uv[0][0], uv[1][0]);
+        else {
+            TGAColor normal_color = normal_file.get(uv[0][0] * normal_file.get_width(), uv[1][0] * normal_file.get_height());
+            n = Vec3f(normal_color.r, normal_color.g, normal_color.b);
+        }
+        // Transform the normal vector to the eye space
+        n = dehomogonize(uniform_MIT*homogonize(n, 0.)).normalize();
+
+        // Same as above
+        Vec3f l = dehomogonize(uniform_M *homogonize(light, 0.)).normalize();
+        Vec3f r = (n*(n*l*2.f) - l).normalize(); // reflection vector
+        float diff = std::max(0.f, n * l); // diffuse intensity value
+        // specular is supposed to be the specular map of that model
+        // but the specular map isnt provided by the course so...
+        float spec = pow(std::max(r.z, 0.f), specular(uv)); // specular value
+        TGAColor texColor = tex_file.get(uv[0][0] * tex_file.get_width(), uv[1][0] * tex_file.get_height());
+        std::min(255.f, 255.f);
+        for (int i = 0; i < 3; i++) color[i] = std::min(5 + texColor[i]*(diff + .6*spec), 255);
+        //color = texColor * diff;
+        return false;
+    }
+};
+ */
 
 struct RainbowShader: IShader {
     Matrix<float> vertex(int iface, int nthvert) override{
@@ -93,6 +117,18 @@ struct RainbowShader: IShader {
         return false;
     }
 };
+
+Vec3f rasterize(IShader *shader, int iface, int nthvert) {
+    // Apply vertex shader
+    Matrix<float> homogonized = shader->vertex(iface, nthvert);
+    Vec3f result = dehomogonize(homogonized);
+    // Round the result to apply to screen
+    result.x = std::round(result.x);
+    result.y = std::round(result.y);
+    result.z = std::round(result.z);
+
+    return result;
+}
 
 int main(int argc, char** argv) {
 
@@ -144,14 +180,13 @@ int main(int argc, char** argv) {
         normal_file.read_tga_file(argv[3]);
         normal_file.flip_vertically();
         use_normal_map = true;
-
     }
 
     // Setup zbuffer
-    float zbuffer[width*height];
+    float *zbuffer = new float[width*height];
     std::fill(zbuffer, zbuffer + width*height, -std::numeric_limits<float>::max()); // set every value in zbuffer to -inf
 
-    TGAImage frame(width, height, TGAImage::RGB);
+    auto frame = TGAImage(width, height, TGAImage::RGB);
 
     // camera setting
     Vec3f eye(3, 2, 3);
@@ -208,5 +243,6 @@ int main(int argc, char** argv) {
     std::cout << "Render time: " << ms.count() << " ms" << std::endl;
 
     delete model;
+    delete[] zbuffer;
     return 0;
 }
