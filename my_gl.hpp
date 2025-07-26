@@ -21,6 +21,7 @@ struct IShader {
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color);
 void line(Vec2i t0, Vec2i t1, TGAImage &image, TGAColor color);
 void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, int width, IShader &shader);
+void wireframe_trig(Vec3f *pts, TGAImage &image, TGAColor color);
 void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAColor const &color, int width);
 Matrix<float> homogonize(Vec3f v, float h);
 Vec3f dehomogonize(Matrix<float> const &m);

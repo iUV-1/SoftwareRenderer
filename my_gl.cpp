@@ -172,6 +172,47 @@ void line(Vec2<int> t0, Vec2<int> t1, TGAImage &image, TGAColor color) {
     }
 }
 
+// Overload with vec3
+void line(Vec3f t0, Vec3f t1, TGAImage &image, TGAColor color) {
+    int x0 = t0.x;
+    int y0 = t0.y;
+    int x1 = t1.x;
+    int y1 = t1.y;
+    bool steep = false;
+    // If it's too steep, swap it due to the algo struggling with steep lines
+    if(std::abs(x0-x1) < std::abs(y0-y1)) {
+        std::swap(x0, y0);
+        std::swap(x1,y1);
+        steep = true;
+    }
+
+    if(x0>x1) {
+        std::swap(x0, x1);
+        std::swap(y0, y1);
+    }
+
+    int dx = x1 - x0;
+    int dy = y1 - y0;
+    // slope of the line
+    float derror = std::abs(dy)*2;
+    float error = 0;
+    int y = y0;
+
+    for (float x=x0; x<=x1; x++) {
+        if(steep) {
+            image.set(y, x, color);
+        } else {
+            image.set(x, y, color);
+        }
+        // if the error gets too big, increment y
+        error += derror;
+        if (error>dx) {
+            y += (y1>y0?1:-1);
+            error -= dx*2;
+        }
+    }
+}
+
 // Calculate barycentric value of a point in a triangle
 // Returns (-1, 1, 1) in case the triangle is degenerate
 Vec3f barycentric(Vec3f A, Vec3f B, Vec3f C, Vec3f P) {
@@ -222,35 +263,11 @@ void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, int width, IShader &s
     }
 }
 
-
-// Overload that is just intensity
-void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAColor const &color, int width) {
-    Vec2f bboxmin( std::numeric_limits<float>::max(),  std::numeric_limits<float>::max());
-    Vec2f bboxmax(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
-    Vec2f clamp(image.get_width()-1, image.get_height()-1);
-    for (int i=0; i<3; i++) {
-        for (int j=0; j<2; j++) {
-            bboxmin[j] = std::max(0.f,      std::min(bboxmin[j], pts[i][j]));
-            bboxmax[j] = std::min(clamp[j], std::max(bboxmax[j], pts[i][j]));
-        }
-    }
-    Vec3f P;
-    for (P.x=bboxmin.x; P.x<=bboxmax.x; ++P.x) {
-        for (P.y=bboxmin.y; P.y<=bboxmax.y; ++P.y) {
-            Vec3f bc_screen  = barycentric(pts[0], pts[1], pts[2], P);
-            if (bc_screen.x<0 || bc_screen.y<0 || bc_screen.z<0) continue;
-            P.z = 0;
-            for (int i=0; i<3; ++i) {
-                P.z += pts[i][2]*bc_screen[i];
-            }
-            auto idx = static_cast<size_t>(P.x + P.y * width);
-            if(zbuffer[idx] < P.z) {
-                zbuffer[idx] = P.z;
-                //image.set(P.x, P.y, texture.get(u*texture.get_width(), v*texture.get_height()));
-                image.set(P.x, P.y, color);
-            }
-        }
-    }
+// Draw a triangle in wireframe mode
+void wireframe_trig(Vec3f *pts, TGAImage &image, TGAColor color) {
+    line(pts[0] ,pts[1], image, color);
+    line(pts[1], pts[2], image, color);
+    line(pts[0], pts[2], image, color);
 }
 
 /* retirement home */

@@ -15,21 +15,26 @@ float c;
 Model *model = nullptr;
 TGAImage tex_file(1024 ,1024,TGAImage::RGB);
 TGAImage normal_file(1024, 1024, TGAImage::RGB);
+TGAImage specular_file(1024, 1024, TGAImage::RGB);
 bool use_normal_map = false;
+bool use_specular_map = false;
 
 const int width = 800;
 const int height = 800;
 
-Vec3f light = Vec3f(0.0, 0.0, 2.0);
+const int depth = 255; // Far clipping plane
 
-// Gouraud Shader uses vertex data to calculate light value
-struct GouraudShader: IShader {
+Vec3f light = Vec3f(1.0, 1.0, 1.0);
+
+struct GouraudShaderReference: IShader {
     Vec3f varying_intensity; // intensity of a vertex
     Matrix<float> varying_uv = Matrix<float>(2, 3); // 2x3 matrix containing uv coordinate of 3 vertex (a trig)
     Matrix4x4f uniform_M; // Projection*ModelView
     Matrix4x4f uniform_MIT; // same as above but invert_transpose()
 
     Matrix<float> vertex(int iface, int nthvert) override{
+        light.normalize();
+        //light.normalize();
         Vec3f v = model->vert(iface, nthvert);
         Vec3f n = model->normal(iface, nthvert);
         // Set the column of varying_uv to texture position in Vec2f
@@ -48,9 +53,57 @@ struct GouraudShader: IShader {
         Matrix<float> bary = Matrix(bar); // 1x3 row matrix that represent a vector
         // Matrix<float> uv = varying_uv*Matrix(bar) <- Slower!
         Matrix<float> uv = varying_uv*bary; // 1x2 Matrix (Basically a Vec2f)
-
         TGAColor texColor = tex_file.get(uv[0][0] * tex_file.get_width(), uv[1][0] * tex_file.get_height());
         color = texColor * intensity;
+        return false;
+    }
+};
+
+// Gouraud Shader uses vertex data to calculate light value
+struct GouraudShader: IShader {
+    Vec3f varying_intensity; // intensity of a vertex
+    Matrix<float> varying_uv = Matrix<float>(2, 3); // 2x3 matrix containing uv coordinate of 3 vertex (a trig)
+    Matrix4x4f uniform_M; // Projection*ModelView
+    Matrix4x4f uniform_MIT; // same as above but invert_transpose()
+
+    Matrix<float> vertex(int iface, int nthvert) override{
+        //light.normalize();
+        Vec3f v = model->vert(iface, nthvert);
+        Vec3f n = model->normal(iface, nthvert);
+        // Set the column of varying_uv to texture position in Vec2f
+        varying_uv[0][nthvert] = model->texcoord(iface, nthvert).x;
+        varying_uv[1][nthvert] = model->texcoord(iface, nthvert).y;
+        // Cap at 0
+        varying_intensity[nthvert] = std::max(0.f, n*light);
+        return Viewport*Projection*ModelView*homogonize(v, 1.);
+    }
+    // bar is the barycentric of that vertex
+    bool fragment(Vec3f bar, TGAColor &color) override {
+        // Cap at 0
+        // Convert barycentric vector to a matrix
+        // NOTE: Somehow making a new variable is faster than making it inline?
+        Matrix<float> bary = Matrix(bar); // 1x3 row matrix that represent a vector
+        // Matrix<float> uv = varying_uv*Matrix(bar) <- Slower!
+        Matrix<float> uv = varying_uv*bary; // 1x2 Matrix (Basically a Vec2f)
+
+        Vec3f norm;
+        if(false)
+            norm = model->normal(uv[0][0], uv[1][0]);
+        else {
+            TGAColor normal_color = normal_file.get(uv[0][0] * normal_file.get_width(), uv[1][0] * normal_file.get_height());
+            norm = Vec3f(normal_color.r, normal_color.g, normal_color.b);
+        }
+        // Transforming
+        Vec3f l = dehomogonize(uniform_M  *homogonize(light, 0.f)).normalize();
+        //l.z = -l.z;
+        Vec3f n = dehomogonize(uniform_MIT*homogonize(norm, 0.f)).normalize();
+/*        if(varying_intensity*bar != n*l) {
+            std::cout << "mismatched value" << std::endl;
+        }*/
+        float diff = std::max(0.f, n * l); // diffuse intensity value
+
+        TGAColor texColor = tex_file.get(uv[0][0] * tex_file.get_width(), uv[1][0] * tex_file.get_height());
+        color = texColor * diff;
         return false;
     }
 };
@@ -75,35 +128,42 @@ struct PhongShader: IShader {
         // NOTE: Somehow making a new variable is faster than making it inline?
         Matrix<float> bary = Matrix(bar); // 1x3 row matrix that represent a vector
         // Matrix<float> uv = varying_uv*Matrix(bar) <- Slower!
-        Matrix<float> uv = varying_uv*bary; // 1x2 Matrix (Basically a Vec2f)
-
-        /// Insanely costly calculations
+        Matrix<float> mat_uv = varying_uv*bary; // 1x2 Matrix (Basically a Vec2f)
+        Vec2f uv = Vec2f(mat_uv[0][0], mat_uv[1][0]);
         // Get the normal vector of that mesh based on the setting
-        Vec3f n;
+        Vec3f norm;
         if(!use_normal_map)
-            n = model->normal(uv[0][0], uv[1][0]);
+            norm = model->normal(uv[0], uv[1]);
         else {
-            TGAColor normal_color = normal_file.get(uv[0][0] * normal_file.get_width(), uv[1][0] * normal_file.get_height());
-            n = Vec3f(normal_color.r, normal_color.g, normal_color.b);
+            TGAColor normal_color = normal_file.get(uv[0] * normal_file.get_width(), uv[1] * normal_file.get_height());
+            norm = Vec3f(normal_color.r, normal_color.g, normal_color.b);
         }
+        /// Insanely costly calculations
         // Transform the normal vector to the eye space
-        n = dehomogonize(uniform_MIT*homogonize(n, 0.)).normalize();
-
+        Vec3f n = dehomogonize(uniform_MIT*homogonize(norm, 0.f)).normalize();
         // Same as above
-        Vec3f l = dehomogonize(uniform_M *homogonize(light, 0.)).normalize();
+        Vec3f l = dehomogonize(uniform_M  *homogonize(light, 0.f)).normalize();
+        l.z = -l.z; // I think this formula is meant to work for a different axis?
         Vec3f r = (n*(n*l*2.f) - l).normalize(); // reflection vector
         float diff = std::max(0.f, n * l); // diffuse intensity value
-        // specular is supposed to be the specular map of that model
-        // but the specular map isnt provided by the course so...
-        float spec = pow(std::max(r.z, 0.f), 0.f); // specular value
-        TGAColor texColor = tex_file.get(uv[0][0] * tex_file.get_width(), uv[1][0] * tex_file.get_height());
-        std::min(255.f, 255.f);
-        for (int i = 0; i < 3; i++) color[i] = std::min<float>(5 + texColor[i]*(diff + .0*spec), 255.f);
+        // Specular
+        float spec = 0.f;
+        if(use_specular_map) {
+            float spec_map_val = specular_file.get(uv.x * specular_file.get_width(), uv.y * specular_file.get_height()).r;
+            spec = pow(std::max(r.z, 0.f), spec_map_val);
+        } else {
+            spec = std::max(r.z, 0.f);
+        }
+        TGAColor texColor = tex_file.get(uv.x * tex_file.get_width(), uv.y * tex_file.get_height());
+        for (int i = 0; i < 3; i++) color[i] = std::min<float>(5 + texColor[i]*(diff + .6*spec), 255.f);
+        color = texColor * diff;
+
         return false;
     }
 };
 
-
+// The famous Rainbow Triangle
+// vertex shader is discarded entirely
 struct RainbowShader: IShader {
     Matrix<float> vertex(int iface, int nthvert) override{
         Matrix<float> dummy = Matrix4x4f();
@@ -114,6 +174,34 @@ struct RainbowShader: IShader {
         TGAColor rainbow(bar.x * 255, bar.y * 255, bar.z * 255, 255);
         color = rainbow;
         return false;
+    }
+};
+
+// Copy zbuffer to a framebuffer (Image in this case)
+struct DepthShader: IShader {
+    Matrix<float> varying_uv = Matrix<float>(2, 3); // 2x3 matrix containing uv coordinate of 3 vertex (a trig)
+    Matrix4x4f uniform_M; // Projection*ModelView
+    Matrix3x3<float> varying_tri;
+
+    // Typical vertex rendering
+    Matrix<float> vertex(int iface, int nthvert) override{
+        Vec3f v = model->vert(iface, nthvert);
+        // Set the column of varying_uv to texture position in Vec2f
+        Matrix<float> transformed_vert = Viewport*uniform_M*homogonize(v, 1.);
+        Vec3f dehomo_vert = dehomogonize(transformed_vert);
+        varying_tri[nthvert] = {dehomo_vert.x, dehomo_vert.y, dehomo_vert.z };
+        return Viewport*uniform_M*homogonize(v, 1.);
+    }
+
+    //
+    bool fragment(Vec3f bar, TGAColor &color) override {
+        Matrix<float> bary(bar);
+        Matrix<float> pt = varying_tri * bary; // point interpolated after transformation
+        Vec3f p(pt[0][0], pt[0][1], pt[0][2]);
+
+        // Set the color based on how far is it from the camera
+        color = TGAColor(255, 255, 255, 255) * (p.z/depth);
+        return true;
     }
 };
 
@@ -180,28 +268,40 @@ int main(int argc, char** argv) {
         use_normal_map = true;
     }
 
+    if(argc >= 4) {
+        specular_file.read_tga_file(argv[4]);
+        specular_file.flip_vertically();
+        use_specular_map = true;
+    }
+
     // Setup zbuffer
     float *zbuffer = new float[width*height];
     std::fill(zbuffer, zbuffer + width*height, -std::numeric_limits<float>::max()); // set every value in zbuffer to -inf
 
     auto frame = TGAImage(width, height, TGAImage::RGB);
+    auto depth_buffer = TGAImage(width, height, TGAImage::RGB);
 
     // camera setting
     Vec3f eye(0, 0, 2);
     Vec3f cam(0, 0, 0);
     Vec3f up(0, 1, 0);
 
+    /*Vec3f eye(3, 2, 3);
+    Vec3f cam(0, 0, 0);
+    Vec3f up(0, 1, 0);*/
+
     // Setup GL
     LookAt(eye, cam, up);
     Project(5);
     SetViewport(width, height, 255.0f);
 
-  GouraudShader shader = GouraudShader();
-//    PhongShader shader = PhongShader();
+    //GouraudShader shader = GouraudShader();
+    PhongShader shader = PhongShader();
+// GouraudShaderReference shader = GouraudShaderReference();
     shader.uniform_M = Projection*ModelView;
     shader.uniform_MIT = shader.uniform_M;
     shader.uniform_MIT.inverseTranspose();
-    //light.normalize();
+
     auto render = std::chrono::system_clock::now();
     for (int i=0; i<model->nfaces(); ++i) {
         Vec3f screen_coords[3];
@@ -221,11 +321,40 @@ int main(int argc, char** argv) {
 
         if (view_dir_intensity<1) {
             triangle(screen_coords, frame, zbuffer, width, shader);
-
+            //wireframe_trig(screen_coords, frame, TGAColor(255, 255, 255, 255));
         }
     }
     // set origin to the bottom left corner
     frame.flip_vertically();
+
+    /* Depth map*/
+    DepthShader depth_shader = DepthShader();
+    light.normalize();
+    LookAt(light, cam, up);
+    depth_shader.uniform_M = Projection*ModelView;
+    for(int i = 0; i < model->nfaces(); ++i) {
+        Vec3f screen_coords[3];
+
+        for (int j=0; j<3; ++j)
+            screen_coords[j] = rasterize(&depth_shader, i, j);
+
+        // calculate normal
+        // ^ is an overloaded operator that performs cross product calculation
+        // world_coords[2] - world_coords[0] and the other are 2 vectors pointing from point
+        // world_coords[0].
+        Vec3f n = (screen_coords[2]-screen_coords[0])^(screen_coords[1]-screen_coords[0]);
+        n.normalize();
+        // calculate eye intensity by dot product between normal and eye vector
+        float view_dir_intensity = eye*n;
+        // back face culling
+
+        if (view_dir_intensity<1) {
+            triangle(screen_coords, depth_buffer, zbuffer, width, shader);
+            //wireframe_trig(screen_coords, frame, TGAColor(255, 255, 255, 255));
+        }
+    }
+    depth_buffer.flip_vertically();
+
     // Get timing of the render
     auto now = std::chrono::system_clock::now();
     auto finish_time = std::chrono::system_clock::to_time_t(now);
@@ -234,6 +363,8 @@ int main(int argc, char** argv) {
     sstream << "../output/" << local_time.tm_mon + 1 << "-" << local_time.tm_mday << "_"
             << local_time.tm_hour << "-" << local_time.tm_min << ".tga";
     frame.write_tga_file(sstream.str().c_str());
+    sstream << "_buffer.tga";
+    depth_buffer.write_tga_file(sstream.str().c_str());
 
     // How long the render takes
     std::chrono::duration<double> diff = now - before;
