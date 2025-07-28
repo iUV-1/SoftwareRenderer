@@ -387,7 +387,12 @@ int main(int argc, char** argv) {
         for (int j=0; j<3; ++j)
             screen_coords[j] = rasterize(&depth_shader, i, j);
 
-        triangle(screen_coords, depth_buffer, depth_buffer_arr, width, depth_shader);
+        Vec3f n = (screen_coords[2]-screen_coords[0])^(screen_coords[1]-screen_coords[0]);
+        n.normalize();
+        float view_dir_intensity = eye*n;
+
+        if (view_dir_intensity<1)
+            triangle(screen_coords, depth_buffer, depth_buffer_arr, width, depth_shader);
     }
     depth_buffer.flip_vertically();
     Matrix4x4f M_Shadow = Viewport*Projection*ModelView;
@@ -411,9 +416,6 @@ int main(int argc, char** argv) {
     shader.uniform_M = Projection*ModelView;
     shader.uniform_MIT = shader.uniform_M;
     shader.uniform_MIT.inverseTranspose();
-    std::cout << "Viewport:\n" << Viewport;
-    std::cout << "Projection:\n" << Projection;
-    std::cout << "ModelView:\n" << ModelView;
     Matrix4x4f MVP = Viewport*Projection*ModelView;
     MVP.invert();
     shader.uniform_Mshadow = M_Shadow*MVP;
