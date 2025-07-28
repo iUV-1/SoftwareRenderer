@@ -31,5 +31,7 @@ void Project(float coeff);
 void LookAt(Vec3f eye, Vec3f center, Vec3f up);
 void world2screen(Vec3f v, int w, int h, float depth);
 void SetViewport(int width, int height, float depth);
+void SetViewport(int x, int y, float w, float h, float depth);
+
 
 #endif //SOFTWARERENDERER_MY_GL_HPP

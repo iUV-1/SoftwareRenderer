@@ -46,7 +46,7 @@ Vec3f project(Vec3f v) {
 
 void Project(float coeff) {
     Projection = Matrix4x4f::identity();
-    Projection[3][2] = -1/coeff;
+    Projection[3][2] = coeff;
 }
 
 // Similar to gluLookAt, create a camera transformation matrix
@@ -93,6 +93,17 @@ void SetViewport(int width, int height, float depth) {
 
     Viewport[2][3] = depth/2.f;
     Viewport[2][2] = depth/2.f;
+}
+
+void SetViewport(int x, int y, float w, float h, float depth) {
+    Matrix Viewport = Matrix4x4f::identity();
+    Viewport[0][3] = x + w / 2.f;
+    Viewport[1][3] = y + h / 2.f;
+    Viewport[2][3] = depth / 2.f;
+
+    Viewport[0][0] = w / 2.f;
+    Viewport[1][1] = h / 2.f;
+    Viewport[2][2] = depth / 2.f;
 }
 
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {

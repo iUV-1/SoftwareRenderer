@@ -22,9 +22,9 @@ bool use_specular_map = false;
 const int width = 800;
 const int height = 800;
 
-const int depth = 255; // Far clipping plane
+const float depth = 100.0f; // Far clipping plane
 
-Vec3f light = Vec3f(1.0, 1.0, 1.0);
+Vec3f light = Vec3f(-1.0, 1.0, 1.0).normalize();
 
 struct GouraudShaderReference: IShader {
     Vec3f varying_intensity; // intensity of a vertex
@@ -33,13 +33,11 @@ struct GouraudShaderReference: IShader {
     Matrix4x4f uniform_MIT; // same as above but invert_transpose()
 
     Matrix<float> vertex(int iface, int nthvert) override{
-        light.normalize();
         //light.normalize();
         Vec3f v = model->vert(iface, nthvert);
         Vec3f n = model->normal(iface, nthvert);
         // Set the column of varying_uv to texture position in Vec2f
-        varying_uv[0][nthvert] = model->texcoord(iface, nthvert).x;
-        varying_uv[1][nthvert] = model->texcoord(iface, nthvert).y;
+        varying_uv.set_col(nthvert, model->texcoord(iface, nthvert));
         // Cap at 0
         varying_intensity[nthvert] = std::max(0.f, n*light);
         return Viewport*uniform_M*homogonize(v, 1.);
@@ -60,6 +58,8 @@ struct GouraudShaderReference: IShader {
 };
 
 // Gouraud Shader uses vertex data to calculate light value
+// However, this shader uses interpolation to compute the normal vector per pixel
+// This is also called smooth shading
 struct GouraudShader: IShader {
     Vec3f varying_intensity; // intensity of a vertex
     Matrix<float> varying_uv = Matrix<float>(2, 3); // 2x3 matrix containing uv coordinate of 3 vertex (a trig)
@@ -96,6 +96,9 @@ struct GouraudShader: IShader {
         // Transforming
         Vec3f l = dehomogonize(uniform_M  *homogonize(light, 0.f)).normalize();
         //l.z = -l.z;
+        l.x = -l.x;
+        l.y = -l.y;
+        l.z = -l.z;
         Vec3f n = dehomogonize(uniform_MIT*homogonize(norm, 0.f)).normalize();
 /*        if(varying_intensity*bar != n*l) {
             std::cout << "mismatched value" << std::endl;
@@ -109,7 +112,7 @@ struct GouraudShader: IShader {
 };
 
 
-// Phong Shader uses interpolation and fragment to better represent color on that triangle
+// Phong Shader includes Phong reflection model and specular mapping
 struct PhongShader: IShader {
     Matrix<float> varying_uv = Matrix<float>(2, 3); // 2x3 matrix containing uv coordinate of 3 vertex (a trig)
     Matrix4x4f uniform_M; // Projection*ModelView
@@ -118,8 +121,8 @@ struct PhongShader: IShader {
     Matrix<float> vertex(int iface, int nthvert) override{
         Vec3f v = model->vert(iface, nthvert);
         // Set the column of varying_uv to texture position in Vec2f
-        varying_uv[0][nthvert] = model->texcoord(iface, nthvert).x;
-        varying_uv[1][nthvert] = model->texcoord(iface, nthvert).y;
+        varying_uv.set_col(nthvert, model->texcoord(iface, nthvert));
+
         return Viewport*uniform_M*homogonize(v, 1.);
     }
     // bar is the barycentric of that vertex
@@ -133,9 +136,9 @@ struct PhongShader: IShader {
         // Get the normal vector of that mesh based on the setting
         Vec3f norm;
         if(!use_normal_map)
-            norm = model->normal(uv[0], uv[1]);
+            norm = model->normal(uv.u, uv.v);
         else {
-            TGAColor normal_color = normal_file.get(uv[0] * normal_file.get_width(), uv[1] * normal_file.get_height());
+            TGAColor normal_color = normal_file.get(uv.u * normal_file.get_width(), uv.v * normal_file.get_height());
             norm = Vec3f(normal_color.r, normal_color.g, normal_color.b);
         }
         /// Insanely costly calculations
@@ -144,17 +147,19 @@ struct PhongShader: IShader {
         // Same as above
         Vec3f l = dehomogonize(uniform_M  *homogonize(light, 0.f)).normalize();
         l.z = -l.z; // I think this formula is meant to work for a different axis?
+        l.y = -l.y;
+        l.x = -l.x;
         Vec3f r = (n*(n*l*2.f) - l).normalize(); // reflection vector
         float diff = std::max(0.f, n * l); // diffuse intensity value
         // Specular
         float spec = 0.f;
         if(use_specular_map) {
-            float spec_map_val = specular_file.get(uv.x * specular_file.get_width(), uv.y * specular_file.get_height()).r;
+            float spec_map_val = specular_file.get(uv.u * specular_file.get_width(), uv.v * specular_file.get_height()).r;
             spec = pow(std::max(r.z, 0.f), spec_map_val);
         } else {
             spec = std::max(r.z, 0.f);
         }
-        TGAColor texColor = tex_file.get(uv.x * tex_file.get_width(), uv.y * tex_file.get_height());
+        TGAColor texColor = tex_file.get(uv.u * tex_file.get_width(), uv.v * tex_file.get_height());
         for (int i = 0; i < 3; i++) color[i] = std::min<float>(5 + texColor[i]*(diff + .6*spec), 255.f);
         color = texColor * diff;
 
@@ -179,29 +184,30 @@ struct RainbowShader: IShader {
 
 // Copy zbuffer to a framebuffer (Image in this case)
 struct DepthShader: IShader {
-    Matrix<float> varying_uv = Matrix<float>(2, 3); // 2x3 matrix containing uv coordinate of 3 vertex (a trig)
     Matrix4x4f uniform_M; // Projection*ModelView
-    Matrix3x3<float> varying_tri;
+    Matrix3x3<float> varying_tri; // 3x3 matrix containing vertex position of a trig
 
     // Typical vertex rendering
     Matrix<float> vertex(int iface, int nthvert) override{
         Vec3f v = model->vert(iface, nthvert);
         // Set the column of varying_uv to texture position in Vec2f
         Matrix<float> transformed_vert = Viewport*uniform_M*homogonize(v, 1.);
-        Vec3f dehomo_vert = dehomogonize(transformed_vert);
-        varying_tri[nthvert] = {dehomo_vert.x, dehomo_vert.y, dehomo_vert.z };
-        return Viewport*uniform_M*homogonize(v, 1.);
+        varying_tri.set_col(nthvert, dehomogonize(transformed_vert));
+        return transformed_vert;
     }
 
     //
     bool fragment(Vec3f bar, TGAColor &color) override {
         Matrix<float> bary(bar);
         Matrix<float> pt = varying_tri * bary; // point interpolated after transformation
-        Vec3f p(pt[0][0], pt[0][1], pt[0][2]);
 
-        // Set the color based on how far is it from the camera
-        color = TGAColor(255, 255, 255, 255) * (p.z/depth);
-        return true;
+        // Set the brightness based on how far is it from the camera
+        // clamp
+        float dist = std::clamp(pt[2][0]/depth, 0.f, 1.f);
+        color = TGAColor(255, 255, 255) *
+                (dist);
+
+        return false;
     }
 };
 
@@ -279,7 +285,6 @@ int main(int argc, char** argv) {
     std::fill(zbuffer, zbuffer + width*height, -std::numeric_limits<float>::max()); // set every value in zbuffer to -inf
 
     auto frame = TGAImage(width, height, TGAImage::RGB);
-    auto depth_buffer = TGAImage(width, height, TGAImage::RGB);
 
     // camera setting
     Vec3f eye(0, 0, 2);
@@ -292,7 +297,7 @@ int main(int argc, char** argv) {
 
     // Setup GL
     LookAt(eye, cam, up);
-    Project(5);
+    Project(-1/5.f);
     SetViewport(width, height, 255.0f);
 
     //GouraudShader shader = GouraudShader();
@@ -328,30 +333,21 @@ int main(int argc, char** argv) {
     frame.flip_vertically();
 
     /* Depth map*/
+    auto *depth_buffer_arr = new float[width*height];
+    std::fill(depth_buffer_arr, depth_buffer_arr + width*height, -std::numeric_limits<float>::max()); // set every value in zbuffer to -inf
+    auto depth_buffer = TGAImage(width, height, TGAImage::RGB);
     DepthShader depth_shader = DepthShader();
-    light.normalize();
     LookAt(light, cam, up);
+    Project(0); // Render light in orthographic mode
+    SetViewport(width / 8, height/8, width * 3/4, height * 3/4, depth);
+
     depth_shader.uniform_M = Projection*ModelView;
     for(int i = 0; i < model->nfaces(); ++i) {
         Vec3f screen_coords[3];
-
         for (int j=0; j<3; ++j)
             screen_coords[j] = rasterize(&depth_shader, i, j);
 
-        // calculate normal
-        // ^ is an overloaded operator that performs cross product calculation
-        // world_coords[2] - world_coords[0] and the other are 2 vectors pointing from point
-        // world_coords[0].
-        Vec3f n = (screen_coords[2]-screen_coords[0])^(screen_coords[1]-screen_coords[0]);
-        n.normalize();
-        // calculate eye intensity by dot product between normal and eye vector
-        float view_dir_intensity = eye*n;
-        // back face culling
-
-        if (view_dir_intensity<1) {
-            triangle(screen_coords, depth_buffer, zbuffer, width, shader);
-            //wireframe_trig(screen_coords, frame, TGAColor(255, 255, 255, 255));
-        }
+        triangle(screen_coords, depth_buffer, depth_buffer_arr, width, depth_shader);
     }
     depth_buffer.flip_vertically();
 

@@ -120,7 +120,45 @@ public:
         }
     }
 
+    void set_col(int idx, std::vector<T> vec) {
+        if(vec.size() > cols) {
+            std::cerr << "There are more elements in the vector than available columns!" << std::endl;
+        }
+        for(int i = 0; i < cols; i++) {
+            data[i][idx] = vec[i];
+        }
+    }
 
+    void set_col(int idx, Vec2<T> v) {
+        data[0][idx] = v.x;
+        data[1][idx] = v.y;
+    }
+
+    void set_col(int idx, Vec3<T> v) {
+        data[0][idx] = v.x;
+        data[1][idx] = v.y;
+        data[2][idx] = v.z;
+    }
+
+    void set_row(int idx, std::vector<T> vec) {
+        if(vec.size() > rows) {
+            std::cerr << "There are more elements in the vector than available rows!" << std::endl;
+        }
+        for(int i = 0; i < cols; i++) {
+            data[idx][i] = vec[i];
+        }
+    }
+
+    void set_row(int idx, Vec2<T> v) {
+        data[idx][0] = v.x;
+        data[idx][1] = v.y;
+    }
+
+    void set_row(int idx, Vec3<T> v) {
+        data[idx][0] = v.x;
+        data[idx][1] = v.y;
+        data[idx][2] = v.z;
+    }
 
     Matrix<T> operator*(Matrix<T> const &other) { return this->multiply(other); }
     template<class U>
@@ -163,6 +201,8 @@ public:
 
         return result;
     }
+
+
 };
 
 typedef Matrix3x3<float> Matrix3x3if;
@@ -269,9 +309,11 @@ public:
     }
 
 
-     inline Matrix4x4<T> operator*( Matrix4x4<T> const &other) { return this->multiply4x4(other); };
+    inline Matrix4x4<T> operator*( Matrix4x4<T> const &other) { return this->multiply4x4(other); };
      template <typename U>
-     friend  Matrix<U> operator* ( Matrix4x4<U> const &cur,  Matrix<U> const &other);
+    friend  Matrix<U> operator* ( Matrix4x4<U> const &cur,  Matrix<U> const &other);
+
+
 };
 
  template <typename T>
