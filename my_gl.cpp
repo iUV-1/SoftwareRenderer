@@ -96,7 +96,7 @@ void SetViewport(int width, int height, float depth) {
 }
 
 void SetViewport(int x, int y, float w, float h, float depth) {
-    Matrix Viewport = Matrix4x4f::identity();
+    Viewport = Matrix4x4f::identity();
     Viewport[0][3] = x + w / 2.f;
     Viewport[1][3] = y + h / 2.f;
     Viewport[2][3] = depth / 2.f;

@@ -19,10 +19,10 @@ TGAImage specular_file(1024, 1024, TGAImage::RGB);
 bool use_normal_map = false;
 bool use_specular_map = false;
 
-const int width = 800;
-const int height = 800;
+const int width = 1024;
+const int height = 1024;
 
-const float depth = 100.0f; // Far clipping plane
+const float depth = 255.0f; // Far clipping plane
 
 Vec3f light = Vec3f(-1.0, 1.0, 1.0).normalize();
 
@@ -171,7 +171,7 @@ struct PhongShader: IShader {
 // Like above but includes a shadow pass
 struct PhongShaderShadow: IShader {
     Matrix<float> varying_uv = Matrix<float>(2, 3); // 2x3 matrix containing uv coordinate of 3 vertex (a trig)
-    Matrix3x3f varying_tri; // 3x3 matrix containing verticies of a trig
+    Matrix3x3<float> varying_tri; // 3x3 matrix containing verticies of a trig
     float* depth_buffer;
     Matrix4x4f uniform_M; // Projection*ModelView
     Matrix4x4f uniform_MIT; // same as above but invert_transpose()
@@ -201,7 +201,7 @@ struct PhongShaderShadow: IShader {
         Matrix<float> shadow_buffer_pt = uniform_Mshadow* homogonize(p, 1.f);
         Vec3f shadow_p = dehomogonize(shadow_buffer_pt);
         auto shadow_buf_idx = static_cast<size_t>(shadow_p.x + shadow_p.y * width);
-        float shadow = .3 + 7*(depth_buffer[shadow_buf_idx] < shadow_p.z);
+        float shadow = .3 + 7*(depth_buffer[shadow_buf_idx] < shadow_p.z+43.34); // magic coeff to avoid z-fighting
 
         Vec2f uv = Vec2f(mat_uv[0][0], mat_uv[1][0]);
         // Get the normal vector of that mesh based on the setting
@@ -256,7 +256,7 @@ struct RainbowShader: IShader {
 // Copy zbuffer to a framebuffer (Image in this case)
 struct DepthShader: IShader {
     Matrix4x4f uniform_M; // Projection*ModelView
-    Matrix3x3f varying_tri; // 3x3 matrix containing vertex position of a trig
+    Matrix3x3<float> varying_tri; // 3x3 matrix containing vertex position of a trig
 
     // Typical vertex rendering
     Matrix<float> vertex(int iface, int nthvert) override{
@@ -352,7 +352,11 @@ int main(int argc, char** argv) {
     }
 
     // camera setting
-    Vec3f eye(0, 0, 2);
+/*    Vec3f eye(0, 0, 2);
+    Vec3f cam(0, 0, 0);
+    Vec3f up(0, 1, 0);*/
+
+    Vec3f eye(1, 1, 3);
     Vec3f cam(0, 0, 0);
     Vec3f up(0, 1, 0);
 
@@ -371,7 +375,7 @@ int main(int argc, char** argv) {
     // Init shader
     LookAt(light, cam, up); // Render from the light (normalized)
     Project(0); // Render light in orthographic mode
-    SetViewport(width, height, 255.0f);
+    //SetViewport(width, height, 255.0f);
 
     SetViewport(width / 8, height/8, width * 3/4, height * 3/4, depth); // Clamp the image into the center with margins (3/4 of the screen)
 
@@ -386,7 +390,7 @@ int main(int argc, char** argv) {
         triangle(screen_coords, depth_buffer, depth_buffer_arr, width, depth_shader);
     }
     depth_buffer.flip_vertically();
-    Matrix4x4f M_Shadow = Viewport*depth_shader.uniform_M;
+    Matrix4x4f M_Shadow = Viewport*Projection*ModelView;
 
     /* Render */
     auto frame = TGAImage(width, height, TGAImage::RGB);
@@ -394,7 +398,7 @@ int main(int argc, char** argv) {
     // Setup GL
     LookAt(eye, cam, up);
     Project(-1/(eye-cam).norm());
-    SetViewport(width, height, 255.0f);
+    SetViewport(width/8, height/8, width*3./4, height*3./4, depth);
 
     // Setup zbuffer
     float *zbuffer = new float[width*height];
@@ -407,7 +411,12 @@ int main(int argc, char** argv) {
     shader.uniform_M = Projection*ModelView;
     shader.uniform_MIT = shader.uniform_M;
     shader.uniform_MIT.inverseTranspose();
-    shader.uniform_Mshadow = M_Shadow;
+    std::cout << "Viewport:\n" << Viewport;
+    std::cout << "Projection:\n" << Projection;
+    std::cout << "ModelView:\n" << ModelView;
+    Matrix4x4f MVP = Viewport*Projection*ModelView;
+    MVP.invert();
+    shader.uniform_Mshadow = M_Shadow*MVP;
     shader.depth_buffer = depth_buffer_arr;
 
     for (int i=0; i<model->nfaces(); ++i) {
