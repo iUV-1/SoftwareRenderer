@@ -167,6 +167,77 @@ struct PhongShader: IShader {
     }
 };
 
+
+// Like above but includes a shadow pass
+struct PhongShaderShadow: IShader {
+    Matrix<float> varying_uv = Matrix<float>(2, 3); // 2x3 matrix containing uv coordinate of 3 vertex (a trig)
+    Matrix3x3f varying_tri; // 3x3 matrix containing verticies of a trig
+    float* depth_buffer;
+    Matrix4x4f uniform_M; // Projection*ModelView
+    Matrix4x4f uniform_MIT; // same as above but invert_transpose()
+    Matrix4x4f uniform_Mshadow; // Shadow transformation
+
+    Matrix<float> vertex(int iface, int nthvert) override{
+        Vec3f v = model->vert(iface, nthvert);
+        // Set the column of varying_uv to texture position in Vec2f
+        varying_uv.set_col(nthvert, model->texcoord(iface, nthvert));
+        // Set the column of vertex the triangle using vert index
+        Matrix<float> transformed_vert = Viewport*uniform_M*homogonize(v, 1.);
+        varying_tri.set_col(nthvert, dehomogonize(transformed_vert));
+
+        return transformed_vert;
+    }
+    // bar is the barycentric of that vertex
+    bool fragment(Vec3f bar, TGAColor &color) override {
+        // Convert barycentric vector to a matrix
+        // NOTE: Somehow making a new variable is faster than making it inline?
+        Matrix<float> bary = Matrix(bar); // 1x3 row matrix that represent a vector
+        // Matrix<float> uv = varying_uv*Matrix(bar) <- Slower!
+        Matrix<float> mat_uv = varying_uv*bary; // 1x2 Matrix (Basically a Vec2f)
+
+        // Get shadow position from buffer
+        Matrix<float> matrix_p = varying_tri * bary;
+        Vec3f p = { matrix_p[0][0], matrix_p[1][0], matrix_p[2][0]};
+        Matrix<float> shadow_buffer_pt = uniform_Mshadow* homogonize(p, 1.f);
+        Vec3f shadow_p = dehomogonize(shadow_buffer_pt);
+        auto shadow_buf_idx = static_cast<size_t>(shadow_p.x + shadow_p.y * width);
+        float shadow = .3 + 7*(depth_buffer[shadow_buf_idx] < shadow_p.z);
+
+        Vec2f uv = Vec2f(mat_uv[0][0], mat_uv[1][0]);
+        // Get the normal vector of that mesh based on the setting
+        Vec3f norm;
+        if(!use_normal_map)
+            norm = model->normal(uv.u, uv.v);
+        else {
+            TGAColor normal_color = normal_file.get(uv.u * normal_file.get_width(), uv.v * normal_file.get_height());
+            norm = Vec3f(normal_color.r, normal_color.g, normal_color.b);
+        }
+        /// Insanely costly calculations
+        // Transform the normal vector to the eye space
+        Vec3f n = dehomogonize(uniform_MIT*homogonize(norm, 0.f)).normalize();
+        // Same as above
+        Vec3f l = dehomogonize(uniform_M  *homogonize(light, 0.f)).normalize();
+        l.z = -l.z; // I think this formula is meant to work for a different axis?
+        l.y = -l.y;
+        l.x = -l.x;
+        Vec3f r = (n*(n*l*2.f) - l).normalize(); // reflection vector
+        float diff = std::max(0.f, n * l); // diffuse intensity value
+        // Specular
+        float spec = 0.f;
+        if(use_specular_map) {
+            float spec_map_val = specular_file.get(uv.u * specular_file.get_width(), uv.v * specular_file.get_height()).r;
+            spec = pow(std::max(r.z, 0.f), spec_map_val);
+        } else {
+            spec = std::max(r.z, 0.f);
+        }
+        TGAColor texColor = tex_file.get(uv.u * tex_file.get_width(), uv.v * tex_file.get_height());
+        for (int i = 0; i < 3; i++) color[i] = std::min<float>(5 + texColor[i]*shadow*(1.2*diff + .6*spec), 255.f);
+        color = texColor * diff;
+
+        return false;
+    }
+};
+
 // The famous Rainbow Triangle
 // vertex shader is discarded entirely
 struct RainbowShader: IShader {
@@ -185,7 +256,7 @@ struct RainbowShader: IShader {
 // Copy zbuffer to a framebuffer (Image in this case)
 struct DepthShader: IShader {
     Matrix4x4f uniform_M; // Projection*ModelView
-    Matrix3x3<float> varying_tri; // 3x3 matrix containing vertex position of a trig
+    Matrix3x3f varying_tri; // 3x3 matrix containing vertex position of a trig
 
     // Typical vertex rendering
     Matrix<float> vertex(int iface, int nthvert) override{
@@ -280,12 +351,6 @@ int main(int argc, char** argv) {
         use_specular_map = true;
     }
 
-    // Setup zbuffer
-    float *zbuffer = new float[width*height];
-    std::fill(zbuffer, zbuffer + width*height, -std::numeric_limits<float>::max()); // set every value in zbuffer to -inf
-
-    auto frame = TGAImage(width, height, TGAImage::RGB);
-
     // camera setting
     Vec3f eye(0, 0, 2);
     Vec3f cam(0, 0, 0);
@@ -295,19 +360,56 @@ int main(int argc, char** argv) {
     Vec3f cam(0, 0, 0);
     Vec3f up(0, 1, 0);*/
 
-    // Setup GL
-    LookAt(eye, cam, up);
-    Project(-1/5.f);
+    auto render = std::chrono::system_clock::now();
+
+    /* Depth map*/
+    // Init depth buffer
+    auto *depth_buffer_arr = new float[width*height];
+    std::fill(depth_buffer_arr, depth_buffer_arr + width*height, -std::numeric_limits<float>::max()); // set every value in zbuffer to -inf
+
+    auto depth_buffer = TGAImage(width, height, TGAImage::RGB);
+    // Init shader
+    LookAt(light, cam, up); // Render from the light (normalized)
+    Project(0); // Render light in orthographic mode
     SetViewport(width, height, 255.0f);
 
-    //GouraudShader shader = GouraudShader();
-    PhongShader shader = PhongShader();
-// GouraudShaderReference shader = GouraudShaderReference();
+    SetViewport(width / 8, height/8, width * 3/4, height * 3/4, depth); // Clamp the image into the center with margins (3/4 of the screen)
+
+    DepthShader depth_shader = DepthShader();
+    depth_shader.uniform_M = Projection*ModelView;
+    // Render
+    for(int i = 0; i < model->nfaces(); ++i) {
+        Vec3f screen_coords[3];
+        for (int j=0; j<3; ++j)
+            screen_coords[j] = rasterize(&depth_shader, i, j);
+
+        triangle(screen_coords, depth_buffer, depth_buffer_arr, width, depth_shader);
+    }
+    depth_buffer.flip_vertically();
+    Matrix4x4f M_Shadow = Viewport*depth_shader.uniform_M;
+
+    /* Render */
+    auto frame = TGAImage(width, height, TGAImage::RGB);
+
+    // Setup GL
+    LookAt(eye, cam, up);
+    Project(-1/(eye-cam).norm());
+    SetViewport(width, height, 255.0f);
+
+    // Setup zbuffer
+    float *zbuffer = new float[width*height];
+    std::fill(zbuffer, zbuffer + width*height, -std::numeric_limits<float>::max()); // set every value in zbuffer to -inf
+
+    // GouraudShader shader = GouraudShader();
+    // PhongShader shader = PhongShader();
+    // GouraudShaderReference shader = GouraudShaderReference();
+    PhongShaderShadow shader = PhongShaderShadow();
     shader.uniform_M = Projection*ModelView;
     shader.uniform_MIT = shader.uniform_M;
     shader.uniform_MIT.inverseTranspose();
+    shader.uniform_Mshadow = M_Shadow;
+    shader.depth_buffer = depth_buffer_arr;
 
-    auto render = std::chrono::system_clock::now();
     for (int i=0; i<model->nfaces(); ++i) {
         Vec3f screen_coords[3];
 
@@ -332,25 +434,6 @@ int main(int argc, char** argv) {
     // set origin to the bottom left corner
     frame.flip_vertically();
 
-    /* Depth map*/
-    auto *depth_buffer_arr = new float[width*height];
-    std::fill(depth_buffer_arr, depth_buffer_arr + width*height, -std::numeric_limits<float>::max()); // set every value in zbuffer to -inf
-    auto depth_buffer = TGAImage(width, height, TGAImage::RGB);
-    DepthShader depth_shader = DepthShader();
-    LookAt(light, cam, up);
-    Project(0); // Render light in orthographic mode
-    SetViewport(width / 8, height/8, width * 3/4, height * 3/4, depth);
-
-    depth_shader.uniform_M = Projection*ModelView;
-    for(int i = 0; i < model->nfaces(); ++i) {
-        Vec3f screen_coords[3];
-        for (int j=0; j<3; ++j)
-            screen_coords[j] = rasterize(&depth_shader, i, j);
-
-        triangle(screen_coords, depth_buffer, depth_buffer_arr, width, depth_shader);
-    }
-    depth_buffer.flip_vertically();
-
     // Get timing of the render
     auto now = std::chrono::system_clock::now();
     auto finish_time = std::chrono::system_clock::to_time_t(now);
@@ -372,5 +455,6 @@ int main(int argc, char** argv) {
 
     delete model;
     delete[] zbuffer;
+    delete[] depth_buffer_arr;
     return 0;
 }

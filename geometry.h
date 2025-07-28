@@ -205,7 +205,7 @@ public:
 
 };
 
-typedef Matrix3x3<float> Matrix3x3if;
+typedef Matrix3x3<float> Matrix3x3f;
 
 // 4x4 matrix derived from Matrix class
 template <typename T> class Matrix4x4: public Matrix<T> {
