@@ -264,7 +264,7 @@ struct DepthShader: IShader {
 
     //
     bool fragment(Vec3f bar, TGAColor &color) override {
-        Matrix<float> bary(bar);
+        Matrix bary(bar);
         Matrix<float> pt = varying_tri * bary; // point interpolated after transformation
 
         // Set the brightness based on how far is it from the camera

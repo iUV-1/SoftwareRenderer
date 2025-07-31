@@ -14,8 +14,8 @@ constexpr int height = 800;
 constexpr float depth = 255.f;
 
 Model *model;
-TGAImage tex_file;
 TGAImage normal_file;
+TGAImage tex_file;
 TGAImage specular_file;
 
 bool use_specular;

@@ -7,7 +7,7 @@
 #include "tgaimage.h"
 
 Matrix4x4f ModelView;
-Matrix4x4f Projection;
+Matrix4x4f Projection = Matrix4x4f::identity();
 Matrix4x4f Viewport;
 
 // Create a homogonized matrix from a vector
@@ -46,7 +46,6 @@ Vec3f project(Vec3f v) {
 }
 
 void Project(float coeff) {
-    Projection = Matrix4x4f::identity();
     Projection[3][2] = coeff;
 }
 
@@ -67,21 +66,8 @@ void LookAt(Vec3f eye, Vec3f center, Vec3f up) {
         Tr[i][3] = -eye[i];
     }
     ModelView = Minv * Tr;
-    //return M_cam;
 }
 
-// Matrix representation of viewport transformation
-// Also includes depth because viewport is a box
-void world2screen(Vec3f v, int w, int h, float depth) {
-    Viewport = Matrix4x4f::identity();
-    Viewport[0][3] = v.x+w/2.f;
-    Viewport[1][3] = v.y+h/2.f;
-    Viewport[2][3] = depth/2.f;
-
-    Viewport[0][0] = w/2.f;
-    Viewport[1][1] = h/2.f;
-    Viewport[2][2] = depth/2.f;
-}
 
 // Set Viewport Matrix (M_vp)
 // Section 8.1 in textbook
@@ -287,4 +273,18 @@ void wireframe_trig(Vec3f *pts, TGAImage &image, TGAColor color) {
 /*
 Vec3f world2screen(Vec3f v) {
     return Vec3f(static_cast<int>((v.x+1.)*width/2.+.5), static_cast<int>((v.y+1.)*height/2. + .5), v.z);
-}*/
+}
+
+// Matrix representation of viewport transformation
+// Also includes depth because viewport is a box
+void world2screen(Vec3f v, int w, int h, float depth) {
+    Viewport = Matrix4x4f::identity();
+    Viewport[0][3] = v.x+w/2.f;
+    Viewport[1][3] = v.y+h/2.f;
+    Viewport[2][3] = depth/2.f;
+
+    Viewport[0][0] = w/2.f;
+    Viewport[1][1] = h/2.f;
+    Viewport[2][2] = depth/2.f;
+}
+*/
