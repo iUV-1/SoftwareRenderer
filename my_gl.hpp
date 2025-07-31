@@ -13,10 +13,20 @@ extern Matrix4x4f Viewport;
 
 /* Interface for both vertex and fragment shader*/
 struct IShader {
-    virtual ~IShader();
+    IShader() {
+        uniform_M = Projection*ModelView;
+        uniform_MIT = uniform_M;
+        uniform_MIT.inverseTranspose();
+    };
+    Matrix4x4f uniform_M;
+    Matrix<float> varying_uv = Matrix<float>(2, 3);
+    Matrix4x4f uniform_MIT; // Invert transpose
+    virtual ~IShader() = default;
     virtual Matrix<float> vertex(int iface, int nthvert) = 0;
     virtual bool fragment(Vec3f bar, TGAColor &color) = 0;
 };
+
+float *create_buffer(int width, int height);
 
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color);
 void line(Vec2i t0, Vec2i t1, TGAImage &image, TGAColor color);

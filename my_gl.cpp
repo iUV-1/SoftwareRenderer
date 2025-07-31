@@ -20,10 +20,11 @@ Matrix<float> homogonize(Vec3f v, float h) {
     return result;
 }
 
-IShader::~IShader() {
-
+float *create_buffer(int width, int height) {
+    auto *buffer_arr = new float[width*height];
+    std::fill(buffer_arr, buffer_arr + width*height, -std::numeric_limits<float>::max()); // set every value in zbuffer to -inf
+    return buffer_arr;
 }
-
 
 // De-homogonize it
 Vec3f dehomogonize(Matrix<float> const &m) {

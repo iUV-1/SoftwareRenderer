@@ -3,7 +3,5 @@
 //
 #include "geometry.h"
 
-
-
 template class Matrix<float>;
 template class Matrix4x4<float>;

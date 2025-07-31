@@ -1,4 +1,4 @@
-C:\Users\iUV\AppData\Local\Programs\CLion\bin\cmake\win\x64\bin\cmake.exe -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=C:/Users/iUV/AppData/Local/Programs/CLion/bin/ninja/win/x64/ninja.exe -G Ninja -S C:\Users\iUV\Documents\Programming\_SoftwareRenderer -B C:\Users\iUV\Documents\Programming\_SoftwareRenderer\cmake-build-debug
--- Configuring done (1.1s)
--- Generating done (0.3s)
--- Build files have been written to: C:/Users/iUV/Documents/Programming/_SoftwareRenderer/cmake-build-debug
+/Users/iuv/Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "Unix Makefiles" -S /Users/iuv/Documents/Programming/SoftwareRenderer -B /Users/iuv/Documents/Programming/SoftwareRenderer/cmake-build-debug
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/iuv/Documents/Programming/SoftwareRenderer/cmake-build-debug

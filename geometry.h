@@ -79,8 +79,8 @@ class Matrix4x4;
 
 template <typename T> class Matrix {
 public:
-    std::vector<std::vector<T>> data;
     size_t rows, cols;
+    std::vector<std::vector<T>> data;
 
     Matrix(size_t rows, size_t columns, T defaultVal = T{}): rows(rows), cols(columns),data(rows, std::vector<T>(columns, defaultVal)) {}
 

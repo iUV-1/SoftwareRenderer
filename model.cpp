@@ -23,7 +23,7 @@ Model::Model(const char *filename) {
             iss >> trash;
             Vec3f v;
             for (int i=0;i<3;i++) iss >> v.raw[i];
-            verts_.push_back(v);
+            verts_.emplace_back(v);
         } else if (!line.compare(0, 2, "f ")) {
             // v_idx is the vertex index from that face
             // t_idx is the texture index from that face
@@ -37,13 +37,13 @@ Model::Model(const char *filename) {
                 v_idx--; // in wavefront obj all indices start at 1, not zero
                 t_idx--;
                 n_idx--;
-                f.push_back(v_idx);
-                t.push_back(t_idx);
-                n.push_back(n_idx);
+                f.emplace_back(v_idx);
+                t.emplace_back(t_idx);
+                n.emplace_back(n_idx);
             }
-            faces_.push_back(f);
-            faces_texture.push_back(t);
-            faces_normal.push_back(n);
+            faces_.emplace_back(f);
+            faces_texture.emplace_back(t);
+            faces_normal.emplace_back(n);
         } else if (!line.compare(0, 3, "vt ")) {
             // trash vt because trash is a char so we need to do this twice
             iss >> trash;
@@ -51,13 +51,13 @@ Model::Model(const char *filename) {
 
             Vec2f uv;
             iss >> uv.u >> uv.v;
-            texcoords_.push_back(uv);
+            texcoords_.emplace_back(uv);
         } else if (!line.compare(0, 3, "vn ")) {
             iss >> trash;
             iss >> trash;
             Vec3f normal;
             iss >> normal.x >> normal.y >> normal.z;
-            normals_.push_back(normal);
+            normals_.emplace_back(normal);
         }
     }
     std::cerr << "# v# " << verts_.size() << " f# "  << faces_.size() << std::endl;

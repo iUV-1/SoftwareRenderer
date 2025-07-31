@@ -73,6 +73,7 @@ struct TGAColor {
         if(i == 1) return g;
         if(i == 2) return b;
         // if its not either one of these 3, you're fucked.
+        return r;
     }
 };
 

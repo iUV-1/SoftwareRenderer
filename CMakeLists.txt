@@ -15,4 +15,5 @@ add_executable(SoftwareRenderer main.cpp
         my_gl.hpp
         my_gl.cpp
         geometry.cpp
+        shaders.hpp
 )
