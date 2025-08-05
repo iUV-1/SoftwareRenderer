@@ -9,7 +9,7 @@
 //
 
 #include <iostream>
-#include <utility>
+#include <random>
 
 #include "model.h"
 #include "shaders.hpp"
@@ -112,10 +112,6 @@ struct GouraudShader: IShader {
 
 // Phong Shader includes Phong reflection model and specular mapping
 struct PhongShader: IShader {
-    Matrix<float> varying_uv = Matrix<float>(2, 3); // 2x3 matrix containing uv coordinate of 3 vertex (a trig)
-    Matrix4x4f uniform_M; // Projection*ModelView
-    Matrix4x4f uniform_MIT; // same as above but invert_transpose()
-
     Matrix<float> vertex(int iface, int nthvert) override{
         Vec3f v = model->vert(iface, nthvert);
         // Set the column of varying_uv to texture position in Vec2f
@@ -190,6 +186,7 @@ struct PhongShaderShadow: IShader {
         Matrix<float> bary = Matrix(bar); // 1x3 row matrix that represent a vector
         // Matrix<float> uv = varying_uv*Matrix(bar) <- Slower!
         Matrix<float> mat_uv = varying_uv*bary; // 1x2 Matrix (Basically a Vec2f)
+        Vec2f uv = Vec2f(mat_uv[0][0], mat_uv[1][0]);
 
         // Get shadow position from buffer
         Matrix<float> matrix_p = varying_tri * bary;
@@ -199,7 +196,6 @@ struct PhongShaderShadow: IShader {
         auto shadow_buf_idx = static_cast<size_t>(shadow_p.x + shadow_p.y * width);
         float shadow = .3 + 7*(depth_buffer[shadow_buf_idx] < shadow_p.z+43.34); // magic coeff to avoid z-fighting
 
-        Vec2f uv = Vec2f(mat_uv[0][0], mat_uv[1][0]);
         // Get the normal vector of that mesh based on the setting
         Vec3f norm;
         if(!use_normal)
@@ -250,7 +246,7 @@ struct RainbowShader: IShader {
 };
 
 // Copy zbuffer to a framebuffer (Image in this case)
-struct DepthShader: IShader {
+struct DepthShaderImage: IShader {
     Matrix3x3<float> varying_tri; // 3x3 matrix containing vertex position of a trig
 
     // Typical vertex rendering
@@ -273,6 +269,135 @@ struct DepthShader: IShader {
         color = TGAColor(255, 255, 255) *
                 (dist);
 
+        return false;
+    }
+};
+
+struct DepthShader: IShader {
+    // Typical vertex rendering
+    Matrix<float> vertex(int iface, int nthvert) override{
+        Vec3f v = model->vert(iface, nthvert);
+        // Set the column of varying_uv to texture position in Vec2f
+        // Matrix<float> transformed_vert = Viewport*uniform_M*homogonize(v, 1.);
+        return Viewport*uniform_M*homogonize(v, 1.);
+    }
+
+    // Discard the fragment because we are only interested in the zbuffer produced by triangle()
+    bool fragment(Vec3f bar, TGAColor &color) override {
+        color = TGAColor(0,0,0,0);
+        return false;
+    }
+};
+
+constexpr int kernelSize = 16;
+constexpr int noiseSize = 16;
+constexpr float radius = 0.5f;
+std::random_device rd;
+std::mt19937 gen(rd());
+
+struct SSAOShader: IShader {
+    Matrix3x3<float> varying_tri;
+    Vec3f kernel[kernelSize];
+    Vec3f noise[noiseSize];
+    TGAImage depth;
+
+    SSAOShader() {
+        // Generate random coordinates in the hemisphere
+        for (int i = 0; i < kernelSize; ++i) {
+            kernel[i] = Vec3f(
+                random(-1.0f, 1.0f),
+                random(-1.0f, 1.0f),
+                random(0.0f, 1.0f)
+                ).normalize();
+            float scale = static_cast<float>(i) / static_cast<float>(kernelSize) * random(0.0f, 1.0f);
+            scale = lerp(0.1f, 1.0f, scale * scale);
+            kernel[i] *= scale;
+        }
+
+        // Generate rotational noise
+        for (int i = 0; i < noiseSize; ++i) {
+            noise[i] = Vec3f(
+               random(-1.0f, 1.0f),
+               random(-1.0f, 1.0f),
+               0.0f
+            ).normalize();
+        }
+    }
+
+    // Typical vertex rendering
+    Matrix<float> vertex(int iface, int nthvert) override{
+        Vec3f v = model->vert(iface, nthvert);
+        // Set the column of varying_uv to texture position in Vec2f
+        Matrix<float> transformed_vert = Viewport*uniform_M*homogonize(v, 1.);
+        varying_tri.set_col(nthvert, dehomogonize(transformed_vert));
+        return transformed_vert;
+    }
+
+    float random(float r1, float r2) {
+        std::uniform_real_distribution<float> dist(r1, r2);
+        return dist(gen);
+    }
+
+    float lerp(float v0, float v1, float t) {
+        return v0 + t * (v1 - v0);
+    }
+
+    bool fragment(Vec3f bar, TGAColor &color) override {
+        // Get uv
+        Matrix<float> bary = Matrix(bar); // 1x3 row matrix that represent a vector
+        Matrix<float> mat_uv = varying_uv*bary; // 1x2 Matrix
+        Vec2f uv = Vec2f(mat_uv[0][0], mat_uv[1][0]);
+
+        // Get normal
+        Vec3f norm;
+        if(!use_normal)
+            norm = model->normal(uv.u, uv.v);
+        else {
+            TGAColor normal_color = normal_file.get(uv.u * normal_file.get_width(), uv.v * normal_file.get_height());
+            norm = Vec3f(normal_color.r, normal_color.g, normal_color.b);
+        }
+
+        // Get point
+        Matrix<float> matrix_p = varying_tri * bary;
+        Vec3f p = { matrix_p[0][0], matrix_p[1][0], matrix_p[2][0]};
+
+        // Orient the points to the normal vector
+        Vec3f z = norm.normalize();          // Desired new z-axis
+        Vec3f up = abs(z.z) < 0.999 ? Vec3f(0, 0, 1) : Vec3f(0, 1, 0); // Choose a safe up vector
+        Vec3f x = (up^z).normalize(); // Perpendicular to z
+        Vec3f y = z^x;             // Completes right-handed basis
+
+        // Create transformation matrix
+        Matrix4x4f M = Matrix4x4f::identity();
+        M.set_col(0, x);
+        M.set_col(1, y);
+        M.set_col(2, z);
+
+        // Transform kernel and test with depth buffer
+        float occlusion = 0.f;
+        for(int i = 0; i < kernelSize; i++) {
+            // get sample position:
+            Vec3f sample = dehomogonize(M * homogonize(kernel[i], 1.));
+            sample = sample * radius + p;
+
+            // Project sample position
+            Vec3f offset = dehomogonize(Projection*homogonize(sample, 1.f));
+            offset.x = offset.x * 0.5f + 0.5f;
+            offset.y = offset.y * 0.5f + 0.5f;
+
+            // Get sample depth
+            // Test with depth buffer
+
+            float sampleDepth = depth.get(offset.x * tex_file.get_width(), offset.y * tex_file.get_height()).r;
+
+            // range check & accumulate:
+            float rangeCheck= abs(p.z - sampleDepth) < radius ? 1.0 : 0.0;
+            occlusion += (sampleDepth <= sample.z ? 1.0 : 0.0) * rangeCheck;
+        }
+        occlusion = 1.0 - (occlusion / kernelSize);
+
+        // Produce image
+        color = TGAColor(occlusion * 255, occlusion * 255, occlusion * 255);
         return false;
     }
 };

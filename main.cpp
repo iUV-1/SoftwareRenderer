@@ -70,7 +70,6 @@ int main(int argc, char** argv) {
     else
         tex_file.read_tga_file(argv[2]);
 
-
     tex_file.flip_vertically();
 
     // Check if normal map is included in the args
@@ -107,7 +106,7 @@ int main(int argc, char** argv) {
     float *depth_buffer_arr = create_buffer(width, height);
     auto depth_buffer = TGAImage(width, height, TGAImage::RGB);
     // Init shader
-    LookAt(light, cam, up); // Render from the light (normalized)
+    LookAt(light, cam, up); // Render from the light
     Project(0); // Render light in orthographic mode
     SetViewport(width / 8, height/8, width * 3./4, height * 3./4, depth); // Clamp the image into the center with margins (3/4 of the screen)
 
@@ -128,6 +127,50 @@ int main(int argc, char** argv) {
     //depth_buffer.flip_vertically();
     Matrix4x4f M_Shadow = Viewport*Projection*ModelView;
 
+    /* SSAO */
+    /// Get depth from Camera
+    auto depth_from_cam = TGAImage(width, height, TGAImage::RGB);
+    // Setup GL
+    LookAt(eye, cam, up);
+    Project(-1/(eye-cam).norm());
+    SetViewport(width/8, height/8, width*3./4, height*3./4, depth);
+
+    // Setup zbuffer
+    float *depth_cam_buf = create_buffer(width, height);
+    depth_shader = DepthShader();
+    for(int i = 0; i < model->nfaces(); ++i) {
+        Vec3f screen_coords[3];
+        for (int j=0; j<3; ++j)
+            screen_coords[j] = rasterize(&depth_shader, i, j);
+
+        Vec3f n = (screen_coords[2]-screen_coords[0])^(screen_coords[1]-screen_coords[0]);
+        n.normalize();
+        float view_dir_intensity = eye*n;
+
+        if (view_dir_intensity<1)
+            triangle(screen_coords, depth_from_cam, depth_cam_buf, width, depth_shader);
+    }
+    depth_from_cam.flip_vertically();
+    /// SSAO
+    auto ssao_pass = TGAImage(width, height, TGAImage::RGB);
+    // Setup zbuffer
+    auto ssao_buf = create_buffer(width, height);
+    SSAOShader ssao_shader = SSAOShader();
+    ssao_shader.depth = depth_from_cam;
+    for(int i = 0; i < model->nfaces(); ++i) {
+        Vec3f screen_coords[3];
+        for (int j=0; j<3; ++j)
+            screen_coords[j] = rasterize(&ssao_shader, i, j);
+
+        Vec3f n = (screen_coords[2]-screen_coords[0])^(screen_coords[1]-screen_coords[0]);
+        n.normalize();
+        float view_dir_intensity = eye*n;
+
+        if (view_dir_intensity<1)
+            triangle(screen_coords, ssao_pass, ssao_buf, width, ssao_shader);
+    }
+    ssao_pass.flip_vertically();
+
     /* Render */
     auto frame = TGAImage(width, height, TGAImage::RGB);
 
@@ -143,7 +186,8 @@ int main(int argc, char** argv) {
     // GouraudShaderReference shader = GouraudShaderReference();
     Matrix4x4f MVP = Viewport*Projection*ModelView;
     MVP.invert();
-    PhongShaderShadow shader = PhongShaderShadow(M_Shadow*MVP, depth_buffer_arr);
+    // PhongShaderShadow shader = PhongShaderShadow(M_Shadow*MVP, depth_buffer_arr);
+    PhongShader shader = PhongShader();
 
     for (int i=0; i<model->nfaces(); ++i) {
         Vec3f screen_coords[3];
@@ -177,8 +221,8 @@ int main(int argc, char** argv) {
     sstream << "../output/" << local_time.tm_mon + 1 << "-" << local_time.tm_mday << "_"
             << local_time.tm_hour << "-" << local_time.tm_min << ".tga";
     frame.write_tga_file(sstream.str().c_str());
-    sstream << "_buffer.tga";
-    depth_buffer.write_tga_file(sstream.str().c_str());
+    sstream << "_ssao.tga";
+    ssao_pass.write_tga_file(sstream.str().c_str());
 
     // How long the render takes
     std::chrono::duration<double> diff = now - before;

@@ -56,6 +56,13 @@ template <class t> struct Vec3 {
         if(index == 1) return y;
         if(index == 2) return z;
         throw std::out_of_range("index out of range");
+    }
+
+    Vec3<float> &operator*=(float a) {
+        x *= a;
+        y *= a;
+        z *= a;
+        return *this;
     };
 };
 

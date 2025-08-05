@@ -3,7 +3,7 @@ project(SoftwareRenderer)
 
 set(CMAKE_CXX_STANDARD 20)
 add_link_options(-g)
-add_compile_options(-Wall -O2 -g)
+add_compile_options(-Wall -g)
 
 add_executable(SoftwareRenderer main.cpp
         tgaimage.h
