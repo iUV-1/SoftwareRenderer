@@ -300,6 +300,8 @@ struct SSAOShader: IShader {
     Vec3f kernel[kernelSize];
     Vec3f noise[noiseSize];
     TGAImage depth;
+    float *depth_buffer;
+    TGAImage noise_texture;
 
     SSAOShader() {
         // Generate random coordinates in the hemisphere
@@ -313,15 +315,23 @@ struct SSAOShader: IShader {
             scale = lerp(0.1f, 1.0f, scale * scale);
             kernel[i] *= scale;
         }
-
+        noise_texture = TGAImage(4,4,TGAImage::RGB);
         // Generate rotational noise
         for (int i = 0; i < noiseSize; ++i) {
-            noise[i] = Vec3f(
-               random(-1.0f, 1.0f),
-               random(-1.0f, 1.0f),
-               0.0f
-            ).normalize();
+
         }
+
+        for(int i = 0; i < 4; ++i) {
+            for(int j = 0; j < 4; ++j) {
+                noise[i+j] = Vec3f(
+                   random(-1.0f, 1.0f),
+                   random(-1.0f, 1.0f),
+                   0.0f
+                ).normalize();
+                noise_texture.set(i,j,TGAColor(noise[i+j].x, noise[i+j].y, noise[i+j].z));
+            }
+        }
+
     }
 
     // Typical vertex rendering
@@ -368,7 +378,7 @@ struct SSAOShader: IShader {
         Vec3f y = z^x;             // Completes right-handed basis
 
         // Create transformation matrix
-        Matrix4x4f M = Matrix4x4f::identity();
+        Matrix<float> M = Matrix<float>(3, 3);
         M.set_col(0, x);
         M.set_col(1, y);
         M.set_col(2, z);
@@ -387,11 +397,19 @@ struct SSAOShader: IShader {
 
             // Get sample depth
             // Test with depth buffer
+            auto idx = static_cast<size_t>(offset.x + offset.y * width);
 
-            float sampleDepth = depth.get(offset.x * tex_file.get_width(), offset.y * tex_file.get_height()).r;
+            //float sampleDepth = depth_buffer[idx];
+            float sampleDepth = depth.get(offset.x * depth.get_width(), offset.y * depth.get_height()).r;
+            if(sampleDepth > 0.) {
+                std::cout << "something" << std::endl;
+            }
 
             // range check & accumulate:
             float rangeCheck= abs(p.z - sampleDepth) < radius ? 1.0 : 0.0;
+            if((sampleDepth <= sample.z ? 1.0 : 0.0) * rangeCheck > 1) {
+                std::cout << "sampleDepth: " << sampleDepth << std::endl;
+            }
             occlusion += (sampleDepth <= sample.z ? 1.0 : 0.0) * rangeCheck;
         }
         occlusion = 1.0 - (occlusion / kernelSize);

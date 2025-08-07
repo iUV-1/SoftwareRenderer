@@ -137,39 +137,20 @@ int main(int argc, char** argv) {
 
     // Setup zbuffer
     float *depth_cam_buf = create_buffer(width, height);
-    depth_shader = DepthShader();
+    auto depth_shader_image = DepthShaderImage();
     for(int i = 0; i < model->nfaces(); ++i) {
         Vec3f screen_coords[3];
         for (int j=0; j<3; ++j)
-            screen_coords[j] = rasterize(&depth_shader, i, j);
+            screen_coords[j] = rasterize(&depth_shader_image, i, j);
 
         Vec3f n = (screen_coords[2]-screen_coords[0])^(screen_coords[1]-screen_coords[0]);
         n.normalize();
         float view_dir_intensity = eye*n;
 
         if (view_dir_intensity<1)
-            triangle(screen_coords, depth_from_cam, depth_cam_buf, width, depth_shader);
+            triangle(screen_coords, depth_from_cam, depth_cam_buf, width, depth_shader_image);
     }
     depth_from_cam.flip_vertically();
-    /// SSAO
-    auto ssao_pass = TGAImage(width, height, TGAImage::RGB);
-    // Setup zbuffer
-    auto ssao_buf = create_buffer(width, height);
-    SSAOShader ssao_shader = SSAOShader();
-    ssao_shader.depth = depth_from_cam;
-    for(int i = 0; i < model->nfaces(); ++i) {
-        Vec3f screen_coords[3];
-        for (int j=0; j<3; ++j)
-            screen_coords[j] = rasterize(&ssao_shader, i, j);
-
-        Vec3f n = (screen_coords[2]-screen_coords[0])^(screen_coords[1]-screen_coords[0]);
-        n.normalize();
-        float view_dir_intensity = eye*n;
-
-        if (view_dir_intensity<1)
-            triangle(screen_coords, ssao_pass, ssao_buf, width, ssao_shader);
-    }
-    ssao_pass.flip_vertically();
 
     /* Render */
     auto frame = TGAImage(width, height, TGAImage::RGB);
@@ -213,6 +194,28 @@ int main(int argc, char** argv) {
     // set origin to the bottom left corner
     frame.flip_vertically();
 
+    /// SSAO
+    auto ssao_pass = TGAImage(width, height, TGAImage::RGB);
+    // Setup zbuffer
+    auto ssao_buf = create_buffer(width, height);
+    SSAOShader ssao_shader = SSAOShader();
+    ssao_shader.depth = depth_from_cam;
+    // ssao_shader.depth_buffer = zbuffer;
+    for(int i = 0; i < model->nfaces(); ++i) {
+        Vec3f screen_coords[3];
+        for (int j=0; j<3; ++j)
+            screen_coords[j] = rasterize(&ssao_shader, i, j);
+
+        Vec3f n = (screen_coords[2]-screen_coords[0])^(screen_coords[1]-screen_coords[0]);
+        n.normalize();
+        float view_dir_intensity = eye*n;
+
+        if (view_dir_intensity<1)
+            triangle(screen_coords, ssao_pass, ssao_buf, width, ssao_shader);
+    }
+    ssao_pass.flip_vertically();
+
+
     // Get timing of the render
     auto now = std::chrono::system_clock::now();
     auto finish_time = std::chrono::system_clock::to_time_t(now);
@@ -223,6 +226,8 @@ int main(int argc, char** argv) {
     frame.write_tga_file(sstream.str().c_str());
     sstream << "_ssao.tga";
     ssao_pass.write_tga_file(sstream.str().c_str());
+    sstream << "_depth.tga";
+    depth_from_cam.write_tga_file(sstream.str().c_str());
 
     // How long the render takes
     std::chrono::duration<double> diff = now - before;
