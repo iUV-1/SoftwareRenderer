@@ -102,6 +102,7 @@ public:
 
     Matrix<T> multiply(Matrix<T> matrix) const {
         if (cols != matrix.rows) {
+            throw std::invalid_argument("Matrix multiplication mismatch");
             std::cerr << "Matrix multiplication mismatch!!" << std::endl;
             // unable to do it, what should i return?
             return matrix;

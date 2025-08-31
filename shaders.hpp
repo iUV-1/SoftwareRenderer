@@ -28,6 +28,7 @@ extern bool use_normal; // Use normal map
 
 extern const float depth;
 extern const int width;
+extern const int height;
 
 struct GouraudShaderReference: IShader {
     Vec3f varying_intensity; // intensity of a vertex
@@ -294,14 +295,15 @@ constexpr int noiseSize = 16;
 constexpr float radius = 0.5f;
 std::random_device rd;
 std::mt19937 gen(rd());
-
+/*
 struct SSAOShader: IShader {
     Matrix3x3<float> varying_tri;
     Vec3f kernel[kernelSize];
     Vec3f noise[noiseSize];
     TGAImage depth;
+    Vec2f uNoiseScale = Vec2f(width / 4, height / 4);
+    TGAImage noise_texture = TGAImage(4,4,TGAImage::RGB);
     float *depth_buffer;
-    TGAImage noise_texture;
 
     SSAOShader() {
         // Generate random coordinates in the hemisphere
@@ -315,32 +317,32 @@ struct SSAOShader: IShader {
             scale = lerp(0.1f, 1.0f, scale * scale);
             kernel[i] *= scale;
         }
-        noise_texture = TGAImage(4,4,TGAImage::RGB);
         // Generate rotational noise
-        for (int i = 0; i < noiseSize; ++i) {
-
-        }
 
         for(int i = 0; i < 4; ++i) {
             for(int j = 0; j < 4; ++j) {
-                noise[i+j] = Vec3f(
+                noise[i*4+j] = Vec3f(
                    random(-1.0f, 1.0f),
                    random(-1.0f, 1.0f),
                    0.0f
                 ).normalize();
-                noise_texture.set(i,j,TGAColor(noise[i+j].x, noise[i+j].y, noise[i+j].z));
+                noise_texture.set(i,j,TGAColor(
+                        (noise[i*4+j].x * .5f + .5f) * 255,
+                        (noise[i*4+j].y * .5f + .5f) * 255,
+                        255));
             }
         }
-
     }
 
+    Matrix3x3f varying_norm;
     // Typical vertex rendering
     Matrix<float> vertex(int iface, int nthvert) override{
         Vec3f v = model->vert(iface, nthvert);
+        Vec3f n = model->normal(iface, nthvert);
         // Set the column of varying_uv to texture position in Vec2f
-        Matrix<float> transformed_vert = Viewport*uniform_M*homogonize(v, 1.);
-        varying_tri.set_col(nthvert, dehomogonize(transformed_vert));
-        return transformed_vert;
+        varying_tri.set_col(nthvert, v);
+        varying_norm.set_col(nthvert, v);
+        return Viewport*uniform_M*homogonize(v, 1.);
     }
 
     float random(float r1, float r2) {
@@ -351,6 +353,7 @@ struct SSAOShader: IShader {
     float lerp(float v0, float v1, float t) {
         return v0 + t * (v1 - v0);
     }
+
 
     bool fragment(Vec3f bar, TGAColor &color) override {
         // Get uv
@@ -371,23 +374,26 @@ struct SSAOShader: IShader {
         Matrix<float> matrix_p = varying_tri * bary;
         Vec3f p = { matrix_p[0][0], matrix_p[1][0], matrix_p[2][0]};
 
-        // Orient the points to the normal vector
-        Vec3f z = norm.normalize();          // Desired new z-axis
-        Vec3f up = abs(z.z) < 0.999 ? Vec3f(0, 0, 1) : Vec3f(0, 1, 0); // Choose a safe up vector
-        Vec3f x = (up^z).normalize(); // Perpendicular to z
-        Vec3f y = z^x;             // Completes right-handed basis
-
+        TGAColor rvac_color = noise_texture.get(uv.x * uNoiseScale.x,uv.y * uNoiseScale.y);
+        Vec3f rvac = {
+                static_cast<float>(rvac_color.r * 2.0 - 1.0),
+                static_cast<float>(rvac_color.g * 2.0 - 1.0),
+                0};
+        Vec3f tangent = (rvac - norm * (rvac * norm));
+        Vec3f bitangent = norm^tangent;
         // Create transformation matrix
         Matrix<float> M = Matrix<float>(3, 3);
-        M.set_col(0, x);
-        M.set_col(1, y);
-        M.set_col(2, z);
+        M.set_col(0, rvac);
+        M.set_col(1, tangent);
+        M.set_col(2, bitangent);
 
+        /*
         // Transform kernel and test with depth buffer
         float occlusion = 0.f;
         for(int i = 0; i < kernelSize; i++) {
             // get sample position:
-            Vec3f sample = dehomogonize(M * homogonize(kernel[i], 1.));
+            Matrix<float> M_result = M * Matrix(kernel[i]);
+            Vec3f sample = {M_result[0][0], M_result[1][0], M_result[2][0]};
             sample = sample * radius + p;
 
             // Project sample position
@@ -397,24 +403,175 @@ struct SSAOShader: IShader {
 
             // Get sample depth
             // Test with depth buffer
-            auto idx = static_cast<size_t>(offset.x + offset.y * width);
-
+            //auto idx = static_cast<size_t>(offset.x + offset.y * width);
             //float sampleDepth = depth_buffer[idx];
-            float sampleDepth = depth.get(offset.x * depth.get_width(), offset.y * depth.get_height()).r;
+            float sampleDepth = depth.get(offset.x * depth.get_width(), offset.y * depth.get_height()).r / 255.0f;
             if(sampleDepth > 0.) {
                 std::cout << "something" << std::endl;
             }
 
             // range check & accumulate:
-            float rangeCheck= abs(p.z - sampleDepth) < radius ? 1.0 : 0.0;
-            if((sampleDepth <= sample.z ? 1.0 : 0.0) * rangeCheck > 1) {
-                std::cout << "sampleDepth: " << sampleDepth << std::endl;
+            float pDepth = p.z / 255.f;
+            float rangeCheck= abs(pDepth - sampleDepth) < radius ? 1.0 : 0.0;
+            if((sampleDepth <= sample.z ? 1.0 : 0.0) * rangeCheck >= 1) {
+                //std::cout << "sampleDepth: " << sampleDepth << std::endl;
             }
             occlusion += (sampleDepth <= sample.z ? 1.0 : 0.0) * rangeCheck;
         }
         occlusion = 1.0 - (occlusion / kernelSize);
 
         // Produce image
+        color = TGAColor(occlusion * 255, occlusion * 255, occlusion * 255);
+        return false;
+
+        float occlusion = 0.f;
+        for (int i = 0; i < kernelSize; i++) {
+            // get sample position
+            Matrix<float> M_result = M * Matrix(kernel[i]);
+            Vec3f sample = {M_result[0][0], M_result[1][0], M_result[2][0]};
+            sample = sample * radius + p;
+
+            // Project sample position to [0,1] screen coords
+            Vec3f offset = dehomogonize(Projection * homogonize(sample, 1.f));
+            offset.x = offset.x * 0.5f + 0.5f;
+            offset.y = offset.y * 0.5f + 0.5f;
+
+            // Fetch depth at this projected point
+            size_t idx = static_cast<size_t>(offset.x * width + offset.y );
+            if (idx > width*height) idx = width*height;
+            float sampleDepth = depth_buffer[idx];
+
+            // Normalize current sample.z the same way as depth shader
+            //float sampleZNorm = ; // depth = far plane used in depth shader
+            // Range check & accumulate
+            float rangeCheck = fabs(p.z  - sampleDepth) < radius ? 1.0f : 0.0f;
+            if (sampleDepth < sample.z) {
+                occlusion += rangeCheck;
+            }
+        }
+        occlusion = 1.0f - (occlusion / kernelSize);
+        color = TGAColor(occlusion * 255, occlusion * 255, occlusion * 255);
+        return false;
+    }
+};
+*/
+
+
+struct SSAOShader: IShader {
+    Matrix<float> varying_pos_view = Matrix<float>(3, 3);
+    Matrix<float> varying_norm_view = Matrix<float>(3, 3);
+    Vec3f kernel[kernelSize];
+    TGAImage depth;
+    Vec2f uNoiseScale = Vec2f(width / 4, height / 4);
+    TGAImage noise_texture = TGAImage(4,4,TGAImage::RGB);
+    float *depth_buffer;
+
+    float random(float r1, float r2) {
+        std::uniform_real_distribution<float> dist(r1, r2);
+        return dist(gen);
+    }
+
+    float lerp(float v0, float v1, float t) {
+        return v0 + t * (v1 - v0);
+    }
+    SSAOShader() {
+        // Generate random coordinates in the hemisphere
+        for (int i = 0; i < kernelSize; ++i) {
+            Vec3f sample(
+                    random(-1.0f, 1.0f),
+                    random(-1.0f, 1.0f),
+                    random(0.0f, 1.0f)
+            );
+            sample.normalize();
+            float scale = static_cast<float>(i) / static_cast<float>(kernelSize) * random(0.0f, 1.0f);
+            scale = lerp(0.1f, 1.0f, scale * scale);
+            kernel[i] = sample * scale;
+        }
+        // Generate rotational noise
+        for(int i = 0; i < 4; ++i) {
+            for(int j = 0; j < 4; ++j) {
+                Vec3f n(
+                        random(-1.0f, 1.0f),
+                        random(-1.0f, 1.0f),
+                        0.0f
+                );
+                n.normalize();
+                noise_texture.set(i, j, TGAColor(
+                        (n.x * .5f + .5f) * 255,
+                        (n.y * .5f + .5f) * 255,
+                        255)
+                );
+            }
+        }
+    }
+    Matrix<float> vertex(int iface, int nthvert) override {
+        Vec3f v = model->vert(iface, nthvert);
+        Vec3f n = model->normal(iface, nthvert);
+
+        // Store view-space position and normal for interpolation
+        varying_pos_view.set_col(nthvert, dehomogonize(ModelView * homogonize(v, 1.f)));
+        varying_norm_view.set_col(nthvert, dehomogonize(ModelView * homogonize(n, 0.f)).normalize());
+
+        return Viewport * Projection * ModelView * homogonize(v, 1.f);
+    }
+
+    bool fragment(Vec3f bar, TGAColor &color) override {
+        Matrix<float> bary = Matrix(bar);
+
+        // Get interpolated view-space position and normal
+        Matrix<float> frag_pos_matrix = varying_pos_view * bary;
+        Vec3f frag_pos_view = {frag_pos_matrix[0][0], frag_pos_matrix[1][0], frag_pos_matrix[2][0]};
+
+        Matrix<float> frag_norm_matrix = varying_norm_view * bary;
+        Vec3f frag_norm_view = {frag_norm_matrix[0][0], frag_norm_matrix[1][0], frag_norm_matrix[2][0]};
+
+        // Get noise vector
+        TGAColor rvac_color = noise_texture.get(frag_pos_view.x * uNoiseScale.x, frag_pos_view.y * uNoiseScale.y);
+        Vec3f rvac = {
+                (rvac_color.r / 255.f) * 2.f - 1.f,
+                (rvac_color.g / 255.f) * 2.f - 1.f,
+                0.f
+        };
+        rvac.normalize();
+
+        // Create TBN matrix for hemisphere rotation
+        Vec3f tangent = (rvac - frag_norm_view * (rvac * frag_norm_view)).normalize();
+        Vec3f bitangent = frag_norm_view ^ tangent;
+
+        Matrix<float> TBN = Matrix<float>(3, 3);
+        TBN.set_col(0, tangent);
+        TBN.set_col(1, bitangent);
+        TBN.set_col(2, frag_norm_view);
+
+        float occlusion = 0.f;
+        for (int i = 0; i < kernelSize; i++) {
+            // Get sample position in view space
+            Matrix<float> M_kernel = Matrix(kernel[i]);
+            Matrix<float> M_sample_vec = TBN * M_kernel;
+            Vec3f sample_vec = {M_sample_vec[0][0], M_sample_vec[1][0], M_sample_vec[2][0]};
+            Vec3f sample_pos = frag_pos_view + sample_vec;
+
+            // Project sample position to screen coords [0,1]
+            Vec3f offset = dehomogonize(Projection * homogonize(sample_pos, 1.f));
+            offset.x = offset.x * 0.5f + 0.5f;
+            offset.y = offset.y * 0.5f + 0.5f;
+
+            // Check if offset is within screen bounds
+            if (offset.x < 0 || offset.y < 0 || offset.x > 1 || offset.y > 1) {
+                continue;
+            }
+
+            // Fetch depth from depth buffer
+            size_t idx = static_cast<size_t>(offset.x * width + offset.y);
+            float sampleDepth = depth_buffer[idx];
+
+            // Range check & accumulate
+            float rangeCheck = fabs(frag_pos_view.z - sampleDepth) < radius ? 1.0f : 0.0f;
+            if (sampleDepth > sample_pos.z) {
+                occlusion += rangeCheck;
+            }
+        }
+        occlusion = 1.0f - (occlusion / kernelSize);
         color = TGAColor(occlusion * 255, occlusion * 255, occlusion * 255);
         return false;
     }

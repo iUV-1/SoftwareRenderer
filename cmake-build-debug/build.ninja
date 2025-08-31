@@ -51,31 +51,31 @@ build cmake_object_order_depends_target_SoftwareRenderer: phony || .
 
 build CMakeFiles/SoftwareRenderer.dir/main.cpp.obj: CXX_COMPILER__SoftwareRenderer_unscanned_Debug C$:/Users/iUV/Documents/Programming/_SoftwareRenderer/main.cpp || cmake_object_order_depends_target_SoftwareRenderer
   DEP_FILE = CMakeFiles\SoftwareRenderer.dir\main.cpp.obj.d
-  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always -Wall -O2 -g
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always -Wall -g
   OBJECT_DIR = CMakeFiles\SoftwareRenderer.dir
   OBJECT_FILE_DIR = CMakeFiles\SoftwareRenderer.dir
 
 build CMakeFiles/SoftwareRenderer.dir/tgaimage.cpp.obj: CXX_COMPILER__SoftwareRenderer_unscanned_Debug C$:/Users/iUV/Documents/Programming/_SoftwareRenderer/tgaimage.cpp || cmake_object_order_depends_target_SoftwareRenderer
   DEP_FILE = CMakeFiles\SoftwareRenderer.dir\tgaimage.cpp.obj.d
-  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always -Wall -O2 -g
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always -Wall -g
   OBJECT_DIR = CMakeFiles\SoftwareRenderer.dir
   OBJECT_FILE_DIR = CMakeFiles\SoftwareRenderer.dir
 
 build CMakeFiles/SoftwareRenderer.dir/model.cpp.obj: CXX_COMPILER__SoftwareRenderer_unscanned_Debug C$:/Users/iUV/Documents/Programming/_SoftwareRenderer/model.cpp || cmake_object_order_depends_target_SoftwareRenderer
   DEP_FILE = CMakeFiles\SoftwareRenderer.dir\model.cpp.obj.d
-  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always -Wall -O2 -g
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always -Wall -g
   OBJECT_DIR = CMakeFiles\SoftwareRenderer.dir
   OBJECT_FILE_DIR = CMakeFiles\SoftwareRenderer.dir
 
 build CMakeFiles/SoftwareRenderer.dir/my_gl.cpp.obj: CXX_COMPILER__SoftwareRenderer_unscanned_Debug C$:/Users/iUV/Documents/Programming/_SoftwareRenderer/my_gl.cpp || cmake_object_order_depends_target_SoftwareRenderer
   DEP_FILE = CMakeFiles\SoftwareRenderer.dir\my_gl.cpp.obj.d
-  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always -Wall -O2 -g
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always -Wall -g
   OBJECT_DIR = CMakeFiles\SoftwareRenderer.dir
   OBJECT_FILE_DIR = CMakeFiles\SoftwareRenderer.dir
 
 build CMakeFiles/SoftwareRenderer.dir/geometry.cpp.obj: CXX_COMPILER__SoftwareRenderer_unscanned_Debug C$:/Users/iUV/Documents/Programming/_SoftwareRenderer/geometry.cpp || cmake_object_order_depends_target_SoftwareRenderer
   DEP_FILE = CMakeFiles\SoftwareRenderer.dir\geometry.cpp.obj.d
-  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always -Wall -O2 -g
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always -Wall -g
   OBJECT_DIR = CMakeFiles\SoftwareRenderer.dir
   OBJECT_FILE_DIR = CMakeFiles\SoftwareRenderer.dir
 
