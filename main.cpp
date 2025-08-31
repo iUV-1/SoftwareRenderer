@@ -33,6 +33,20 @@ Vec3f rasterize(IShader *shader, int iface, int nthvert) {
     return result;
 }
 
+float max_elevation_angle(float *zbuffer, Vec2f p, Vec2f dir) {
+    float maxangle = 0;
+    for (float t=0.; t<1000.; t+=1.) {
+        Vec2f cur = p + dir*t;
+        if (cur.x>=width || cur.y>=height || cur.x<0 || cur.y<0) return maxangle;
+
+        float distance = (p-cur).norm();
+        if (distance < 1.f) continue;
+        float elevation = zbuffer[int(cur.x)+int(cur.y)*width]-zbuffer[int(p.x)+int(p.y)*width];
+        maxangle = std::max(maxangle, atanf(elevation/distance));
+    }
+    return maxangle;
+}
+
 int main(int argc, char** argv) {
     /* the famous rainbow triangle */
 #if false
@@ -133,7 +147,7 @@ int main(int argc, char** argv) {
     // Setup GL
     LookAt(eye, cam, up);
     Project(-1/(eye-cam).norm());
-    SetViewport(width/8, height/8, width*3./4, height*3./4, depth);
+    SetViewport(width/8, height/8, width, height, depth);
 
     // Setup zbuffer
     float *depth_cam_buf = create_buffer(width, height);
@@ -153,32 +167,25 @@ int main(int argc, char** argv) {
     depth_from_cam.flip_vertically();
 
     /// SSAO
-    auto ssao_pass = TGAImage(width, height, TGAImage::RGB);
-    // Setup zbuffer
-    auto ssao_buf = create_buffer(width, height);
-    SSAOShader ssao_shader = SSAOShader();
-    ssao_shader.depth = depth_from_cam;
-    ssao_shader.depth_buffer = depth_cam_buf;
-    for(int i = 0; i < model->nfaces(); ++i) {
-        Vec3f screen_coords[3];
-        for (int j=0; j<3; ++j)
-            screen_coords[j] = rasterize(&ssao_shader, i, j);
+    auto ssao_frame = TGAImage(width, height, TGAImage::RGB);
 
-        Vec3f n = (screen_coords[2]-screen_coords[0])^(screen_coords[1]-screen_coords[0]);
-        n.normalize();
-        float view_dir_intensity = eye*n;
-
-        if (view_dir_intensity<1)
-            triangle(screen_coords, ssao_pass, ssao_buf, width, ssao_shader);
+    for (int x=0; x<width; x++) {
+        for (int y=0; y<height; y++) {
+            if (depth_cam_buf[x+y*width] < -1e5) continue;
+            float total = 0;
+            for (float a=0; a<M_PI*2-1e-4; a += M_PI/4) {
+                total += M_PI/2 - max_elevation_angle(depth_cam_buf, Vec2f(x, y), Vec2f(cos(a), sin(a)));
+            }
+            total /= (M_PI/2)*8;
+            total = pow(total, 100.f);
+            ssao_frame.set(x, y, TGAColor(total*255, total*255, total*255));
+        }
     }
-    ssao_pass.flip_vertically();
+    ssao_frame.flip_vertically();
     /* Render */
     auto frame = TGAImage(width, height, TGAImage::RGB);
 
     // Setup GL
-    LookAt(eye, cam, up);
-    Project(-1/(eye-cam).norm());
-    SetViewport(width/8, height/8, width*3./4, height*3./4, depth);
 
     // Setup zbuffer
     float *zbuffer = create_buffer(width, height);
@@ -187,8 +194,8 @@ int main(int argc, char** argv) {
     // GouraudShaderReference shader = GouraudShaderReference();
     Matrix4x4f MVP = Viewport*Projection*ModelView;
     MVP.invert();
-    // PhongShaderShadow shader = PhongShaderShadow(M_Shadow*MVP, depth_buffer_arr);
-    PhongShader shader = PhongShader();
+    PhongShaderShadow shader = PhongShaderShadow(M_Shadow*MVP, depth_buffer_arr);
+    //PhongShader shader = PhongShader();
 
     for (int i=0; i<model->nfaces(); ++i) {
         Vec3f screen_coords[3];
@@ -214,8 +221,13 @@ int main(int argc, char** argv) {
     // set origin to the bottom left corner
     frame.flip_vertically();
 
-
-
+    for(int x=0; x<width;++x) {
+        for(int y=0; y<height; ++y) {
+            TGAColor c = frame.get(x,y) + ssao_frame.get(x, y)*0.3f;
+            c.a = 255;
+            frame.set(x, y, c);
+        }
+    }
 
     // Get timing of the render
     auto now = std::chrono::system_clock::now();
@@ -226,7 +238,7 @@ int main(int argc, char** argv) {
             << local_time.tm_hour << "-" << local_time.tm_min << ".tga";
     frame.write_tga_file(sstream.str().c_str());
     sstream << "_ssao.tga";
-    ssao_pass.write_tga_file(sstream.str().c_str());
+    ssao_frame.write_tga_file(sstream.str().c_str());
     sstream << "_depth.tga";
     depth_from_cam.write_tga_file(sstream.str().c_str());
 
