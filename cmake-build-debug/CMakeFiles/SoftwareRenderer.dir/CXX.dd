@@ -1,0 +1,11 @@
+ninja_dyndep_version = 1.0
+build CMakeFiles\SoftwareRenderer.dir\main.cpp.obj: dyndep
+
+build CMakeFiles\SoftwareRenderer.dir\tgaimage.cpp.obj: dyndep
+
+build CMakeFiles\SoftwareRenderer.dir\model.cpp.obj: dyndep
+
+build CMakeFiles\SoftwareRenderer.dir\my_gl.cpp.obj: dyndep
+
+build CMakeFiles\SoftwareRenderer.dir\geometry.cpp.obj: dyndep
+

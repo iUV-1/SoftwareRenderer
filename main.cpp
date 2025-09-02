@@ -47,6 +47,8 @@ float max_elevation_angle(float *zbuffer, Vec2f p, Vec2f dir) {
     return maxangle;
 }
 
+#define M_PI 3.14159265358979323846
+
 int main(int argc, char** argv) {
     /* the famous rainbow triangle */
 #if false
@@ -147,7 +149,7 @@ int main(int argc, char** argv) {
     // Setup GL
     LookAt(eye, cam, up);
     Project(-1/(eye-cam).norm());
-    SetViewport(width/8, height/8, width, height, depth);
+    SetViewport(width/8, height/8, width*3./4, height*3./4, depth);
 
     // Setup zbuffer
     float *depth_cam_buf = create_buffer(width, height);
