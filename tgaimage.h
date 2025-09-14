@@ -61,6 +61,22 @@ struct TGAColor {
         return *this;
     }
 
+    TGAColor operator +(const TGAColor &c) {
+        TGAColor temp;
+        int temp2;
+        temp2 =  r + c.r;
+        if(temp2 > 255) temp2 = 255;
+        temp.r = temp2;
+        temp2 =  g + c.g;
+        if(temp2 > 255) temp2 = 255;
+        temp.g = temp2;
+        temp2 =  b + c.b;
+        if(temp2 > 255) temp2 = 255;
+        temp.b = temp2;
+
+        return temp;
+    }
+
     TGAColor & operator *(const float val) {
         r *= val;
         g *= val;

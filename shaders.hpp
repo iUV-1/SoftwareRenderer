@@ -28,6 +28,7 @@ extern bool use_normal; // Use normal map
 
 extern const float depth;
 extern const int width;
+extern const int height;
 
 struct GouraudShaderReference: IShader {
     Vec3f varying_intensity; // intensity of a vertex
@@ -194,7 +195,7 @@ struct PhongShaderShadow: IShader {
         Matrix<float> shadow_buffer_pt = uniform_Mshadow* homogonize(p, 1.f);
         Vec3f shadow_p = dehomogonize(shadow_buffer_pt);
         auto shadow_buf_idx = static_cast<size_t>(shadow_p.x + shadow_p.y * width);
-        float shadow = .3 + 7*(depth_buffer[shadow_buf_idx] < shadow_p.z+43.34); // magic coeff to avoid z-fighting
+        float shadow = .3 + .7*(depth_buffer[shadow_buf_idx] < shadow_p.z+43.34); // magic coeff to avoid z-fighting
 
         // Get the normal vector of that mesh based on the setting
         Vec3f norm;
@@ -224,11 +225,11 @@ struct PhongShaderShadow: IShader {
         }
         TGAColor texColor = tex_file.get(uv.u * tex_file.get_width(), uv.v * tex_file.get_height());
         for (int i = 0; i < 3; i++) color[i] = std::min<float>(5 + texColor[i]*shadow*(1.2*diff + .6*spec), 255.f);
-        color = texColor * diff;
 
         return false;
     }
 };
+
 
 // The famous Rainbow Triangle
 // vertex shader is discarded entirely
@@ -285,137 +286,6 @@ struct DepthShader: IShader {
     // Discard the fragment because we are only interested in the zbuffer produced by triangle()
     bool fragment(Vec3f bar, TGAColor &color) override {
         color = TGAColor(0,0,0,0);
-        return false;
-    }
-};
-
-constexpr int kernelSize = 16;
-constexpr int noiseSize = 16;
-constexpr float radius = 0.5f;
-std::random_device rd;
-std::mt19937 gen(rd());
-
-struct SSAOShader: IShader {
-    Matrix3x3<float> varying_tri;
-    Vec3f kernel[kernelSize];
-    Vec3f noise[noiseSize];
-    TGAImage depth;
-    float *depth_buffer;
-    TGAImage noise_texture;
-
-    SSAOShader() {
-        // Generate random coordinates in the hemisphere
-        for (int i = 0; i < kernelSize; ++i) {
-            kernel[i] = Vec3f(
-                random(-1.0f, 1.0f),
-                random(-1.0f, 1.0f),
-                random(0.0f, 1.0f)
-                ).normalize();
-            float scale = static_cast<float>(i) / static_cast<float>(kernelSize) * random(0.0f, 1.0f);
-            scale = lerp(0.1f, 1.0f, scale * scale);
-            kernel[i] *= scale;
-        }
-        noise_texture = TGAImage(4,4,TGAImage::RGB);
-        // Generate rotational noise
-        for (int i = 0; i < noiseSize; ++i) {
-
-        }
-
-        for(int i = 0; i < 4; ++i) {
-            for(int j = 0; j < 4; ++j) {
-                noise[i+j] = Vec3f(
-                   random(-1.0f, 1.0f),
-                   random(-1.0f, 1.0f),
-                   0.0f
-                ).normalize();
-                noise_texture.set(i,j,TGAColor(noise[i+j].x, noise[i+j].y, noise[i+j].z));
-            }
-        }
-
-    }
-
-    // Typical vertex rendering
-    Matrix<float> vertex(int iface, int nthvert) override{
-        Vec3f v = model->vert(iface, nthvert);
-        // Set the column of varying_uv to texture position in Vec2f
-        Matrix<float> transformed_vert = Viewport*uniform_M*homogonize(v, 1.);
-        varying_tri.set_col(nthvert, dehomogonize(transformed_vert));
-        return transformed_vert;
-    }
-
-    float random(float r1, float r2) {
-        std::uniform_real_distribution<float> dist(r1, r2);
-        return dist(gen);
-    }
-
-    float lerp(float v0, float v1, float t) {
-        return v0 + t * (v1 - v0);
-    }
-
-    bool fragment(Vec3f bar, TGAColor &color) override {
-        // Get uv
-        Matrix<float> bary = Matrix(bar); // 1x3 row matrix that represent a vector
-        Matrix<float> mat_uv = varying_uv*bary; // 1x2 Matrix
-        Vec2f uv = Vec2f(mat_uv[0][0], mat_uv[1][0]);
-
-        // Get normal
-        Vec3f norm;
-        if(!use_normal)
-            norm = model->normal(uv.u, uv.v);
-        else {
-            TGAColor normal_color = normal_file.get(uv.u * normal_file.get_width(), uv.v * normal_file.get_height());
-            norm = Vec3f(normal_color.r, normal_color.g, normal_color.b);
-        }
-
-        // Get point
-        Matrix<float> matrix_p = varying_tri * bary;
-        Vec3f p = { matrix_p[0][0], matrix_p[1][0], matrix_p[2][0]};
-
-        // Orient the points to the normal vector
-        Vec3f z = norm.normalize();          // Desired new z-axis
-        Vec3f up = abs(z.z) < 0.999 ? Vec3f(0, 0, 1) : Vec3f(0, 1, 0); // Choose a safe up vector
-        Vec3f x = (up^z).normalize(); // Perpendicular to z
-        Vec3f y = z^x;             // Completes right-handed basis
-
-        // Create transformation matrix
-        Matrix<float> M = Matrix<float>(3, 3);
-        M.set_col(0, x);
-        M.set_col(1, y);
-        M.set_col(2, z);
-
-        // Transform kernel and test with depth buffer
-        float occlusion = 0.f;
-        for(int i = 0; i < kernelSize; i++) {
-            // get sample position:
-            Vec3f sample = dehomogonize(M * homogonize(kernel[i], 1.));
-            sample = sample * radius + p;
-
-            // Project sample position
-            Vec3f offset = dehomogonize(Projection*homogonize(sample, 1.f));
-            offset.x = offset.x * 0.5f + 0.5f;
-            offset.y = offset.y * 0.5f + 0.5f;
-
-            // Get sample depth
-            // Test with depth buffer
-            auto idx = static_cast<size_t>(offset.x + offset.y * width);
-
-            //float sampleDepth = depth_buffer[idx];
-            float sampleDepth = depth.get(offset.x * depth.get_width(), offset.y * depth.get_height()).r;
-            if(sampleDepth > 0.) {
-                std::cout << "something" << std::endl;
-            }
-
-            // range check & accumulate:
-            float rangeCheck= abs(p.z - sampleDepth) < radius ? 1.0 : 0.0;
-            if((sampleDepth <= sample.z ? 1.0 : 0.0) * rangeCheck > 1) {
-                std::cout << "sampleDepth: " << sampleDepth << std::endl;
-            }
-            occlusion += (sampleDepth <= sample.z ? 1.0 : 0.0) * rangeCheck;
-        }
-        occlusion = 1.0 - (occlusion / kernelSize);
-
-        // Produce image
-        color = TGAColor(occlusion * 255, occlusion * 255, occlusion * 255);
         return false;
     }
 };
