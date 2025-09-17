@@ -255,6 +255,8 @@ void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, int width, IShader &s
                 // Use shader
                 TGAColor color;
                 shader.fragment(bc_screen, color);
+                //std::cout << "P: x:" << P.x << " y: " << P.y << std::endl;
+                //std::cout << "" << std::endl;
                 image.set(P.x, P.y, color);
             }
         }
