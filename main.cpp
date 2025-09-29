@@ -20,6 +20,7 @@ TGAImage specular_file;
 
 bool use_specular;
 bool use_normal;
+Vec3f light = Vec3f(-1.0, 1.0, 1.0).normalize();
 
 Vec3f rasterize(IShader *shader, int iface, int nthvert) {
     // Apply vertex shader
@@ -138,7 +139,7 @@ int main(int argc, char** argv) {
         float view_dir_intensity = eye*n;
 
         if (view_dir_intensity<1)
-            triangle(screen_coords, depth_buffer, depth_buffer_arr, width, depth_shader);
+        triangle(screen_coords, depth_buffer, depth_buffer_arr, width, depth_shader);
     }
     //depth_buffer.flip_vertically();
     Matrix4x4f M_Shadow = Viewport*Projection*ModelView;
@@ -169,7 +170,7 @@ int main(int argc, char** argv) {
     depth_from_cam.flip_vertically();
 
     /// SSAO
-    auto ssao_frame = TGAImage(width, height, TGAImage::RGB);
+/*    auto ssao_frame = TGAImage(width, height, TGAImage::RGB);
 
     for (int x=0; x<width; x++) {
         for (int y=0; y<height; y++) {
@@ -183,12 +184,9 @@ int main(int argc, char** argv) {
             ssao_frame.set(x, y, TGAColor(total*255, total*255, total*255));
         }
     }
-    ssao_frame.flip_vertically();
+    ssao_frame.flip_vertically();*/
     /* Render */
     auto frame = TGAImage(width, height, TGAImage::RGB);
-
-    // Setup GL
-
     // Setup zbuffer
     float *zbuffer = create_buffer(width, height);
     // GouraudShader shader = GouraudShader();
@@ -196,7 +194,7 @@ int main(int argc, char** argv) {
     // GouraudShaderReference shader = GouraudShaderReference();
     Matrix4x4f MVP = Viewport*Projection*ModelView;
     MVP.invert();
-    PhongShaderShadow shader = PhongShaderShadow(M_Shadow*MVP, depth_buffer_arr);
+    PhongShaderShadow shader = PhongShaderShadow(M_Shadow, depth_buffer_arr);
     //PhongShader shader = PhongShader();
 
     for (int i=0; i<model->nfaces(); ++i) {
@@ -223,13 +221,13 @@ int main(int argc, char** argv) {
     // set origin to the bottom left corner
     frame.flip_vertically();
 
-    for(int x=0; x<width;++x) {
+/*    for(int x=0; x<width;++x) {
         for(int y=0; y<height; ++y) {
             TGAColor c = frame.get(x,y) + ssao_frame.get(x, y)*0.3f;
             c.a = 255;
             frame.set(x, y, c);
         }
-    }
+    }*/
 
     // Get timing of the render
     auto now = std::chrono::system_clock::now();
@@ -239,8 +237,8 @@ int main(int argc, char** argv) {
     sstream << "../output/" << local_time.tm_mon + 1 << "-" << local_time.tm_mday << "_"
             << local_time.tm_hour << "-" << local_time.tm_min << ".tga";
     frame.write_tga_file(sstream.str().c_str());
-    sstream << "_ssao.tga";
-    ssao_frame.write_tga_file(sstream.str().c_str());
+/*    sstream << "_ssao.tga";
+    ssao_frame.write_tga_file(sstream.str().c_str());*/
     sstream << "_depth.tga";
     depth_from_cam.write_tga_file(sstream.str().c_str());
 

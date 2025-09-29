@@ -11,6 +11,9 @@
 #include "my_gl.hpp"
 
 Model::Model(const char *filename) {
+    faces_.reserve(100);
+    faces_texture.reserve(100);
+    faces_normal.reserve(100);
     std::ifstream in;
     in.open (filename, std::ifstream::in);
     if (in.fail()) return;
@@ -29,8 +32,11 @@ Model::Model(const char *filename) {
             // t_idx is the texture index from that face
             // n_idx is the normal index from that face
             std::vector<int> f;
+            f.reserve(100);
             std::vector<int> t;
+            t.reserve(100);
             std::vector<int> n;
+            n.reserve(100);
             int v_idx, t_idx, n_idx;
             iss >> trash;
             while (iss >> v_idx >> trash >> t_idx >> trash >> n_idx) {
