@@ -29,7 +29,7 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 23,
+				"line" : 24,
 				"parent" : 0
 			},
 			{
@@ -61,6 +61,18 @@
 				{
 					"backtrace" : 3,
 					"fragment" : "-g"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-ffast-math"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-fopt-info-vec"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-fopt-info-vec-missed"
 				}
 			],
 			"language" : "CXX",

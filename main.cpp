@@ -127,7 +127,7 @@ int main(int argc, char** argv) {
     Project(0); // Render light in orthographic mode
     SetViewport(width / 8, height/8, width * 3./4, height * 3./4, depth); // Clamp the image into the center with margins (3/4 of the screen)
 
-    DepthShader depth_shader = DepthShader();
+    auto depth_shader = DepthShaderImage();
     // Render
     for(int i = 0; i < model->nfaces(); ++i) {
         Vec3f screen_coords[3];
@@ -141,7 +141,7 @@ int main(int argc, char** argv) {
         if (view_dir_intensity<1)
         triangle(screen_coords, depth_buffer, depth_buffer_arr, width, depth_shader);
     }
-    //depth_buffer.flip_vertically();
+    depth_buffer.flip_vertically();
     Matrix4x4f M_Shadow = Viewport*Projection*ModelView;
 
     /* SSAO */
@@ -241,6 +241,8 @@ int main(int argc, char** argv) {
     ssao_frame.write_tga_file(sstream.str().c_str());*/
     sstream << "_depth.tga";
     depth_from_cam.write_tga_file(sstream.str().c_str());
+    sstream << "_depth_from_light.tga";
+    depth_buffer.write_tga_file(sstream.str().c_str());
 
     // How long the render takes
     std::chrono::duration<double> diff = now - before;

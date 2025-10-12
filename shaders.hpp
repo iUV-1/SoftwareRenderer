@@ -179,7 +179,7 @@ struct PhongShaderShadow: IShader {
         // Set the column of vertex the triangle using vert index
         Matrix<float> transformed_vert = Viewport*uniform_M*homogonize(v, 1.);
         varying_tri.set_col(nthvert, dehomogonize(transformed_vert));
-        varying_shadow_tri.set_col(nthvert, dehomogonize(uniform_Mshadow * homogonize(v, 1.0)));
+        varying_shadow_tri.set_col(nthvert, dehomogonize(uniform_Mshadow * homogonize(v, 1.)));
 
         return transformed_vert;
     }
@@ -197,7 +197,7 @@ struct PhongShaderShadow: IShader {
         Vec3f p = { matrix_p[0][0], matrix_p[1][0], matrix_p[2][0]};
         Matrix<float> shadow_buffer_pt = varying_shadow_tri * bary;
         Vec3f shadow_p = { shadow_buffer_pt[0][0], shadow_buffer_pt[1][0], shadow_buffer_pt[2][0]};
-        auto shadow_buf_idx = static_cast<size_t>(shadow_p.x  + shadow_p.y * width );
+        auto shadow_buf_idx = static_cast<size_t>( shadow_p.x  + shadow_p.y * width );
 
         // Get the normal vector of that mesh based on the setting
         Vec3f norm;
@@ -212,14 +212,24 @@ struct PhongShaderShadow: IShader {
         Vec3f n = dehomogonize(uniform_MIT*homogonize(norm, 0.f)).normalize();
         // Same as above
         Vec3f l = dehomogonize(uniform_M  *homogonize(light, 0.f)).normalize();
-        //slope_bias = 43.34f;
         l.z = -l.z; // I think this formula is meant to work for a different axis?
         l.y = -l.y;
         l.x = -l.x;
+
+        // Shadow
         float slope_bias = std::max(43.f* (1.0f - n*l), 10.f);
+        //slope_bias = 43.34f;
+        float depth_p = depth_buffer[shadow_buf_idx];
+        if(depth_p != -std::numeric_limits<float>::max()) {
+            depth_p -= slope_bias;
+        } else {
+            int dummy = 0;
+        }
 
-        float shadow = ((depth_buffer[shadow_buf_idx] - slope_bias) < shadow_p.z );
+        float shadow = depth_p < shadow_p.z;
 
+        if(shadow == 0)
+            int dummy = 0;
         Vec3f r = (n*(n*l*2.f) - l).normalize(); // reflection vector
         float diff = std::max(0.f, n * l); // diffuse intensity value
         // Specular
