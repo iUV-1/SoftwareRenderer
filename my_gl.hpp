@@ -23,7 +23,7 @@ struct IShader {
     Matrix4x4f uniform_MIT; // Invert transpose
     virtual ~IShader() = default;
     virtual Matrix<float> vertex(int iface, int nthvert) = 0;
-    virtual bool fragment(Vec3f bar, TGAColor &color) = 0;
+    virtual bool fragment(Vec3f bar, TGAColor &color, Vec3f vert) = 0;
 };
 
 float *create_buffer(int width, int height);

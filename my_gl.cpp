@@ -254,7 +254,7 @@ void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, int width, IShader &s
                 zbuffer[idx] = P.z;
                 // Use shader
                 TGAColor color;
-                shader.fragment(bc_screen, color);
+                shader.fragment(bc_screen, color, *pts);
                 image.set(P.x, P.y, color);
             }
         }

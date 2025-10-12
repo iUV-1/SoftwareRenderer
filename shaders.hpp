@@ -30,6 +30,7 @@ extern const float depth;
 extern const int width;
 extern const int height;
 
+/*
 struct GouraudShaderReference: IShader {
     Vec3f varying_intensity; // intensity of a vertex
 
@@ -100,9 +101,11 @@ struct GouraudShader: IShader {
         l.y = -l.y;
         l.z = -l.z;
         Vec3f n = dehomogonize(uniform_MIT*homogonize(norm, 0.f)).normalize();
+*/
 /*        if(varying_intensity*bar != n*l) {
             std::cout << "mismatched value" << std::endl;
-        }*/
+        }*//*
+
         float diff = std::max(0.f, n * l); // diffuse intensity value
 
         TGAColor texColor = tex_file.get(uv[0][0] * tex_file.get_width(), uv[1][0] * tex_file.get_height());
@@ -161,6 +164,7 @@ struct PhongShader: IShader {
         return false;
     }
 };
+*/
 
 // Like above but includes a shadow pass
 struct PhongShaderShadow: IShader {
@@ -170,7 +174,11 @@ struct PhongShaderShadow: IShader {
     Matrix4x4f uniform_Mshadow; // Shadow transformation
     float* depth_buffer;
 
-    PhongShaderShadow(Matrix4x4f uniform_shadow, float* depth_buffer) : uniform_Mshadow(std::move(uniform_shadow)), depth_buffer(depth_buffer) {}
+    PhongShaderShadow(Matrix4x4f uniform_shadow, float* depth_buffer) :  depth_buffer(depth_buffer) {
+        Matrix4x4f M = (Viewport*Projection*ModelView);
+        M.invert();
+        uniform_Mshadow = uniform_shadow*M;
+    }
 
     Matrix<float> vertex(int iface, int nthvert) override{
         Vec3f v = model->vert(iface, nthvert);
@@ -184,7 +192,7 @@ struct PhongShaderShadow: IShader {
         return transformed_vert;
     }
     // bar is the barycentric of that vertex
-    bool fragment(Vec3f bar, TGAColor &color) override {
+    bool fragment(Vec3f bar, TGAColor &color, Vec3f vert) override {
         // Convert barycentric vector to a matrix
         // NOTE: Somehow making a new variable is faster than making it inline?
         Matrix<float> bary = Matrix(bar); // 1x3 row matrix that represent a vector
@@ -195,9 +203,10 @@ struct PhongShaderShadow: IShader {
         // Get shadow position from buffer
         Matrix<float> matrix_p = varying_tri * bary;
         Vec3f p = { matrix_p[0][0], matrix_p[1][0], matrix_p[2][0]};
-        Matrix<float> shadow_buffer_pt = varying_shadow_tri * bary;
-        Vec3f shadow_p = { shadow_buffer_pt[0][0], shadow_buffer_pt[1][0], shadow_buffer_pt[2][0]};
-        auto shadow_buf_idx = static_cast<size_t>( shadow_p.x  + shadow_p.y * width );
+        Vec3f shadow_p = dehomogonize(uniform_Mshadow* homogonize(p, 1.));
+        //Matrix<float> shadow_buffer_pt = varying_shadow_tri * bary;
+        //Vec3f shadow_p = { shadow_buffer_pt[0][0], shadow_buffer_pt[1][0], shadow_buffer_pt[2][0]};
+        auto shadow_buf_idx = int(shadow_p.x)  + int(shadow_p.y) * width ;
 
         // Get the normal vector of that mesh based on the setting
         Vec3f norm;
@@ -217,8 +226,8 @@ struct PhongShaderShadow: IShader {
         l.x = -l.x;
 
         // Shadow
-        float slope_bias = std::max(43.f* (1.0f - n*l), 10.f);
-        //slope_bias = 43.34f;
+        float slope_bias = std::max(0.5f* (1.0f - n*l), 1.f);
+        slope_bias = 43.34f;
         float depth_p = depth_buffer[shadow_buf_idx];
         if(depth_p != -std::numeric_limits<float>::max()) {
             depth_p -= slope_bias;
@@ -227,7 +236,6 @@ struct PhongShaderShadow: IShader {
         }
 
         float shadow = depth_p < shadow_p.z;
-
         if(shadow == 0)
             int dummy = 0;
         Vec3f r = (n*(n*l*2.f) - l).normalize(); // reflection vector
@@ -248,6 +256,7 @@ struct PhongShaderShadow: IShader {
 };
 
 
+/*
 // The famous Rainbow Triangle
 // vertex shader is discarded entirely
 struct RainbowShader: IShader {
@@ -262,6 +271,7 @@ struct RainbowShader: IShader {
         return false;
     }
 };
+*/
 
 // Copy zbuffer to a framebuffer (Image in this case)
 struct DepthShaderImage: IShader {
@@ -277,20 +287,17 @@ struct DepthShaderImage: IShader {
     }
 
     //
-    bool fragment(Vec3f bar, TGAColor &color) override {
-        Matrix bary(bar);
-        Matrix<float> pt = varying_tri * bary; // point interpolated after transformation
-
+    bool fragment(Vec3f bar, TGAColor &color, Vec3f vert) override {
         // Set the brightness based on how far is it from the camera
         // clamp
-        float dist = std::clamp(pt[2][0]/depth, 0.f, 1.f);
+        float dist = std::clamp(vert.z/depth, 0.f, 1.f);
         color = TGAColor(255, 255, 255) *
                 (dist);
 
         return false;
     }
 };
-
+/*
 struct DepthShader: IShader {
     // Typical vertex rendering
     Matrix<float> vertex(int iface, int nthvert) override{
@@ -305,5 +312,5 @@ struct DepthShader: IShader {
         color = TGAColor(0,0,0,0);
         return false;
     }
-};
+};*/
 #endif //SHADERS_HPP
