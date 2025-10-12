@@ -15,7 +15,7 @@ set(SOURCE_FILE main.cpp
         shaders.hpp)
 
 add_link_options(-g)
-add_compile_options(-Wall -g -ffast-math -fopt-info-vec
+add_compile_options(-Wall -g -O2 -ffast-math -fopt-info-vec
         -fopt-info-vec-missed)
 
 # Copy the directory from source code tree to executable tree

@@ -30,7 +30,6 @@ extern const float depth;
 extern const int width;
 extern const int height;
 
-/*
 struct GouraudShaderReference: IShader {
     Vec3f varying_intensity; // intensity of a vertex
 
@@ -101,10 +100,9 @@ struct GouraudShader: IShader {
         l.y = -l.y;
         l.z = -l.z;
         Vec3f n = dehomogonize(uniform_MIT*homogonize(norm, 0.f)).normalize();
-*/
-/*        if(varying_intensity*bar != n*l) {
+        if(varying_intensity*bar != n*l) {
             std::cout << "mismatched value" << std::endl;
-        }*//*
+        }
 
         float diff = std::max(0.f, n * l); // diffuse intensity value
 
@@ -164,7 +162,6 @@ struct PhongShader: IShader {
         return false;
     }
 };
-*/
 
 // Like above but includes a shadow pass
 struct PhongShaderShadow: IShader {
@@ -192,7 +189,7 @@ struct PhongShaderShadow: IShader {
         return transformed_vert;
     }
     // bar is the barycentric of that vertex
-    bool fragment(Vec3f bar, TGAColor &color, Vec3f vert) override {
+    bool fragment(Vec3f bar, TGAColor &color) override {
         // Convert barycentric vector to a matrix
         // NOTE: Somehow making a new variable is faster than making it inline?
         Matrix<float> bary = Matrix(bar); // 1x3 row matrix that represent a vector
@@ -256,7 +253,6 @@ struct PhongShaderShadow: IShader {
 };
 
 
-/*
 // The famous Rainbow Triangle
 // vertex shader is discarded entirely
 struct RainbowShader: IShader {
@@ -271,7 +267,6 @@ struct RainbowShader: IShader {
         return false;
     }
 };
-*/
 
 // Copy zbuffer to a framebuffer (Image in this case)
 struct DepthShaderImage: IShader {
@@ -287,17 +282,18 @@ struct DepthShaderImage: IShader {
     }
 
     //
-    bool fragment(Vec3f bar, TGAColor &color, Vec3f vert) override {
+    bool fragment(Vec3f bar, TGAColor &color) override {
         // Set the brightness based on how far is it from the camera
+        Matrix<float> bary = Matrix(bar);
+        Matrix<float> matrix_p = varying_tri*bary;
         // clamp
-        float dist = std::clamp(vert.z/depth, 0.f, 1.f);
+        float dist = std::clamp(matrix_p[2][0]/depth, 0.f, 1.f);
         color = TGAColor(255, 255, 255) *
                 (dist);
 
         return false;
     }
 };
-/*
 struct DepthShader: IShader {
     // Typical vertex rendering
     Matrix<float> vertex(int iface, int nthvert) override{
@@ -312,5 +308,5 @@ struct DepthShader: IShader {
         color = TGAColor(0,0,0,0);
         return false;
     }
-};*/
+};
 #endif //SHADERS_HPP

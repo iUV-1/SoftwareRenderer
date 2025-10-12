@@ -170,7 +170,7 @@ int main(int argc, char** argv) {
     depth_from_cam.flip_vertically();
 
     /// SSAO
-/*    auto ssao_frame = TGAImage(width, height, TGAImage::RGB);
+    auto ssao_frame = TGAImage(width, height, TGAImage::RGB);
 
     for (int x=0; x<width; x++) {
         for (int y=0; y<height; y++) {
@@ -184,7 +184,7 @@ int main(int argc, char** argv) {
             ssao_frame.set(x, y, TGAColor(total*255, total*255, total*255));
         }
     }
-    ssao_frame.flip_vertically();*/
+    ssao_frame.flip_vertically();
     /* Render */
     auto frame = TGAImage(width, height, TGAImage::RGB);
     // Setup zbuffer
@@ -221,13 +221,13 @@ int main(int argc, char** argv) {
     // set origin to the bottom left corner
     frame.flip_vertically();
 
-/*    for(int x=0; x<width;++x) {
+    for(int x=0; x<width;++x) {
         for(int y=0; y<height; ++y) {
             TGAColor c = frame.get(x,y) + ssao_frame.get(x, y)*0.3f;
             c.a = 255;
             frame.set(x, y, c);
         }
-    }*/
+    }
 
     // Get timing of the render
     auto now = std::chrono::system_clock::now();
@@ -237,12 +237,11 @@ int main(int argc, char** argv) {
     sstream << "../output/" << local_time.tm_mon + 1 << "-" << local_time.tm_mday << "_"
             << local_time.tm_hour << "-" << local_time.tm_min << ".tga";
     frame.write_tga_file(sstream.str().c_str());
-/*    sstream << "_ssao.tga";
-    ssao_frame.write_tga_file(sstream.str().c_str());*/
+    sstream << "_ssao.tga";
+    ssao_frame.write_tga_file(sstream.str().c_str());
     sstream << "_depth.tga";
     depth_from_cam.write_tga_file(sstream.str().c_str());
-    sstream << "_depth_from_light.tga";
-    depth_buffer.write_tga_file(sstream.str().c_str());
+
 
     // How long the render takes
     std::chrono::duration<double> diff = now - before;
