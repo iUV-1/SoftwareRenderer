@@ -1,4 +1,8 @@
-
 cmake-build-debug/SoftwareRenderer
 cmake-build-debug/.DS_Store
 .DS_Store
+.idea
+.vscode
+cmake-build-debug
+cmake-build-release
+cmake-build-debug-visual-studio
