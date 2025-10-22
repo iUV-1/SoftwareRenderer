@@ -232,7 +232,7 @@ struct PhongShaderShadow: IShader {
             int dummy = 0;
         }
 
-        float shadow = depth_p < shadow_p.z;
+        float shadow = (depth_p < shadow_p.z) ? 1.f : 0.3f;
         if(shadow == 0)
             int dummy = 0;
         Vec3f r = (n*(n*l*2.f) - l).normalize(); // reflection vector

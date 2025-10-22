@@ -104,17 +104,17 @@ int main(int argc, char** argv) {
     }
 
     // camera setting
-    Vec3f eye(0, 0, 2);
+/*    Vec3f eye(0, 0, 2);
+    Vec3f cam(0, 0, 0);
+    Vec3f up(0, 1, 0);*/
+
+/*    Vec3f eye(1, 1, 3);
+    Vec3f cam(0, 0, 0);
+    Vec3f up(0, 1, 0);*/
+
+    Vec3f eye(3, 2, 3);
     Vec3f cam(0, 0, 0);
     Vec3f up(0, 1, 0);
-
-    /*Vec3f eye(1, 1, 3);
-    Vec3f cam(0, 0, 0);
-    Vec3f up(0, 1, 0);*/
-
-    /*Vec3f eye(3, 2, 3);
-    Vec3f cam(0, 0, 0);
-    Vec3f up(0, 1, 0);*/
 
     auto render = std::chrono::system_clock::now();
 
@@ -153,7 +153,7 @@ int main(int argc, char** argv) {
     SetViewport(width/8, height/8, width*3./4, height*3./4, depth);
 
     // Setup zbuffer
-    float *depth_cam_buf = create_buffer(width, height);
+/*    float *depth_cam_buf = create_buffer(width, height);
     auto depth_shader_image = DepthShaderImage();
     for(int i = 0; i < model->nfaces(); ++i) {
         Vec3f screen_coords[3];
@@ -167,10 +167,10 @@ int main(int argc, char** argv) {
         if (view_dir_intensity<1)
             triangle(screen_coords, depth_from_cam, depth_cam_buf, width, depth_shader_image);
     }
-    depth_from_cam.flip_vertically();
+    depth_from_cam.flip_vertically();*/
 
     /// SSAO
-    auto ssao_frame = TGAImage(width, height, TGAImage::RGB);
+    /*auto ssao_frame = TGAImage(width, height, TGAImage::RGB);
 
     for (int x=0; x<width; x++) {
         for (int y=0; y<height; y++) {
@@ -184,7 +184,7 @@ int main(int argc, char** argv) {
             ssao_frame.set(x, y, TGAColor(total*255, total*255, total*255));
         }
     }
-    ssao_frame.flip_vertically();
+    ssao_frame.flip_vertically();*/
     /* Render */
     auto frame = TGAImage(width, height, TGAImage::RGB);
     // Setup zbuffer
@@ -221,13 +221,13 @@ int main(int argc, char** argv) {
     // set origin to the bottom left corner
     frame.flip_vertically();
 
-    for(int x=0; x<width;++x) {
+/*    for(int x=0; x<width;++x) {
         for(int y=0; y<height; ++y) {
             TGAColor c = frame.get(x,y) + ssao_frame.get(x, y)*0.3f;
             c.a = 255;
             frame.set(x, y, c);
         }
-    }
+    }*/
 
     // Get timing of the render
     auto now = std::chrono::system_clock::now();
@@ -237,8 +237,8 @@ int main(int argc, char** argv) {
     sstream << "../output/" << local_time.tm_mon + 1 << "-" << local_time.tm_mday << "_"
             << local_time.tm_hour << "-" << local_time.tm_min << ".tga";
     frame.write_tga_file(sstream.str().c_str());
-    sstream << "_ssao.tga";
-    ssao_frame.write_tga_file(sstream.str().c_str());
+/*    sstream << "_ssao.tga";
+    ssao_frame.write_tga_file(sstream.str().c_str());*/
     sstream << "_depth.tga";
     depth_from_cam.write_tga_file(sstream.str().c_str());
 
