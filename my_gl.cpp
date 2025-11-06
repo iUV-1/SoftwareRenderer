@@ -10,6 +10,8 @@ Matrix4x4f ModelView;
 Matrix4x4f Projection = Matrix4x4f::identity();
 Matrix4x4f Viewport;
 
+#define MAX_FLOAT std::numeric_limits<float>::max()
+
 // Create a homogonized matrix from a vector
 Matrix<float> homogonize(Vec3f v, float h) {
     Matrix<float> result(4, 1);
@@ -22,7 +24,7 @@ Matrix<float> homogonize(Vec3f v, float h) {
 
 float *create_buffer(int width, int height) {
     auto *buffer_arr = new float[width*height];
-    std::fill(buffer_arr, buffer_arr + width*height, -std::numeric_limits<float>::max()); // set every value in zbuffer to -inf
+    std::fill(buffer_arr, buffer_arr + width*height, -MAX_FLOAT); // set every value in zbuffer to -inf
     return buffer_arr;
 }
 
@@ -230,8 +232,8 @@ Vec3f barycentric(Vec3f A, Vec3f B, Vec3f C, Vec3f P) {
 }
 
 void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, int width, IShader &shader) {
-    Vec2f bboxmin( std::numeric_limits<float>::max(),  std::numeric_limits<float>::max());
-    Vec2f bboxmax(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
+    Vec2f bboxmin( MAX_FLOAT,  MAX_FLOAT);
+    Vec2f bboxmax(-MAX_FLOAT, -MAX_FLOAT);
     //std::cout << pts[0] << pts[1] << pts[2] << std::endl;
     Vec2f clamp(image.get_width()-1, image.get_height()-1);
     for (int i=0; i<3; i++) {
