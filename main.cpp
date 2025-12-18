@@ -73,7 +73,11 @@ int main(int argc, char** argv) {
     delete frame;
     return 0;
 #endif
-
+#ifdef _OPENMP
+    std::cout << "OpenMP is supported! Version: " << _OPENMP << std::endl;
+#else
+    std::cout << "OpenMP is not supported." << std::endl;
+#endif
     // Time the render
     auto before = std::chrono::system_clock::now();
 

@@ -15,5 +15,10 @@ add_compile_options(-Wall -g -O2 -ffast-math -fopt-info-vec
 
 # Copy the directory from source code tree to executable tree
 file(COPY ./obj DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+# 1. Find the OpenMP package
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILE})
+find_package(OpenMP REQUIRED)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(SoftwareRenderer PUBLIC OpenMP::OpenMP_CXX)
+endif()
