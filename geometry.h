@@ -2,12 +2,7 @@
 // Created by iUV on 9/7/2024.™
 //
 
-#ifndef SOFTWARERENDERER_GEOMETRY_H
-#define SOFTWARERENDERER_GEOMETRY_H
-
-#endif //SOFTWARERENDERER_GEOMETRY_H
-#ifndef __GEOMETRY_H__
-#define __GEOMETRY_H__
+#pragma once
 
 #include <cmath>
 #include <vector>
@@ -15,7 +10,11 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <class t> struct Vec2 {
+//#define INFINITY std::numeric_limits<float>::max();
+ template <typename T>
+ class Matrix;
+template <class t> class Vec2 {
+public:
     union {
         struct {t u, v;};
         struct {t x, y;};
@@ -23,6 +22,7 @@ template <class t> struct Vec2 {
     };
     Vec2() : u(0), v(0) {}
     Vec2(t _u, t _v) : u(_u),v(_v) {}
+    Vec2(Matrix<t> mat);
     inline Vec2<t> operator +(const Vec2<t> &V) const { return Vec2<t>(u+V.u, v+V.v); }
     inline Vec2<t> operator -(const Vec2<t> &V) const { return Vec2<t>(u-V.u, v-V.v); }
     inline Vec2<t> operator *(float f)          const { return Vec2<t>(u*f, v*f); }
@@ -36,7 +36,8 @@ template <class t> struct Vec2 {
     };
 };
 
-template <class t> struct Vec3 {
+template <class t> class Vec3 {
+public:
     union {
         struct {t x, y, z;};
         struct { t ivert, iuv, inorm; };
@@ -44,6 +45,7 @@ template <class t> struct Vec3 {
     };
     Vec3() : x(0), y(0), z(0) {}
     Vec3(t _x, t _y, t _z) : x(_x),y(_y),z(_z) {}
+    Vec3(Matrix<t> mat);
 
     inline Vec3<t> operator ^(const Vec3<t> &v) const { return Vec3<t>(y*v.z-z*v.y, z*v.x-x*v.z, x*v.y-y*v.x); }
     inline Vec3<t> operator +(const Vec3<t> &v) const { return Vec3<t>(x+v.x, y+v.y, z+v.z); }
@@ -68,10 +70,48 @@ template <class t> struct Vec3 {
     };
 };
 
+template <class t> class Vec4 {
+public:
+     union {
+         struct {t x, y, z, w;};
+         struct { t ivert, iuv, inorm, isomething; };
+         t raw[4];
+     };
+     Vec4() : x(0), y(0), z(0), w(0) {}
+     Vec4(t _x, t _y, t _z, t _w) : x(_x),y(_y),z(_z),w(_z) {}
+     Vec4(Matrix<t> mat);
+
+     inline Vec4<t> operator ^(const Vec4<t> &v) const { return Vec4<t>(y*v.z-z*v.y, z*v.x-x*v.z, x*v.y-y*v.x); }
+     inline Vec4<t> operator +(const Vec4<t> &v) const { return Vec4<t>(x+v.x, y+v.y, z+v.z); }
+     inline Vec4<t> operator -(const Vec4<t> &v) const { return Vec4<t>(x-v.x, y-v.y, z-v.z); }
+     inline Vec4<t> operator *(float f)          const { return Vec4<t>(x*f, y*f, z*f); }
+     inline t       operator *(const Vec4<t> &v) const { return x*v.x + y*v.y + z*v.z + w*v.w; }
+     float norm () const { return std::sqrt(x*x+y*y+z*z+w*w); }
+     Vec4<t> & normalize(t l=1) { *this = (*this)*(l/norm()); return *this; }
+     template <class > friend std::ostream& operator<<(std::ostream& s, Vec4<t>& v);
+     t& operator[](size_t const &index) {
+         if(index == 0) return x;
+         if(index == 1) return y;
+         if(index == 2) return z;
+         if(index == 3) return w;
+         throw std::out_of_range("index out of range");
+     }
+
+     Vec4<t> &operator*=(t a) {
+         x *= a;
+         y *= a;
+         z *= a;
+         w *= a;
+         return *this;
+     };
+ };
+
 typedef Vec2<float> Vec2f;
 typedef Vec2<int>   Vec2i;
 typedef Vec3<float> Vec3f;
 typedef Vec3<int>   Vec3i;
+typedef Vec4<int>   Vec4i;
+typedef Vec4<float> Vec4f;
 
 template <class t> std::ostream& operator<<(std::ostream& s, Vec2<t>& v) {
     s << "(" << v.x << ", " << v.y << ")\n";
@@ -83,14 +123,21 @@ template <class t> std::ostream& operator<<(std::ostream& s, Vec3<t>& v) {
     return s;
 }
 
+ template <class t> std::ostream& operator<<(std::ostream& s, Vec4<t>& v) {
+     s << "(" << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ")\n";
+     return s;
+ }
+
 template <typename T>
 class Matrix4x4;
-
+/// Row major matrix
 template <typename T> class Matrix {
 public:
+    /* Data */
     size_t rows, cols;
     std::vector<std::vector<T>> data;
 
+    /* Initializers */
     Matrix(size_t rows, size_t columns, T defaultVal = T{}): rows(rows), cols(columns),data(rows, std::vector<T>(columns, defaultVal)) {}
 
     // init a row Matrix from a 3D vector
@@ -99,15 +146,19 @@ public:
         data[1][0] = vec.y;
         data[2][0] = vec.z;
     }
+    /* Operator overloads */
     std::vector<T>& operator[](size_t row) {return data[row];}
     const std::vector<T>& operator[](size_t row) const {return data[row];} // return a const reference to a row
-
+    Matrix<T> operator*(Matrix<T> const &other) { return this->multiply(other); }
+    template<class U>
+    friend Matrix<U> operator*( Matrix const &cur,  Matrix4x4<U> const &other);
+    Matrix<T> operator*(Vec2<T> const &other);
+    Matrix<T> operator*(Vec3<T> const &other);
+    Matrix<T> operator*(Vec4<T> const &other);
+    /* Functions */
     Matrix<T> multiply(Matrix<T> matrix) const {
         if (cols != matrix.rows) {
             throw std::invalid_argument("Matrix multiplication mismatch");
-            std::cerr << "Matrix multiplication mismatch!!" << std::endl;
-            // unable to do it, what should i return?
-            return matrix;
         }
 
         Matrix<T> result = Matrix(rows, matrix.cols);
@@ -169,10 +220,6 @@ public:
         data[idx][1] = v.y;
         data[idx][2] = v.z;
     }
-
-    Matrix<T> operator*(Matrix<T> const &other) { return this->multiply(other); }
-    template<class U>
-    friend Matrix<U> operator*( Matrix const &cur,  Matrix4x4<U> const &other);
 };
 
 template <class T> std::ostream& operator<<(std::ostream& os, Matrix<T> m) {
@@ -190,6 +237,9 @@ template <typename T> class Matrix3x3: public Matrix<T> {
 public:
     Matrix3x3() : Matrix<T>(3, 3) {}
 
+    /* Operator overloads */
+    Vec3<T> operator*(const Vec3<T> &other);
+
     // optimized calculation just for 3x3
     Matrix3x3 multiply3x3(const Matrix3x3 &other) {
         Matrix3x3 result;
@@ -197,22 +247,14 @@ public:
         const auto& A = this->data;
         const auto& B = other.data;
 
-        result(0, 0) = A[0][0] * B[0][0] + A[0][1] * B[1][0] + A[0][2] * B[2][0];
-        result(0, 1) = A[0][0] * B[0][1] + A[0][1] * B[1][1] + A[0][2] * B[2][1];
-        result(0, 2) = A[0][0] * B[0][2] + A[0][1] * B[1][2] + A[0][2] * B[2][2];
-
-        result(1, 0) = A[1][0] * B[0][0] + A[1][1] * B[1][0] + A[1][2] * B[2][0];
-        result(1, 1) = A[1][0] * B[0][1] + A[1][1] * B[1][1] + A[1][2] * B[2][1];
-        result(1, 2) = A[1][0] * B[0][2] + A[1][1] * B[1][2] + A[1][2] * B[2][2];
-
-        result(2, 0) = A[2][0] * B[0][0] + A[2][1] * B[1][0] + A[2][2] * B[2][0];
-        result(2, 1) = A[2][0] * B[0][1] + A[2][1] * B[1][1] + A[2][2] * B[2][1];
-        result(2, 2) = A[2][0] * B[0][2] + A[2][1] * B[1][2] + A[2][2] * B[2][2];
+        for (int i = 0; i < 3; i++) {
+            result[i][0] = A[i][0] * B[0][0] + A[i][1] * B[1][0] + A[i][2] * B[2][0];
+            result[i][1] = A[i][0] * B[0][1] + A[i][1] * B[1][1] + A[i][2] * B[2][1];
+            result[i][2] = A[i][0] * B[0][2] + A[i][1] * B[1][2] + A[i][2] * B[2][2];
+        }
 
         return result;
     }
-
-
 };
 
 typedef Matrix3x3<float> Matrix3x3f;
@@ -220,120 +262,133 @@ typedef Matrix3x3<float> Matrix3x3f;
 // 4x4 matrix derived from Matrix class
 template <typename T> class Matrix4x4: public Matrix<T> {
 public:
-     Matrix4x4() : Matrix<T>(4, 4) {}
+    Matrix4x4() : Matrix<T>(4, 4) {}
 
-     // optimized calculation just for 4x4
-     Matrix4x4 multiply4x4(const Matrix4x4 &other) {
-         Matrix4x4 result;
+    // optimized calculation just for 4x4
+    Matrix4x4 multiply4x4(const Matrix4x4 &other) {
+     Matrix4x4 result;
 
-         const auto& A = this->data;
-         const auto& B = other.data;
+     const auto& A = this->data;
+     const auto& B = other.data;
 
-         for (int i = 0; i < 4; i++) {
-             result[i][0] = A[i][0] * B[0][0] + A[i][1] * B[1][0] + A[i][2] * B[2][0] + A[i][3] * B[3][0];
-             result[i][1] = A[i][0] * B[0][1] + A[i][1] * B[1][1] + A[i][2] * B[2][1] + A[i][3] * B[3][1];
-             result[i][2] = A[i][0] * B[0][2] + A[i][1] * B[1][2] + A[i][2] * B[2][2] + A[i][3] * B[3][2];
-             result[i][3] = A[i][0] * B[0][3] + A[i][1] * B[1][3] + A[i][2] * B[2][3] + A[i][3] * B[3][3];
-         }
-
-         return result;
+     for (int i = 0; i < 4; i++) {
+         result[i][0] = A[i][0] * B[0][0] + A[i][1] * B[1][0] + A[i][2] * B[2][0] + A[i][3] * B[3][0];
+         result[i][1] = A[i][0] * B[0][1] + A[i][1] * B[1][1] + A[i][2] * B[2][1] + A[i][3] * B[3][1];
+         result[i][2] = A[i][0] * B[0][2] + A[i][1] * B[1][2] + A[i][2] * B[2][2] + A[i][3] * B[3][2];
+         result[i][3] = A[i][0] * B[0][3] + A[i][1] * B[1][3] + A[i][2] * B[2][3] + A[i][3] * B[3][3];
      }
 
-     // create a 4x4 identity matrix
-     static Matrix4x4 identity() {
-         Matrix4x4 result;
-
-         for (int i = 4; i--; ) {
-             result[i][i] = 1;
-         }
-         return result;
-     }
-
-     // Invert its own matrix
-//     void invert() {
-//        Matrix4x4<T> temp = *this;
-//
-//        T det = 0;
-//
-//        // diagonal
-//        T a = 1;
-//        T b = 1;
-//        for(int i = 0; i < 4; ++i) {
-//            a *= this[i][i];
-//            b *= this[4 - i][4 - i];
-//        }
-//     }
-
-    // from chatGPT
-    void invert() {
-     Matrix4x4<T> inv;
-     const auto &m = this->data;
-
-     inv[0][0] =  m[1][1]*m[2][2]*m[3][3] - m[1][1]*m[2][3]*m[3][2] - m[2][1]*m[1][2]*m[3][3]
-                  + m[2][1]*m[1][3]*m[3][2] + m[3][1]*m[1][2]*m[2][3] - m[3][1]*m[1][3]*m[2][2];
-     inv[0][1] = -m[0][1]*m[2][2]*m[3][3] + m[0][1]*m[2][3]*m[3][2] + m[2][1]*m[0][2]*m[3][3]
-                 - m[2][1]*m[0][3]*m[3][2] - m[3][1]*m[0][2]*m[2][3] + m[3][1]*m[0][3]*m[2][2];
-     inv[0][2] =  m[0][1]*m[1][2]*m[3][3] - m[0][1]*m[1][3]*m[3][2] - m[1][1]*m[0][2]*m[3][3]
-                  + m[1][1]*m[0][3]*m[3][2] + m[3][1]*m[0][2]*m[1][3] - m[3][1]*m[0][3]*m[1][2];
-     inv[0][3] = -m[0][1]*m[1][2]*m[2][3] + m[0][1]*m[1][3]*m[2][2] + m[1][1]*m[0][2]*m[2][3]
-                 - m[1][1]*m[0][3]*m[2][2] - m[2][1]*m[0][2]*m[1][3] + m[2][1]*m[0][3]*m[1][2];
-
-     inv[1][0] = -m[1][0]*m[2][2]*m[3][3] + m[1][0]*m[2][3]*m[3][2] + m[2][0]*m[1][2]*m[3][3]
-                 - m[2][0]*m[1][3]*m[3][2] - m[3][0]*m[1][2]*m[2][3] + m[3][0]*m[1][3]*m[2][2];
-     inv[1][1] =  m[0][0]*m[2][2]*m[3][3] - m[0][0]*m[2][3]*m[3][2] - m[2][0]*m[0][2]*m[3][3]
-                  + m[2][0]*m[0][3]*m[3][2] + m[3][0]*m[0][2]*m[2][3] - m[3][0]*m[0][3]*m[2][2];
-     inv[1][2] = -m[0][0]*m[1][2]*m[3][3] + m[0][0]*m[1][3]*m[3][2] + m[1][0]*m[0][2]*m[3][3]
-                 - m[1][0]*m[0][3]*m[3][2] - m[3][0]*m[0][2]*m[1][3] + m[3][0]*m[0][3]*m[1][2];
-     inv[1][3] =  m[0][0]*m[1][2]*m[2][3] - m[0][0]*m[1][3]*m[2][2] - m[1][0]*m[0][2]*m[2][3]
-                  + m[1][0]*m[0][3]*m[2][2] + m[2][0]*m[0][2]*m[1][3] - m[2][0]*m[0][3]*m[1][2];
-
-     inv[2][0] =  m[1][0]*m[2][1]*m[3][3] - m[1][0]*m[2][3]*m[3][1] - m[2][0]*m[1][1]*m[3][3]
-                  + m[2][0]*m[1][3]*m[3][1] + m[3][0]*m[1][1]*m[2][3] - m[3][0]*m[1][3]*m[2][1];
-     inv[2][1] = -m[0][0]*m[2][1]*m[3][3] + m[0][0]*m[2][3]*m[3][1] + m[2][0]*m[0][1]*m[3][3]
-                 - m[2][0]*m[0][3]*m[3][1] - m[3][0]*m[0][1]*m[2][3] + m[3][0]*m[0][3]*m[2][1];
-     inv[2][2] =  m[0][0]*m[1][1]*m[3][3] - m[0][0]*m[1][3]*m[3][1] - m[1][0]*m[0][1]*m[3][3]
-                  + m[1][0]*m[0][3]*m[3][1] + m[3][0]*m[0][1]*m[1][3] - m[3][0]*m[0][3]*m[1][1];
-     inv[2][3] = -m[0][0]*m[1][1]*m[2][3] + m[0][0]*m[1][3]*m[2][1] + m[1][0]*m[0][1]*m[2][3]
-                 - m[1][0]*m[0][3]*m[2][1] - m[2][0]*m[0][1]*m[1][3] + m[2][0]*m[0][3]*m[1][1];
-
-     inv[3][0] = -m[1][0]*m[2][1]*m[3][2] + m[1][0]*m[2][2]*m[3][1] + m[2][0]*m[1][1]*m[3][2]
-                 - m[2][0]*m[1][2]*m[3][1] - m[3][0]*m[1][1]*m[2][2] + m[3][0]*m[1][2]*m[2][1];
-     inv[3][1] =  m[0][0]*m[2][1]*m[3][2] - m[0][0]*m[2][2]*m[3][1] - m[2][0]*m[0][1]*m[3][2]
-                  + m[2][0]*m[0][2]*m[3][1] + m[3][0]*m[0][1]*m[2][2] - m[3][0]*m[0][2]*m[2][1];
-     inv[3][2] = -m[0][0]*m[1][1]*m[3][2] + m[0][0]*m[1][2]*m[3][1] + m[1][0]*m[0][1]*m[3][2]
-                 - m[1][0]*m[0][2]*m[3][1] - m[3][0]*m[0][1]*m[1][2] + m[3][0]*m[0][2]*m[1][1];
-     inv[3][3] =  m[0][0]*m[1][1]*m[2][2] - m[0][0]*m[1][2]*m[2][1] - m[1][0]*m[0][1]*m[2][2]
-                  + m[1][0]*m[0][2]*m[2][1] + m[2][0]*m[0][1]*m[1][2] - m[2][0]*m[0][2]*m[1][1];
-
-     T det = m[0][0]*inv[0][0] + m[0][1]*inv[1][0] + m[0][2]*inv[2][0] + m[0][3]*inv[3][0];
-
-     if (std::abs(det) < std::numeric_limits<T>::epsilon()) {
-         std::cerr << "Matrix is not invertible!\n";
-         *this = Matrix4x4<T>::identity();
-         return;
-     }
-
-     T inv_det = 1.0 / det;
-     for (int i = 0; i < 4; ++i)
-         for (int j = 0; j < 4; ++j)
-             (*this)[i][j] = inv[i][j] * inv_det;
+     return result;
     }
 
-     // From ChatGPT lol
-    void inverseTranspose() {
-        Matrix4x4<T> temp = *this;
+    // create a 4x4 identity matrix
+    static Matrix4x4 identity() {
+     Matrix4x4 result;
 
-        // Step 1: Compute determinant via cofactor expansion along row 0
-        T det = 0;
-        for (int j = 0; j < 4; ++j) {
+     for (int i = 4; i--; ) {
+         result[i][i] = 1;
+     }
+     return result;
+    }
+
+    // Invert its own matrix
+    // from chatGPT
+    void invert() {
+    Matrix4x4<T> inv;
+    const auto &m = this->data;
+
+    inv[0][0] =  m[1][1]*m[2][2]*m[3][3] - m[1][1]*m[2][3]*m[3][2] - m[2][1]*m[1][2]*m[3][3]
+              + m[2][1]*m[1][3]*m[3][2] + m[3][1]*m[1][2]*m[2][3] - m[3][1]*m[1][3]*m[2][2];
+    inv[0][1] = -m[0][1]*m[2][2]*m[3][3] + m[0][1]*m[2][3]*m[3][2] + m[2][1]*m[0][2]*m[3][3]
+             - m[2][1]*m[0][3]*m[3][2] - m[3][1]*m[0][2]*m[2][3] + m[3][1]*m[0][3]*m[2][2];
+    inv[0][2] =  m[0][1]*m[1][2]*m[3][3] - m[0][1]*m[1][3]*m[3][2] - m[1][1]*m[0][2]*m[3][3]
+              + m[1][1]*m[0][3]*m[3][2] + m[3][1]*m[0][2]*m[1][3] - m[3][1]*m[0][3]*m[1][2];
+    inv[0][3] = -m[0][1]*m[1][2]*m[2][3] + m[0][1]*m[1][3]*m[2][2] + m[1][1]*m[0][2]*m[2][3]
+             - m[1][1]*m[0][3]*m[2][2] - m[2][1]*m[0][2]*m[1][3] + m[2][1]*m[0][3]*m[1][2];
+
+    inv[1][0] = -m[1][0]*m[2][2]*m[3][3] + m[1][0]*m[2][3]*m[3][2] + m[2][0]*m[1][2]*m[3][3]
+             - m[2][0]*m[1][3]*m[3][2] - m[3][0]*m[1][2]*m[2][3] + m[3][0]*m[1][3]*m[2][2];
+    inv[1][1] =  m[0][0]*m[2][2]*m[3][3] - m[0][0]*m[2][3]*m[3][2] - m[2][0]*m[0][2]*m[3][3]
+              + m[2][0]*m[0][3]*m[3][2] + m[3][0]*m[0][2]*m[2][3] - m[3][0]*m[0][3]*m[2][2];
+    inv[1][2] = -m[0][0]*m[1][2]*m[3][3] + m[0][0]*m[1][3]*m[3][2] + m[1][0]*m[0][2]*m[3][3]
+             - m[1][0]*m[0][3]*m[3][2] - m[3][0]*m[0][2]*m[1][3] + m[3][0]*m[0][3]*m[1][2];
+    inv[1][3] =  m[0][0]*m[1][2]*m[2][3] - m[0][0]*m[1][3]*m[2][2] - m[1][0]*m[0][2]*m[2][3]
+              + m[1][0]*m[0][3]*m[2][2] + m[2][0]*m[0][2]*m[1][3] - m[2][0]*m[0][3]*m[1][2];
+
+    inv[2][0] =  m[1][0]*m[2][1]*m[3][3] - m[1][0]*m[2][3]*m[3][1] - m[2][0]*m[1][1]*m[3][3]
+              + m[2][0]*m[1][3]*m[3][1] + m[3][0]*m[1][1]*m[2][3] - m[3][0]*m[1][3]*m[2][1];
+    inv[2][1] = -m[0][0]*m[2][1]*m[3][3] + m[0][0]*m[2][3]*m[3][1] + m[2][0]*m[0][1]*m[3][3]
+             - m[2][0]*m[0][3]*m[3][1] - m[3][0]*m[0][1]*m[2][3] + m[3][0]*m[0][3]*m[2][1];
+    inv[2][2] =  m[0][0]*m[1][1]*m[3][3] - m[0][0]*m[1][3]*m[3][1] - m[1][0]*m[0][1]*m[3][3]
+              + m[1][0]*m[0][3]*m[3][1] + m[3][0]*m[0][1]*m[1][3] - m[3][0]*m[0][3]*m[1][1];
+    inv[2][3] = -m[0][0]*m[1][1]*m[2][3] + m[0][0]*m[1][3]*m[2][1] + m[1][0]*m[0][1]*m[2][3]
+             - m[1][0]*m[0][3]*m[2][1] - m[2][0]*m[0][1]*m[1][3] + m[2][0]*m[0][3]*m[1][1];
+
+    inv[3][0] = -m[1][0]*m[2][1]*m[3][2] + m[1][0]*m[2][2]*m[3][1] + m[2][0]*m[1][1]*m[3][2]
+             - m[2][0]*m[1][2]*m[3][1] - m[3][0]*m[1][1]*m[2][2] + m[3][0]*m[1][2]*m[2][1];
+    inv[3][1] =  m[0][0]*m[2][1]*m[3][2] - m[0][0]*m[2][2]*m[3][1] - m[2][0]*m[0][1]*m[3][2]
+              + m[2][0]*m[0][2]*m[3][1] + m[3][0]*m[0][1]*m[2][2] - m[3][0]*m[0][2]*m[2][1];
+    inv[3][2] = -m[0][0]*m[1][1]*m[3][2] + m[0][0]*m[1][2]*m[3][1] + m[1][0]*m[0][1]*m[3][2]
+             - m[1][0]*m[0][2]*m[3][1] - m[3][0]*m[0][1]*m[1][2] + m[3][0]*m[0][2]*m[1][1];
+    inv[3][3] =  m[0][0]*m[1][1]*m[2][2] - m[0][0]*m[1][2]*m[2][1] - m[1][0]*m[0][1]*m[2][2]
+              + m[1][0]*m[0][2]*m[2][1] + m[2][0]*m[0][1]*m[1][2] - m[2][0]*m[0][2]*m[1][1];
+
+    T det = m[0][0]*inv[0][0] + m[0][1]*inv[1][0] + m[0][2]*inv[2][0] + m[0][3]*inv[3][0];
+
+    if (std::abs(det) < std::numeric_limits<T>::epsilon()) {
+     std::cerr << "Matrix is not invertible!\n";
+     *this = Matrix4x4<T>::identity();
+     return;
+    }
+
+    T inv_det = 1.0 / det;
+    for (int i = 0; i < 4; ++i)
+     for (int j = 0; j < 4; ++j)
+         (*this)[i][j] = inv[i][j] * inv_det;
+    }
+
+    // From ChatGPT lol
+    void inverseTranspose() {
+    Matrix4x4<T> temp = *this;
+
+    // Step 1: Compute determinant via cofactor expansion along row 0
+    T det = 0;
+    for (int j = 0; j < 4; ++j) {
+        Matrix<T> minor(3, 3);
+        for (int mi = 1; mi < 4; ++mi) {
+            int r = mi - 1;
+            int c = 0;
+            for (int mj = 0; mj < 4; ++mj) {
+                if (mj == j) continue;
+                minor[r][c++] = temp[mi][mj];
+            }
+        }
+
+        T cofactor =
+                minor[0][0]*(minor[1][1]*minor[2][2] - minor[1][2]*minor[2][1]) -
+                minor[0][1]*(minor[1][0]*minor[2][2] - minor[1][2]*minor[2][0]) +
+                minor[0][2]*(minor[1][0]*minor[2][1] - minor[1][1]*minor[2][0]);
+
+        det += ((j % 2 == 0 ? 1 : -1) * temp[0][j] * cofactor);
+    }
+
+    if (std::abs(det) < std::numeric_limits<T>::epsilon() * std::abs(det)) {
+        std::cerr << "Matrix is not invertible!\n";
+        *this = Matrix4x4<T>::identity();
+        return;
+    }
+
+    // Step 2: Compute inverse and transpose at the same time (adjugate / det)
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
             Matrix<T> minor(3, 3);
-            for (int mi = 1; mi < 4; ++mi) {
-                int r = mi - 1;
-                int c = 0;
-                for (int mj = 0; mj < 4; ++mj) {
+            for (int mi = 0, r = 0; mi < 4; mi++) {
+                if (mi == i) continue;
+                for (int mj = 0, c = 0; mj < 4; mj++) {
                     if (mj == j) continue;
                     minor[r][c++] = temp[mi][mj];
                 }
+                r++;
             }
 
             T cofactor =
@@ -341,56 +396,33 @@ public:
                     minor[0][1]*(minor[1][0]*minor[2][2] - minor[1][2]*minor[2][0]) +
                     minor[0][2]*(minor[1][0]*minor[2][1] - minor[1][1]*minor[2][0]);
 
-            det += ((j % 2 == 0 ? 1 : -1) * temp[0][j] * cofactor);
-        }
-
-        if (std::abs(det) < std::numeric_limits<T>::epsilon() * std::abs(det)) {
-            std::cerr << "Matrix is not invertible!\n";
-            *this = Matrix4x4<T>::identity();
-            return;
-        }
-
-        // Step 2: Compute inverse and transpose at the same time (adjugate / det)
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                Matrix<T> minor(3, 3);
-                for (int mi = 0, r = 0; mi < 4; mi++) {
-                    if (mi == i) continue;
-                    for (int mj = 0, c = 0; mj < 4; mj++) {
-                        if (mj == j) continue;
-                        minor[r][c++] = temp[mi][mj];
-                    }
-                    r++;
-                }
-
-                T cofactor =
-                        minor[0][0]*(minor[1][1]*minor[2][2] - minor[1][2]*minor[2][1]) -
-                        minor[0][1]*(minor[1][0]*minor[2][2] - minor[1][2]*minor[2][0]) +
-                        minor[0][2]*(minor[1][0]*minor[2][1] - minor[1][1]*minor[2][0]);
-
-                (*this)[j][i] = ((i + j) % 2 == 0 ? 1 : -1) * cofactor / det;  // transpose here
-            }
+            (*this)[j][i] = ((i + j) % 2 == 0 ? 1 : -1) * cofactor / det;  // transpose here
         }
     }
+    }
 
-
+    /* Operator overloads */
+    /// Vector is always on the right
+    Vec4<T> operator* (Vec4<T> const &other);
+    /// Direct to the multiply function
     inline Matrix4x4<T> operator*( Matrix4x4<T> const &other) { return this->multiply4x4(other); };
-     template <typename U>
-    friend  Matrix<U> operator* ( Matrix4x4<U> const &cur,  Matrix<U> const &other);
 
-
+    template <typename U>
+    friend Matrix<U> operator* ( Matrix4x4<U> const &cur,  Matrix<U> const &other);
 };
 
- template <typename T>
- Matrix<T> operator* ( Matrix<T> const &cur,  Matrix4x4<T> const &other) {
-     return cur.multiply(other);
- }
+template <typename T>
+Matrix<T> operator* ( Matrix<T> const &cur,  Matrix4x4<T> const &other) {
+ return cur.multiply(other);
+}
 
- template<typename T>
- Matrix<T> operator* ( Matrix4x4<T> const &cur,  Matrix<T> const &other) {
-     return cur.multiply(other);
- }
- template Matrix<float> operator*( Matrix<float> const & ,  Matrix4x4<float> const &);
- template Matrix<float> operator*( Matrix4x4<float> const &,  Matrix<float> const &);
+template<typename T>
+Matrix<T> operator* ( Matrix4x4<T> const &cur,  Matrix<T> const &other) {
+ return cur.multiply(other);
+}
+template Matrix<float> operator*( Matrix<float> const & ,  Matrix4x4<float> const &);
+template Matrix<float> operator*( Matrix4x4<float> const &,  Matrix<float> const &);
 typedef Matrix4x4<float> Matrix4x4f;
-#endif //__GEOMETRY_H__
+
+Vec4f homogonize(Vec3f const &v, float h);
+Vec3f dehomogonize(Vec4f const &v);

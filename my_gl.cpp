@@ -10,15 +10,15 @@ Matrix4x4f ModelView;
 Matrix4x4f Projection = Matrix4x4f::identity();
 Matrix4x4f Viewport;
 
-// Create a homogonized matrix from a vector
-Matrix<float> homogonize(Vec3f v, float h) {
-    Matrix<float> result(4, 1);
-    result[0][0] = v.x;
-    result[1][0] = v.y;
-    result[2][0] = v.z;
-    result[3][0] = h;
-    return result;
-}
+//// Create a homogonized matrix from a vector
+//Matrix<float> homogonize(Vec3f v, float h) {
+//    Matrix<float> result(4, 1);
+//    result[0][0] = v.x;
+//    result[1][0] = v.y;
+//    result[2][0] = v.z;
+//    result[3][0] = h;
+//    return result;
+//}
 
 float *create_buffer(int width, int height) {
     auto *buffer_arr = new float[width*height];
@@ -26,24 +26,24 @@ float *create_buffer(int width, int height) {
     return buffer_arr;
 }
 
-// De-homogonize it
-Vec3f dehomogonize(Matrix<float> const &m) {
-    Vec3f result;
-    result.x = m[0][0] / m[3][0];
-    result.y = m[1][0] / m[3][0];
-    result.z = m[2][0] / m[3][0];
-    return result;
-}
+//// De-homogonize it
+//Vec3f dehomogonize(Matrix<float> const &m) {
+//    Vec3f result;
+//    result.x = m[0][0] / m[3][0];
+//    result.y = m[1][0] / m[3][0];
+//    result.z = m[2][0] / m[3][0];
+//    return result;
+//}
 
 // Old function. Meant to project the points using a projection matrix
-Vec3f project(Vec3f v) {
-    // row matrix
-    Matrix<float> homogonized = homogonize(v, 1);
-    //Matrix<float> transformed = transfrom.multiply(homogonized); // Matrix4x4f multiply by homogonized vector
-    Matrix<float> transformed = Projection*homogonized;
-    Vec3f result = dehomogonize(transformed);
-    return result;
-}
+//Vec3f project(Vec3f v) {
+//    // row matrix
+//    Matrix<float> homogonized = homogonize(v, 1);
+//    //Matrix<float> transformed = transfrom.multiply(homogonized); // Matrix4x4f multiply by homogonized vector
+//    Matrix<float> transformed = Projection*homogonized;
+//    Vec3f result = dehomogonize(transformed);
+//    return result;
+//}
 
 void Project(float coeff) {
     Projection[3][2] = coeff;

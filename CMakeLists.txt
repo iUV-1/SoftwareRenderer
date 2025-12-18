@@ -3,15 +3,10 @@ project(SoftwareRenderer)
 
 set(CMAKE_CXX_STANDARD 20)
 set(SOURCE_FILE main.cpp
-        tgaimage.h
-        tgaimage.cpp
-        model.cpp
-        model.h
-        geometry.h
-        my_gl.cpp
-        my_gl.hpp
-        my_gl.cpp
-        geometry.cpp
+        tgaimage.h tgaimage.cpp
+        model.cpp model.h
+        geometry.h geometry.cpp
+        my_gl.hpp my_gl.cpp
         shaders.hpp)
 
 add_link_options(-g)

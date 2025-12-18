@@ -33,7 +33,7 @@ extern const int height;
 struct GouraudShaderReference: IShader {
     Vec3f varying_intensity; // intensity of a vertex
 
-    Matrix<float> vertex(int iface, int nthvert) override{
+    Vec4f vertex(int iface, int nthvert) override{
         Vec3f v = model->vert(iface, nthvert);
         Vec3f n = model->normal(iface, nthvert);
         // Set the column of varying_uv to texture position in Vec2f
@@ -66,7 +66,7 @@ struct GouraudShader: IShader {
     Matrix4x4f uniform_M; // Projection*ModelView
     Matrix4x4f uniform_MIT; // same as above but invert_transpose()
 
-    Matrix<float> vertex(int iface, int nthvert) override{
+    Vec4f vertex(int iface, int nthvert) override{
         //light.normalize();
         Vec3f v = model->vert(iface, nthvert);
         Vec3f n = model->normal(iface, nthvert);
@@ -114,7 +114,7 @@ struct GouraudShader: IShader {
 
 // Phong Shader includes Phong reflection model and specular mapping
 struct PhongShader: IShader {
-    Matrix<float> vertex(int iface, int nthvert) override{
+    Vec4f vertex(int iface, int nthvert) override{
         Vec3f v = model->vert(iface, nthvert);
         // Set the column of varying_uv to texture position in Vec2f
         varying_uv.set_col(nthvert, model->texcoord(iface, nthvert));
@@ -177,12 +177,13 @@ struct PhongShaderShadow: IShader {
         uniform_Mshadow = uniform_shadow*M;
     }
 
-    Matrix<float> vertex(int iface, int nthvert) override{
+    Vec4f vertex(int iface, int nthvert) override{
         Vec3f v = model->vert(iface, nthvert);
         // Set the column of varying_uv to texture position in Vec2f
         varying_uv.set_col(nthvert, model->texcoord(iface, nthvert));
         // Set the column of vertex the triangle using vert index
-        Matrix<float> transformed_vert = Viewport*uniform_M*homogonize(v, 1.);
+        // TODO: Can be turned into Vec4 here
+        Vec4f transformed_vert = Viewport*uniform_M*homogonize(v, 1.);
         varying_tri.set_col(nthvert, dehomogonize(transformed_vert));
         varying_shadow_tri.set_col(nthvert, dehomogonize(uniform_Mshadow * homogonize(v, 1.)));
 
@@ -192,18 +193,18 @@ struct PhongShaderShadow: IShader {
     bool fragment(Vec3f bar, TGAColor &color) override {
         // Convert barycentric vector to a matrix
         // NOTE: Somehow making a new variable is faster than making it inline?
-        Matrix<float> bary = Matrix(bar); // 1x3 row matrix that represent a vector
+        //Matrix<float> bary = Matrix(bar); // 1x3 row matrix that represent a vector
         // Matrix<float> uv = varying_uv*Matrix(bar) <- Slower!
-        Matrix<float> mat_uv = varying_uv*bary; // 1x2 Matrix (Basically a Vec2f)
-        Vec2f uv = Vec2f(mat_uv[0][0], mat_uv[1][0]);
+        // TODO: Vector*Matrix
+        Matrix<float> mat_uv = varying_uv * bar; // 1x2 Matrix (Basically a Vec2f)
+        Vec2f uv(mat_uv);
 
         // Get shadow position from buffer
-        Matrix<float> matrix_p = varying_tri * bary;
-        Vec3f p = { matrix_p[0][0], matrix_p[1][0], matrix_p[2][0]};
-        Vec3f shadow_p = dehomogonize(uniform_Mshadow* homogonize(p, 1.));
+        Vec3f p = varying_tri * bar;
+        Vec3f shadow_p = dehomogonize(uniform_Mshadow * homogonize(p, 1.));
         //Matrix<float> shadow_buffer_pt = varying_shadow_tri * bary;
         //Vec3f shadow_p = { shadow_buffer_pt[0][0], shadow_buffer_pt[1][0], shadow_buffer_pt[2][0]};
-        auto shadow_buf_idx = int(shadow_p.x)  + int(shadow_p.y) * width ;
+        auto shadow_buf_idx = int(shadow_p.x)  + int(shadow_p.y) * width;
 
         // Get the normal vector of that mesh based on the setting
         Vec3f norm;
@@ -218,10 +219,10 @@ struct PhongShaderShadow: IShader {
         Vec3f n = dehomogonize(uniform_MIT*homogonize(norm, 0.f)).normalize();
         // Same as above
         Vec3f l = dehomogonize(uniform_M  *homogonize(light, 0.f)).normalize();
-        l.z = -l.z; // I think this formula is meant to work for a different axis?
-        l.y = -l.y;
-        l.x = -l.x;
-
+//        l.z = -l.z; // I think this formula is meant to work for a different axis?
+//        l.y = -l.y;
+//        l.x = -l.x;
+        l *= -1;
         // Shadow
         float slope_bias = std::max(0.5f* (1.0f - n*l), 1.f);
         slope_bias = 43.34f;
@@ -246,7 +247,8 @@ struct PhongShaderShadow: IShader {
             spec = std::max(r.z, 0.f);
         }
         TGAColor texColor = tex_file.get(uv.u * tex_file.get_width(), uv.v * tex_file.get_height());
-        for (int i = 0; i < 3; i++) color[i] = std::min<float>(5 + texColor[i]*shadow*(1.2*diff + .6*spec), 255.f);
+        for (int i = 0; i < 3; i++)
+            color[i] = std::min<float>(5 + texColor[i]*shadow*(1.2*diff + .6*spec), 255.f);
 
         return false;
     }
@@ -256,7 +258,7 @@ struct PhongShaderShadow: IShader {
 // The famous Rainbow Triangle
 // vertex shader is discarded entirely
 struct RainbowShader: IShader {
-    Matrix<float> vertex(int iface, int nthvert) override {
+    Vec4f vertex(int iface, int nthvert) override {
         Matrix<float> dummy = Matrix4x4f();
         return dummy;
     }
@@ -273,10 +275,10 @@ struct DepthShaderImage: IShader {
     Matrix3x3<float> varying_tri; // 3x3 matrix containing vertex position of a trig
 
     // Typical vertex rendering
-    Matrix<float> vertex(int iface, int nthvert) override{
+    Vec4f vertex(int iface, int nthvert) override{
         Vec3f v = model->vert(iface, nthvert);
         // Set the column of varying_uv to texture position in Vec2f
-        Matrix<float> transformed_vert = Viewport*uniform_M*homogonize(v, 1.);
+        Vec4f transformed_vert = Viewport*uniform_M*homogonize(v, 1.);
         varying_tri.set_col(nthvert, dehomogonize(transformed_vert));
         return transformed_vert;
     }
@@ -284,10 +286,9 @@ struct DepthShaderImage: IShader {
     //
     bool fragment(Vec3f bar, TGAColor &color) override {
         // Set the brightness based on how far is it from the camera
-        Matrix<float> bary = Matrix(bar);
-        Matrix<float> matrix_p = varying_tri*bary;
+        Vec3f p = varying_tri*bar;
         // clamp
-        float dist = std::clamp(matrix_p[2][0]/depth, 0.f, 1.f);
+        float dist = std::clamp(p.z/depth, 0.f, 1.f);
         color = TGAColor(255, 255, 255) *
                 (dist);
 
@@ -296,7 +297,7 @@ struct DepthShaderImage: IShader {
 };
 struct DepthShader: IShader {
     // Typical vertex rendering
-    Matrix<float> vertex(int iface, int nthvert) override{
+    Vec4f vertex(int iface, int nthvert) override{
         Vec3f v = model->vert(iface, nthvert);
         // Set the column of varying_uv to texture position in Vec2f
         // Matrix<float> transformed_vert = Viewport*uniform_M*homogonize(v, 1.);

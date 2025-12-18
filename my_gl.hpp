@@ -22,7 +22,7 @@ struct IShader {
     Matrix<float> varying_uv = Matrix<float>(2, 3);
     Matrix4x4f uniform_MIT; // Invert transpose
     virtual ~IShader() = default;
-    virtual Matrix<float> vertex(int iface, int nthvert) = 0;
+    virtual Vec4f vertex(int iface, int nthvert) = 0;
     virtual bool fragment(Vec3f bar, TGAColor &color) = 0;
 };
 
@@ -33,8 +33,8 @@ void line(Vec2i t0, Vec2i t1, TGAImage &image, TGAColor color);
 void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, int width, IShader &shader);
 void wireframe_trig(Vec3f *pts, TGAImage &image, TGAColor color);
 void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAColor const &color, int width);
-Matrix<float> homogonize(Vec3f v, float h);
-Vec3f dehomogonize(Matrix<float> const &m);
+//Matrix<float> homogonize(Vec3f v, float h);
+//Vec3f dehomogonize(Matrix<float> const &m);
 Vec3f project(Vec3f v);
 Vec3f barycentric(Vec3f A, Vec3f B, Vec3f C, Vec3f P);
 void Project(float coeff);
