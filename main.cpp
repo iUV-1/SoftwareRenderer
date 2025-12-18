@@ -104,17 +104,17 @@ int main(int argc, char** argv) {
     }
 
     // camera setting
-    Vec3f eye(0, 0, 2);
-    Vec3f cam(0, 0, 0);
     Vec3f up(0, 1, 0);
+/*    Vec3f eye(0, 0, 2);
+    Vec3f cam(0, 0, 0);
+*/
 
 /*    Vec3f eye(1, 1, 3);
     Vec3f cam(0, 0, 0);
-    Vec3f up(0, 1, 0);*/
+*/
 
-/*    Vec3f eye(3, 2, 3);
+    Vec3f eye(3, 2, 3);
     Vec3f cam(0, 0, 0);
-    Vec3f up(0, 1, 0);*/
 
     auto render = std::chrono::system_clock::now();
 

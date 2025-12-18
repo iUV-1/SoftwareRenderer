@@ -8,7 +8,8 @@ template class Vec3<float>;
 template class Matrix<float>;
 template class Matrix4x4<float>;
 template class Matrix3x3<float>;
-// Create a homogonized matrix from a vector
+
+/// Create a homogonized matrix from a vector
 Vec4f homogonize(Vec3f const &v, float h) {
     Vec4f result;
     result.x = v.x;
@@ -18,6 +19,7 @@ Vec4f homogonize(Vec3f const &v, float h) {
     return result;
 }
 
+/// De-homogonize it
 Vec3f dehomogonize(Vec4f const &v) {
     if(v.w == 0.) {
         throw std::invalid_argument("what the fuck");

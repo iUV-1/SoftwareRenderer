@@ -2,11 +2,7 @@
 // Created by iuv on 7/30/25.
 //
 
-#ifndef SHADERS_HPP
-#define SHADERS_HPP
-//
-// Created by iuv on 7/30/25.
-//
+#pragma once
 
 #include <iostream>
 #include <random>
@@ -182,7 +178,6 @@ struct PhongShaderShadow: IShader {
         // Set the column of varying_uv to texture position in Vec2f
         varying_uv.set_col(nthvert, model->texcoord(iface, nthvert));
         // Set the column of vertex the triangle using vert index
-        // TODO: Can be turned into Vec4 here
         Vec4f transformed_vert = Viewport*uniform_M*homogonize(v, 1.);
         varying_tri.set_col(nthvert, dehomogonize(transformed_vert));
         varying_shadow_tri.set_col(nthvert, dehomogonize(uniform_Mshadow * homogonize(v, 1.)));
@@ -192,18 +187,12 @@ struct PhongShaderShadow: IShader {
     // bar is the barycentric of that vertex
     bool fragment(Vec3f bar, TGAColor &color) override {
         // Convert barycentric vector to a matrix
-        // NOTE: Somehow making a new variable is faster than making it inline?
-        //Matrix<float> bary = Matrix(bar); // 1x3 row matrix that represent a vector
-        // Matrix<float> uv = varying_uv*Matrix(bar) <- Slower!
-        // TODO: Vector*Matrix
         Matrix<float> mat_uv = varying_uv * bar; // 1x2 Matrix (Basically a Vec2f)
         Vec2f uv(mat_uv);
 
         // Get shadow position from buffer
         Vec3f p = varying_tri * bar;
         Vec3f shadow_p = dehomogonize(uniform_Mshadow * homogonize(p, 1.));
-        //Matrix<float> shadow_buffer_pt = varying_shadow_tri * bary;
-        //Vec3f shadow_p = { shadow_buffer_pt[0][0], shadow_buffer_pt[1][0], shadow_buffer_pt[2][0]};
         auto shadow_buf_idx = int(shadow_p.x)  + int(shadow_p.y) * width;
 
         // Get the normal vector of that mesh based on the setting
@@ -219,10 +208,7 @@ struct PhongShaderShadow: IShader {
         Vec3f n = dehomogonize(uniform_MIT*homogonize(norm, 0.f)).normalize();
         // Same as above
         Vec3f l = dehomogonize(uniform_M  *homogonize(light, 0.f)).normalize();
-//        l.z = -l.z; // I think this formula is meant to work for a different axis?
-//        l.y = -l.y;
-//        l.x = -l.x;
-        l *= -1;
+        l *= -1;// I think this formula is meant to work for a different axis?
         // Shadow
         float slope_bias = std::max(0.5f* (1.0f - n*l), 1.f);
         slope_bias = 43.34f;
@@ -283,7 +269,6 @@ struct DepthShaderImage: IShader {
         return transformed_vert;
     }
 
-    //
     bool fragment(Vec3f bar, TGAColor &color) override {
         // Set the brightness based on how far is it from the camera
         Vec3f p = varying_tri*bar;
@@ -310,4 +295,3 @@ struct DepthShader: IShader {
         return false;
     }
 };
-#endif //SHADERS_HPP
