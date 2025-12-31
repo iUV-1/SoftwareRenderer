@@ -18,9 +18,9 @@ TGAImage normal_file;
 TGAImage tex_file;
 TGAImage specular_file;
 
-bool use_specular;
-bool use_normal;
-Vec3f light = Vec3f(-1.0, 1.0, 1.0).normalize();
+bool use_specular = false;
+bool use_normal = false;
+Vec3f light = Vec3f(1.0, 1.0, 1.0);
 
 Vec3f rasterize(IShader *shader, int iface, int nthvert) {
     // Apply vertex shader
@@ -108,16 +108,9 @@ int main(int argc, char** argv) {
     }
 
     // camera setting
+    //Vec3f eye(3, 2, 3);
+    Vec3f eye(1, 1, 3);
     Vec3f up(0, 1, 0);
-/*    Vec3f eye(0, 0, 2);
-    Vec3f cam(0, 0, 0);
-*/
-
-/*    Vec3f eye(1, 1, 3);
-    Vec3f cam(0, 0, 0);
-*/
-
-    Vec3f eye(3, 2, 3);
     Vec3f cam(0, 0, 0);
 
     auto render = std::chrono::system_clock::now();
@@ -154,7 +147,7 @@ int main(int argc, char** argv) {
     // Setup GL
     LookAt(eye, cam, up);
     Project(-1/(eye-cam).norm());
-    SetViewport(width/8, height/8, width*3./4, height*3./4, depth);
+    //SetViewport(width/8, height/8, width*3./4, height*3./4, depth);
 
     // Setup zbuffer
 /*    float *depth_cam_buf = create_buffer(width, height);

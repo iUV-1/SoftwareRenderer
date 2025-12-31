@@ -205,12 +205,12 @@ struct PhongShaderShadow: IShader {
         }
         /// Insanely costly calculations
         // Transform the normal vector to the eye space
-        Vec3f n = dehomogonize(uniform_MIT*homogonize(norm, 0.f)).normalize();
+        Vec3f n = dehomogonize(uniform_MIT*homogonize(norm, 1.f)).normalize();
         // Same as above
-        Vec3f l = dehomogonize(uniform_M  *homogonize(light, 0.f)).normalize();
-        l *= -1;// I think this formula is meant to work for a different axis?
+        Vec3f l = dehomogonize(uniform_M  *homogonize(light, 1.f)).normalize();
+        l *= -1;// The reflection formula below is for object pointing to the light.
         // Shadow
-        float slope_bias = std::max(0.5f* (1.0f - n*l), 1.f);
+        float slope_bias = std::max(0.5f* (1.0f - n*(l*-1)), 1.f);
         slope_bias = 43.34f;
         float depth_p = depth_buffer[shadow_buf_idx];
         if(depth_p != -std::numeric_limits<float>::max()) {
