@@ -216,8 +216,6 @@ struct PhongShaderShadow: IShader {
         float depth_p = depth_buffer[shadow_buf_idx];
         if(depth_p != -MAX_FLOAT) {
             depth_p -= slope_bias;
-        } else {
-            int dummy = 0;
         }
 
         float shadow = (depth_p < shadow_p.z) ? 1.f : 0.3f;

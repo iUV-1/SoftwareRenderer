@@ -8,6 +8,7 @@
 #include "my_gl.hpp"
 #include "tgaimage.h"
 #include "shaders.hpp"
+#include "CycleTimer.hpp"
 
 constexpr int width = 800;
 constexpr int height = 800;

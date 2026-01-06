@@ -7,7 +7,8 @@ set(SOURCE_FILE main.cpp
         model.cpp model.h
         geometry.h geometry.cpp
         my_gl.hpp my_gl.cpp
-        shaders.hpp)
+        shaders.hpp
+        CycleTimer.hpp)
 
 add_link_options(-g)
 add_compile_options(-Wall -g -O2 -ffast-math -fopt-info-vec
