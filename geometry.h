@@ -10,7 +10,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//#define INFINITY std::numeric_limits<float>::max();
+constexpr float MAX_FLOAT = std::numeric_limits<float>::max();
  template <typename T>
  class Matrix;
 template <class t> class Vec2 {

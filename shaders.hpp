@@ -159,6 +159,8 @@ struct PhongShader: IShader {
     }
 };
 
+#define TEX2D(tex, uv) (tex.get(uv.u * tex.get_width(), uv.v * tex.get_height()))
+
 // Like above but includes a shadow pass
 struct PhongShaderShadow: IShader {
     Matrix3x3<float> varying_tri; // 3x3 matrix containing verticies of a trig
@@ -186,9 +188,8 @@ struct PhongShaderShadow: IShader {
     }
     // bar is the barycentric of that vertex
     bool fragment(Vec3f bar, TGAColor &color) override {
-        // Convert barycentric vector to a matrix
-        Matrix<float> mat_uv = varying_uv * bar; // 1x2 Matrix (Basically a Vec2f)
-        Vec2f uv(mat_uv);
+        // Interpolate the uv vector
+        Vec2f uv(varying_uv * bar);
 
         // Get shadow position from buffer
         Vec3f p = varying_tri * bar;
@@ -200,7 +201,7 @@ struct PhongShaderShadow: IShader {
         if(!use_normal)
             norm = model->normal(uv.u, uv.v);
         else {
-            TGAColor normal_color = normal_file.get(uv.u * normal_file.get_width(), uv.v * normal_file.get_height());
+            TGAColor normal_color = TEX2D(normal_file, uv);
             norm = Vec3f(normal_color.r, normal_color.g, normal_color.b);
         }
         /// Insanely costly calculations
@@ -213,26 +214,25 @@ struct PhongShaderShadow: IShader {
         float slope_bias = std::max(0.5f* (1.0f - n*(l*-1)), 1.f);
         slope_bias = 43.34f;
         float depth_p = depth_buffer[shadow_buf_idx];
-        if(depth_p != -std::numeric_limits<float>::max()) {
+        if(depth_p != -MAX_FLOAT) {
             depth_p -= slope_bias;
         } else {
             int dummy = 0;
         }
 
         float shadow = (depth_p < shadow_p.z) ? 1.f : 0.3f;
-        if(shadow == 0)
-            int dummy = 0;
+
         Vec3f r = (n*(n*l*2.f) - l).normalize(); // reflection vector
         float diff = std::max(0.f, n * l); // diffuse intensity value
         // Specular
         float spec = 0.f;
         if(use_specular) {
-            float spec_map_val = specular_file.get(uv.u * specular_file.get_width(), uv.v * specular_file.get_height()).r;
+            float spec_map_val = TEX2D(specular_file, uv).r;
             spec = pow(std::max(r.z, 0.f), spec_map_val);
         } else {
             spec = std::max(r.z, 0.f);
         }
-        TGAColor texColor = tex_file.get(uv.u * tex_file.get_width(), uv.v * tex_file.get_height());
+        TGAColor texColor = TEX2D(tex_file, uv);
         for (int i = 0; i < 3; i++)
             color[i] = std::min<float>(5 + texColor[i]*shadow*(1.2*diff + .6*spec), 255.f);
 

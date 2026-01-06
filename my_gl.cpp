@@ -13,7 +13,7 @@ Matrix4x4f Viewport;
 
 float *create_buffer(int width, int height) {
     auto *buffer_arr = new float[width*height];
-    std::fill(buffer_arr, buffer_arr + width*height, -std::numeric_limits<float>::max()); // set every value in zbuffer to -inf
+    std::fill(buffer_arr, buffer_arr + width*height, -MAX_FLOAT); // set every value in zbuffer to -inf
     return buffer_arr;
 }
 
@@ -213,8 +213,8 @@ Vec3f barycentric(Vec3f A, Vec3f B, Vec3f C, Vec3f P) {
 }
 
 void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, int width, IShader &shader) {
-    Vec2f bboxmin( std::numeric_limits<float>::max(),  std::numeric_limits<float>::max());
-    Vec2f bboxmax(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
+    Vec2f bboxmin( MAX_FLOAT,  MAX_FLOAT);
+    Vec2f bboxmax(-MAX_FLOAT, -MAX_FLOAT);
     //std::cout << pts[0] << pts[1] << pts[2] << std::endl;
     Vec2f clamp(image.get_width()-1, image.get_height()-1);
     for (int i=0; i<3; i++) {
@@ -223,9 +223,10 @@ void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, int width, IShader &s
             bboxmax[j] = std::min(clamp[j], std::max(bboxmax[j], pts[i][j]));
         }
     }
-    Vec3f P;
-    for (P.x=bboxmin.x; P.x<=bboxmax.x; ++P.x) {
-        for (P.y=bboxmin.y; P.y<=bboxmax.y; ++P.y) {
+    //Vec3f P;
+    for (int i = bboxmin.x; i <=bboxmax.x; i++) {
+        for (int j = bboxmin.y; j<=bboxmax.y; j++) {
+            Vec3f P(i, j, 0);
             Vec3f bc_screen  = barycentric(pts[0], pts[1], pts[2], P);
             if (bc_screen.x<0 || bc_screen.y<0 || bc_screen.z<0) continue;
             P.z = 0;

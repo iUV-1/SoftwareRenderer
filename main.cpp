@@ -48,7 +48,7 @@ float max_elevation_angle(float *zbuffer, Vec2f p, Vec2f dir) {
     return maxangle;
 }
 
-#define M_PI 3.14159265358979323846
+constexpr float PI = 3.14159265358979323846;
 
 int main(int argc, char** argv) {
     /* the famous rainbow triangle */
