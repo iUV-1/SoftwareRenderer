@@ -226,7 +226,7 @@ struct PhongShaderShadow: IShader {
         float spec = 0.f;
         if(use_specular) {
             float spec_map_val = TEX2D(specular_file, uv).r;
-            spec = pow(std::max(r.z, 0.f), spec_map_val);
+            spec = std::pow(std::max(r.z, 0.f), spec_map_val);
         } else {
             spec = std::max(r.z, 0.f);
         }
