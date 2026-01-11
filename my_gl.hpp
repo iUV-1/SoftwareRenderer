@@ -1,27 +1,44 @@
 //
 // Created by iUV on 3/7/2025.
 //
+
+
+#pragma once
 #include "tgaimage.h"
 #include "geometry.h"
-
-#ifndef SOFTWARERENDERER_MY_GL_HPP
-#define SOFTWARERENDERER_MY_GL_HPP
+#include "model.h"
+#include "render.hpp"
 
 extern Matrix4x4f ModelView;
 extern Matrix4x4f Projection;
 extern Matrix4x4f Viewport;
 
+#define TEX2D(tex, uv) (tex->get(uv.u * tex->get_width(), uv.v * tex->get_height()))
+
 /* Interface for both vertex and fragment shader*/
-struct IShader {
-    IShader() {
+class IShader {
+public:
+    IShader() {}
+    IShader(Material *mat, Camera *cam, Model *model, Scene *scene)
+            : uniform_Material(mat), uniform_Camera(cam), uniform_Model(model), uniform_Scene(scene){
+//    :width(w){
+        //input = i;
         uniform_M = Projection*ModelView;
         uniform_MIT = uniform_M;
         uniform_MIT.inverseTranspose();
+        width = scene->Width;
     };
+    //IShader() = default; // don't use this
+
     Matrix4x4f uniform_M;
     Matrix<float> varying_uv = Matrix<float>(2, 3);
     Matrix4x4f uniform_MIT; // Invert transpose
-    virtual ~IShader() = default;
+    Material *uniform_Material;
+    Camera  *uniform_Camera;
+    Model *uniform_Model;
+    Scene *uniform_Scene;
+    int width;
+    //virtual ~IShader() = default;
     virtual Vec4f vertex(int iface, int nthvert) = 0;
     virtual bool fragment(Vec3f bar, TGAColor &color) = 0;
 };
@@ -43,5 +60,3 @@ void world2screen(Vec3f v, int w, int h, float depth);
 void SetViewport(int width, int height, float depth);
 void SetViewport(int x, int y, float w, float h, float depth);
 
-
-#endif //SOFTWARERENDERER_MY_GL_HPP
