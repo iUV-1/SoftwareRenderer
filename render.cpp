@@ -150,7 +150,8 @@ void Renderer::Render(SDL_Surface *surface) {
         // back face culling
 
         if (view_dir_intensity<1) {
-            triangle(screen_coords, frame, zbuffer, mScene->Width, shader);
+            //triangle(screen_coords, frame, zbuffer, mScene->Width, shader);
+            triangle(screen_coords, surface, zbuffer, mScene->Width, shader);
             //wireframe_trig(screen_coords, frame, TGAColor(255, 255, 255, 255));
         }
     }

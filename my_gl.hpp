@@ -19,6 +19,12 @@ extern Matrix4x4f Viewport;
 class IShader {
 public:
     IShader() {}
+    IShader(Scene *scene) {
+        uniform_M = Projection*ModelView;
+        uniform_MIT = uniform_M;
+        uniform_MIT.inverseTranspose();
+        width = scene->Width;
+    }
     IShader(Material *mat, Camera *cam, Model *model, Scene *scene)
             : uniform_Material(mat), uniform_Camera(cam), uniform_Model(model), uniform_Scene(scene){
 //    :width(w){
@@ -33,10 +39,10 @@ public:
     Matrix4x4f uniform_M;
     Matrix<float> varying_uv = Matrix<float>(2, 3);
     Matrix4x4f uniform_MIT; // Invert transpose
-    Material *uniform_Material;
-    Camera  *uniform_Camera;
-    Model *uniform_Model;
-    Scene *uniform_Scene;
+    Material *uniform_Material = nullptr;
+    Camera  *uniform_Camera = nullptr;
+    Model *uniform_Model = nullptr;
+    Scene *uniform_Scene = nullptr;
     int width;
     //virtual ~IShader() = default;
     virtual Vec4f vertex(int iface, int nthvert) = 0;
@@ -50,6 +56,7 @@ void line(Vec2i t0, Vec2i t1, TGAImage &image, TGAColor color);
 void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, int width, IShader &shader);
 void wireframe_trig(Vec3f *pts, TGAImage &image, TGAColor color);
 void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAColor const &color, int width);
+void triangle(Vec3f *pts, SDL_Surface *surface, float *zbuffer, int width, IShader &shader);
 //Matrix<float> homogonize(Vec3f v, float h);
 //Vec3f dehomogonize(Matrix<float> const &m);
 Vec3f project(Vec3f v);

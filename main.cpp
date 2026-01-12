@@ -8,8 +8,9 @@
 #include <string>
 
 #include "render.hpp"
+#include "CycleTimer.hpp"
 
-SDL_Window* window;
+SDL_Window *window;
 SDL_Surface *windowSurface;
 
 constexpr int width = 640;
@@ -55,6 +56,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 }
 
 SDL_AppResult SDL_AppIterate(void *appstate) {
+    double before = CycleTimer::currentSeconds();
     // Get the window surface
     windowSurface = SDL_GetWindowSurface(window);
     // Render
@@ -63,6 +65,8 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     //SDL_BlitSurface(bmpSurface, nullptr, windowSurface, nullptr);
     // You gotta do this for some reason
     SDL_UpdateWindowSurface(window);
+    double timeTaken = CycleTimer::currentSeconds() - before;
+    
     return SDL_APP_CONTINUE;
 }
 
@@ -81,5 +85,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 }
 
 void SDL_AppQuit(void *appstate, SDL_AppResult result) {
+    renderer->DestroyRenderer();
     SDL_Quit();
 }

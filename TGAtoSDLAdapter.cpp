@@ -5,7 +5,7 @@
 #include "TGAtoSDLAdapter.hpp"
 
 void TGAtoSDLAdapter::SetTGAPixel(SDL_Surface *surface, int x, int y, TGAColor color) {
-    if(surface->format != SDL_PIXELFORMAT_RGBA32) {
+    if(surface->format != SDL_PIXELFORMAT_XRGB8888) {
         // bruh
         throw std::invalid_argument("Unsupported format");
     }

@@ -17,7 +17,7 @@
 struct DepthShaderImage: IShader {
     Matrix3x3<float> varying_tri; // 3x3 matrix containing vertex position of a trig
     // Typical vertex rendering
-    DepthShaderImage(Model *model, Scene *scene) { uniform_Model = model; uniform_Scene = scene; }
+    DepthShaderImage(Model *model, Scene *scene): IShader(scene) { uniform_Model = model; uniform_Scene = scene; }
     Vec4f vertex(int iface, int nthvert) override{
         Vec3f v = uniform_Model->vert(iface, nthvert);
         // Set the column of varying_uv to texture position in Vec2f
