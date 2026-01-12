@@ -12,6 +12,7 @@
 
 SDL_Window *window;
 SDL_Surface *windowSurface;
+SDL_Renderer *sdlRenderer;
 
 constexpr int width = 640;
 constexpr int height = 640;
@@ -52,10 +53,12 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     Vec3f light(1.0, 1.0, 1.0);
     light.normalize();
     renderer->SetupScene(width, height, 255.f, light);
+    sdlRenderer = SDL_CreateRenderer(window, nullptr);
     return SDL_APP_CONTINUE;
 }
 
 SDL_AppResult SDL_AppIterate(void *appstate) {
+    SDL_RenderClear(sdlRenderer);
     double before = CycleTimer::currentSeconds();
     // Get the window surface
     windowSurface = SDL_GetWindowSurface(window);
@@ -66,7 +69,11 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     // You gotta do this for some reason
     SDL_UpdateWindowSurface(window);
     double timeTaken = CycleTimer::currentSeconds() - before;
-    
+    SDL_Log("%.2f ms\n", 1000.f * timeTaken);
+    double fps = 1000 / timeTaken;
+    std::string fpsStr = "FPS: " + std::to_string(fps);
+    SDL_RenderDebugText(sdlRenderer, 10, 10, fpsStr.c_str());
+    //SDL_RenderPresent(sdlRenderer);
     return SDL_APP_CONTINUE;
 }
 
