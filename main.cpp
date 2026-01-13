@@ -5,6 +5,9 @@
 
 #include "pch.h"
 #include <SDL3/SDL_main.h>
+#include <imgui.h>
+#include <imgui_impl_sdlrenderer3.h>
+#include <imgui_impl_sdl3.h>
 #include <string>
 
 #include "render.hpp"
@@ -25,11 +28,13 @@ Vec3f up(0, 1, 0);
 Vec3f cam(0, 0, 0);
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
+    // Get the global struct by casting
+    appstate[0] = new ImGuiIO;
     if(!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK)) {
         return SDL_APP_FAILURE;
     }
     window = SDL_CreateWindow("Software Renderer", width, height, SDL_WINDOW_RESIZABLE);
-    // Initialize the renderer
+    // --- SETUP RENDERER ---
     double beforeSetup = CycleTimer::currentSeconds();
     renderer = new Renderer();
 
@@ -60,7 +65,32 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     double setupTimeTaken = CycleTimer::currentSeconds() - beforeSetup;
     SDL_Log("Setup time: %.2f ms\n", 1000.f * setupTimeTaken);
 
+    // --- SETUP IMGUI ---
     sdlRenderer = SDL_CreateRenderer(window, nullptr);
+    if (renderer == nullptr)
+    {
+        SDL_Log("Error: SDL_CreateRenderer(): %s\n", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
+    // imgui stuff
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();    (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    *(ImGuiIO*)appstate[0] = io; // ig this works
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsLight();
+    float main_scale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
+
+    // Setup scaling
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.ScaleAllSizes(main_scale);        // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
+    style.FontScaleDpi = main_scale;        // Set initial font scale. (using io.ConfigDpiScaleFonts=true makes this unnecessary. We leave both here for documentation purpose)
+    // Setup Platform/Renderer backends
+    ImGui_ImplSDL3_InitForSDLRenderer(window, sdlRenderer);
+    ImGui_ImplSDLRenderer3_Init(sdlRenderer);
+
     return SDL_APP_CONTINUE;
 }
 
@@ -81,6 +111,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     renderer->Render(windowSurface);
     // Blit
     //SDL_BlitSurface(bmpSurface, nullptr, windowSurface, nullptr);
+    SDL_FlipSurface(windowSurface, SDL_FLIP_VERTICAL);
     // You gotta do this for some reason
     SDL_UpdateWindowSurface(window);
     double timeTaken = CycleTimer::currentSeconds() - before;

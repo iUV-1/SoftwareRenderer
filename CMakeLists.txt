@@ -35,15 +35,28 @@ if(OpenMP_CXX_FOUND)
 endif()
 
 # Add SDL
-#set(SDL_X11_XCURSOR OFF CACHE BOOL "Disable XCursor support" FORCE)
-#set(SDL_X11_XINPUT OFF CACHE BOOL "Disable XInput support" FORCE)
-#set(SDL_X11_XFIXES OFF CACHE BOOL "" FORCE)
-#set(SDL_X11_XRANDR OFF CACHE BOOL "" FORCE)
-#set(SDL_X11_XSCRNSAVER OFF CACHE BOOL "" FORCE)
-#set(SDL_X11_XTEST OFF CACHE BOOL "" FORCE)
-
 add_subdirectory(third_party/SDL EXCLUDE_FROM_ALL)
-add_compile_options(-DSDL_X11_XCURSOR=OFF)
+#add_compile_options(-DSDL_X11_XCURSOR=OFF)
 target_precompile_headers(${PROJECT_NAME} PUBLIC pch.h)
 
 target_link_libraries(SoftwareRenderer PUBLIC SDL3::SDL3)
+
+# Add imgui
+# 1. Setup paths
+set(IMGUI_DIR "${CMAKE_SOURCE_DIR}/third_party/imgui")
+
+# 3. Add ImGui sources DIRECTLY to your executable
+add_library(imgui STATIC
+        "${IMGUI_DIR}/imgui.cpp"
+        "${IMGUI_DIR}/imgui_demo.cpp"
+        "${IMGUI_DIR}/imgui_draw.cpp"
+        "${IMGUI_DIR}/imgui_tables.cpp"
+        "${IMGUI_DIR}/imgui_widgets.cpp"
+        "${IMGUI_DIR}/backends/imgui_impl_sdlrenderer3.cpp"
+        "${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp"
+)
+
+# 4. Add the include directory so #include "imgui.h" works
+target_include_directories(imgui PUBLIC "${IMGUI_DIR}" "${IMGUI_DIR}/backends")
+target_link_libraries(imgui PUBLIC SDL3::SDL3)
+target_link_libraries(${PROJECT_NAME} PRIVATE imgui)
