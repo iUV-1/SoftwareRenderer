@@ -5,7 +5,7 @@
 #include "pch.h"
 
 #include "render.hpp"
-#include "Model.h"
+#include "model.h"
 #include "tgaimage.h"
 #include "my_gl.hpp"
 //#include "shaders.hpp"
@@ -156,5 +156,5 @@ void Renderer::Render(SDL_Surface *surface) {
         }
     }
     // set origin to the bottom left corner
-    frame.flip_vertically();
+    // frame.flip_vertically();
 }

@@ -67,6 +67,12 @@ void SetViewport(int width, int height, float depth) {
     Viewport[2][2] = depth/2.f;
 }
 
+/// Set the viewport plane matrix
+/// x: start point in x
+/// y: start point in y
+/// w: width
+/// h: height
+/// depth: depth
 void SetViewport(int x, int y, float w, float h, float depth) {
     Viewport = Matrix4x4f::identity();
     Viewport[0][3] = x + w / 2.f;

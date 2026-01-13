@@ -13,7 +13,7 @@
 #include "../render.hpp"
 
 // Like above but includes a shadow pass
-struct PhongShaderShadow: public IShader {
+struct PhongShaderShadow: IShader {
     Matrix3x3<float> varying_tri; // 3x3 matrix containing verticies of a trig
     Matrix3x3<float> varying_shadow_tri; // 3x3 matrix containing verticies of a shadow trig
 
@@ -52,7 +52,7 @@ struct PhongShaderShadow: public IShader {
 
         // Get the normal vector of that mesh based on the setting
         Vec3f norm;
-        if(uniform_Material->UseNormal)
+        if(!uniform_Material->UseNormal)
             norm = uniform_Model->normal(uv.u, uv.v);
         else {
             TGAColor normal_color = TEX2D(uniform_Material->NormalFile, uv);
