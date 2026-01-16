@@ -94,8 +94,31 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     return SDL_APP_CONTINUE;
 }
 
+float renderTime = 30.f;
+
 SDL_AppResult SDL_AppIterate(void *appstate) {
+    // --- IMGUI STUFF ---
+    ImGuiIO& io = *(ImGuiIO*)appstate; // this work
+    // new frame blah blah blah
+    ImGui_ImplSDLRenderer3_NewFrame();
+    ImGui_ImplSDL3_NewFrame();
+    ImGui::NewFrame();
+    // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
+    {
+        static float f = 0.0f;
+        static int counter = 0;
+
+        ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+
+        ImGui::Text("Render time/FPS: %.3f ms/frame (%.1f FPS)", renderTime * 1000, 1/renderTime);
+        ImGui::End();
+    }
+    // IMGui render
+    ImGui::Render();
+    SDL_SetRenderScale(sdlRenderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
     SDL_RenderClear(sdlRenderer);
+
+    // --- MY RENDERER ---
     double before = CycleTimer::currentSeconds();
     // Get the window surface
     windowSurface = SDL_GetWindowSurface(window);
@@ -109,18 +132,23 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     renderer->SetCamera(eye, up, cam);
     // Render
     renderer->Render(windowSurface);
-    // Blit
-    //SDL_BlitSurface(bmpSurface, nullptr, windowSurface, nullptr);
+    // Flip the surface
     SDL_FlipSurface(windowSurface, SDL_FLIP_VERTICAL);
     // You gotta do this for some reason
     SDL_UpdateWindowSurface(window);
-    double timeTaken = CycleTimer::currentSeconds() - before;
-    double fps = 1 / timeTaken;
-    std::string fpsStr = "FPS: " + std::to_string(fps);
-    SDL_Log("%.2f ms - %.1f FPS\n", 1000.f * timeTaken, fps);
+    // Get the timing and FPS
+    renderTime = CycleTimer::currentSeconds() - before;
+    //double fps = 1 / timeTaken;
+    //std::string fpsStr = "FPS: " + std::to_string(fps);
+    //SDL_Log("%.2f ms - %.1f FPS\n", 1000.f * timeTaken, fps);
 
-    SDL_RenderDebugText(sdlRenderer, 10, 10, fpsStr.c_str());
-    //SDL_RenderPresent(sdlRenderer);
+    // Create a texture of the finished result
+    SDL_Texture *cpuSurface = SDL_CreateTextureFromSurface(sdlRenderer, windowSurface);
+    // Render the texture
+    SDL_RenderTexture(sdlRenderer, cpuSurface, nullptr, nullptr);
+    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), sdlRenderer);
+
+    SDL_RenderPresent(sdlRenderer);
     return SDL_APP_CONTINUE;
 }
 
@@ -133,16 +161,16 @@ void HandleInput(SDL_Event *event) {
 
     switch (event->key.key) {
         case SDLK_A:
-            input.x -= 1;
+            input.x = -1;
             break;
         case SDLK_D:
-            input.x += 1;
+            input.x = 1;
             break;
         case SDLK_W:
-            input.y += 1;
+            input.y = 1;
             break;
         case SDLK_S:
-            input.y -= 1;
+            input.y = -1;
             break;
         default:
             input.x = 0; input.y = 0;
@@ -152,6 +180,7 @@ void HandleInput(SDL_Event *event) {
 }
 
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
+    ImGui_ImplSDL3_ProcessEvent(event); // imgui event handler
     switch(event->type) {
         case SDL_EVENT_QUIT:
             return SDL_APP_FAILURE; // doing this will quit the program
@@ -168,6 +197,12 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 
 
 void SDL_AppQuit(void *appstate, SDL_AppResult result) {
+    ImGui_ImplSDLRenderer3_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
+    ImGui::DestroyContext();
     renderer->DestroyRenderer();
+    SDL_DestroyRenderer(sdlRenderer);
+    SDL_DestroyWindow(window);
+    SDL_DestroySurface(windowSurface);
     SDL_Quit();
 }
