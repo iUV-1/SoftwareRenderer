@@ -15,6 +15,25 @@ extern Matrix4x4f Viewport;
 
 #define TEX2D(tex, uv) (tex->get(uv.u * tex->get_width(), uv.v * tex->get_height()))
 
+class RectBuffer {
+public:
+    RectBuffer() = delete;
+    RectBuffer(int const w, const int h): width(w), size(w*h) {
+        data = new float[size];
+    }
+    ~RectBuffer() {
+        delete[] data;
+    }
+
+    float &operator[] (size_t const i) {
+        if (i >= size) throw std::out_of_range("Buffer index out of range");
+        return data[i];
+    }
+    size_t width;
+    size_t size;
+    float *data;
+};
+
 /* Interface for both vertex and fragment shader*/
 class IShader {
 public:
@@ -57,6 +76,8 @@ void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, int width, IShader &s
 void wireframe_trig(Vec3f *pts, TGAImage &image, TGAColor color);
 void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAColor const &color, int width);
 void triangle(Vec3f *pts, SDL_Surface *surface, float *zbuffer, int width, IShader &shader);
+void triangle(Vec3f *pts, SDL_Surface *surface, RectBuffer &zbuffer, IShader &shader);
+void triangle(Vec3f *pts, int w, int h, RectBuffer &zbuffer);
 //Matrix<float> homogonize(Vec3f v, float h);
 //Vec3f dehomogonize(Matrix<float> const &m);
 Vec3f project(Vec3f v);

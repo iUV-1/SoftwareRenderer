@@ -18,10 +18,10 @@ struct PhongShaderShadow: IShader {
     Matrix3x3<float> varying_shadow_tri; // 3x3 matrix containing verticies of a shadow trig
 
     Matrix4x4f uniform_Mshadow; // Shadow transformation
-    float* depth_buffer;
+    RectBuffer &depth_buffer;
 
     PhongShaderShadow(Material *mat, Camera *cam, Model *model, Scene *scene,
-                      Matrix4x4f uniform_shadow, float *depth_buffer)
+                      Matrix4x4f uniform_shadow, RectBuffer &depth_buffer)
     : IShader(mat, cam, model, scene), depth_buffer(depth_buffer) {
 
         Matrix4x4f M = (Viewport*Projection*ModelView);
@@ -62,7 +62,7 @@ struct PhongShaderShadow: IShader {
         // Transform the normal vector to the mEye space
         Vec3f n = dehomogonize(uniform_MIT*homogonize(norm, 1.f)).normalize();
         // Same as above
-        Vec3f l = dehomogonize(uniform_M  *homogonize(uniform_Scene->Light, 1.f)).normalize();
+        Vec3f l = dehomogonize(uniform_M  *homogonize(uniform_Scene->Light, 0.f)).normalize();
         l *= -1;// The reflection formula below is for object pointing to the light.
         // Shadow
         float slope_bias = std::max(0.5f* (1.0f - n*(l*-1)), 1.f);

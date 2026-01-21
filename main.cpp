@@ -17,8 +17,8 @@ SDL_Window *window;
 SDL_Surface *windowSurface;
 SDL_Renderer *sdlRenderer;
 
-constexpr int width = 640;
-constexpr int height = 640;
+constexpr int width = 800;
+constexpr int height = 800;
 constexpr float depth = 255.f;
 Renderer *renderer;
 
