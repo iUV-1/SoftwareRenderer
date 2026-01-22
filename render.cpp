@@ -53,8 +53,8 @@ void Renderer::DestroyRenderer() {
 void Renderer::Render(SDL_Surface *surface) {
     /* Depth map */
     // Init depth buffer
-    float *depth_buffer_arr = create_buffer(mScene->Width, mScene->Height);
-    auto depth_buffer = TGAImage(mScene->Width, mScene->Height, TGAImage::RGB);
+    //float *depth_buffer_arr = create_buffer(mScene->Width, mScene->Height);
+    RectBuffer depthBufferArr(mScene->Width, mScene->Height);
     // Init shader
     LookAt(mCamera->Eye, mCamera->Cam, mCamera->Up); // Render from the mLight
     Project(0); // Render mLight in orthographic mode
@@ -75,9 +75,8 @@ void Renderer::Render(SDL_Surface *surface) {
         float view_dir_intensity = mCamera->Eye*n;
 
         if (view_dir_intensity<1)
-            triangle(screen_coords, depth_buffer, depth_buffer_arr, mScene->Width, depth_shader);
+            triangle(screen_coords, mScene->Width, mScene->Height, depthBufferArr);
     }
-    depth_buffer.flip_vertically();
     Matrix4x4f M_Shadow = Viewport*Projection*ModelView;
 
     /* SSAO */
@@ -130,7 +129,7 @@ void Renderer::Render(SDL_Surface *surface) {
     // GouraudShaderReference shader = GouraudShaderReference();
     Matrix4x4f MVP = Viewport*Projection*ModelView;
     MVP.invert();
-    PhongShaderShadow shader = PhongShaderShadow(mMaterial, mCamera, mModel, mScene, M_Shadow, depth_buffer_arr);
+    PhongShaderShadow shader = PhongShaderShadow(mMaterial, mCamera, mModel, mScene, M_Shadow, depthBufferArr);
     //PhongShader shader = PhongShader();
 
     for (int i=0; i< mModel->nfaces(); ++i) {
