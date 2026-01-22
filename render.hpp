@@ -76,7 +76,7 @@ public:
     void SetupScene(int width, int height, float depth, Vec3f light);
     void SetupMaterial(std::string texPath, std::string normalPath, std::string specPath);
     void SetupModel(std::string modelPath);
-private:
+
     Model *mModel;
     Material *mMaterial;
     Scene *mScene;

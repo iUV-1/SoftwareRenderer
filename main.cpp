@@ -104,18 +104,22 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     ImGui_ImplSDLRenderer3_NewFrame();
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
+    Scene *rScene = renderer->mScene;
     // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
     {
         static float f = 0.0f;
         static int counter = 0;
 
-        ImGui::Begin("Stats");                          // Create a window called "Hello, world!" and append into it.
+        ImGui::Begin("Renderer settings");
 
         ImGui::Text("Render time/FPS: %.3f ms/frame (%.1f FPS)", renderTime * 1000, 1/renderTime);
         ImGui::Text("Iterate time/FPS: %.3f ms/frame (%.1f FPS)", iterateTime * 1000, 1/iterateTime);
 
+        // Since Light is a continous array, &rScene->Light.x works
+        ImGui::DragFloat3("Light", &rScene->Light.x, 0.1, -1.0, 1.0, "%.3f");
         ImGui::End();
     }
+    rScene->Light.normalize();
     // IMGui render
     ImGui::Render();
     SDL_SetRenderScale(sdlRenderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
@@ -128,11 +132,11 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     // Clear the surface
     SDL_ClearSurface(windowSurface, 0xFF, 0xFF, 0xFF, 0xFF);
     // Handle movement input
-    eye.x += 0.1f * input.x;
-    eye.z += 0.1f * input.y;
-    cam.x += 0.1f * input.x;
-    cam.z += 0.1f * input.y;
-    renderer->SetCamera(eye, up, cam);
+    Camera *rCamera = renderer->mCamera;
+    rCamera->Eye.x += 0.1f * input.x;
+    rCamera->Eye.z += 0.1f * input.y;
+    rCamera->Cam.x += 0.1f * input.x;
+    rCamera->Cam.z += 0.1f * input.y;
     // Render
     renderer->Render(windowSurface);
     // Flip the surface

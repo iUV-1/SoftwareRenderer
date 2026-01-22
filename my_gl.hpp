@@ -20,6 +20,7 @@ public:
     RectBuffer() = delete;
     RectBuffer(int const w, const int h): width(w), size(w*h) {
         data = new float[size];
+        std::fill(data, data + size, -MAX_FLOAT); // set every value in zbuffer to -inf
     }
     ~RectBuffer() {
         delete[] data;

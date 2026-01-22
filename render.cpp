@@ -60,9 +60,6 @@ void Renderer::Render(SDL_Surface *surface) {
     Project(0); // Render mLight in orthographic mode
     SetViewport(mScene->Width / 8, mScene->Height/8, mScene->Width * 3./4, mScene->Height * 3./4, mScene->Depth); // Clamp the image into the center with margins (3/4 of the screen)
 
-    // Setup the input struct for the shader
-    //a2s input = {mLight, *mModel, mTexFile, mNormalFile, mSpecularFile, mUseSpecular, mUseNormal, mDepth, mWidth, mHeight};
-
     auto depth_shader = DepthShaderImage(mModel, mScene);
     // Render
     for(int i = 0; i < mModel->nfaces(); ++i) {
@@ -75,6 +72,7 @@ void Renderer::Render(SDL_Surface *surface) {
         float view_dir_intensity = mCamera->Eye*n;
 
         if (view_dir_intensity<1)
+            // Doesn't save the image since we don't need it
             triangle(screen_coords, mScene->Width, mScene->Height, depthBufferArr);
     }
     Matrix4x4f M_Shadow = Viewport*Projection*ModelView;
@@ -123,7 +121,8 @@ void Renderer::Render(SDL_Surface *surface) {
     /* Render */
     auto frame = TGAImage(mScene->Width, mScene->Height, TGAImage::RGB);
     // Setup zbuffer
-    float *zbuffer = create_buffer(mScene->Width, mScene->Height);
+//    float *zbuffer = create_buffer(mScene->Width, mScene->Height);
+    RectBuffer zbuffer(mScene->Width, mScene->Height);
     // GouraudShader shader = GouraudShader();
     // PhongShader shader = PhongShader();
     // GouraudShaderReference shader = GouraudShaderReference();
@@ -150,7 +149,7 @@ void Renderer::Render(SDL_Surface *surface) {
 
         if (view_dir_intensity<1) {
             //triangle(screen_coords, frame, zbuffer, mScene->Width, shader);
-            triangle(screen_coords, surface, zbuffer, mScene->Width, shader);
+            triangle(screen_coords, surface, zbuffer, shader);
             //wireframe_trig(screen_coords, frame, TGAColor(255, 255, 255, 255));
         }
     }
