@@ -141,8 +141,6 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     renderer->Render(windowSurface);
     // Flip the surface
     SDL_FlipSurface(windowSurface, SDL_FLIP_VERTICAL);
-    // You gotta do this for some reason
-    //SDL_UpdateWindowSurface(window);
     // Get the timing and FPS
     renderTime = CycleTimer::currentSeconds() - before;
     // Create a texture of the finished result
