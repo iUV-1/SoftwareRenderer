@@ -17,8 +17,8 @@ SDL_Window *window;
 SDL_Surface *windowSurface;
 SDL_Renderer *sdlRenderer;
 
-constexpr int width = 640;
-constexpr int height = 640;
+constexpr int width = 800;
+constexpr int height = 800;
 constexpr float depth = 255.f;
 Renderer *renderer;
 
@@ -94,9 +94,10 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     return SDL_APP_CONTINUE;
 }
 
-float renderTime = 30.f;
-
+double renderTime = 30.f;
+double iterateTime = 30.f;
 SDL_AppResult SDL_AppIterate(void *appstate) {
+    double beforeIterate = CycleTimer::currentSeconds();
     // --- IMGUI STUFF ---
     ImGuiIO& io = *(ImGuiIO*)appstate; // this work
     // new frame blah blah blah
@@ -108,9 +109,11 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
         static float f = 0.0f;
         static int counter = 0;
 
-        ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+        ImGui::Begin("Stats");                          // Create a window called "Hello, world!" and append into it.
 
         ImGui::Text("Render time/FPS: %.3f ms/frame (%.1f FPS)", renderTime * 1000, 1/renderTime);
+        ImGui::Text("Iterate time/FPS: %.3f ms/frame (%.1f FPS)", iterateTime * 1000, 1/iterateTime);
+
         ImGui::End();
     }
     // IMGui render
@@ -135,13 +138,9 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     // Flip the surface
     SDL_FlipSurface(windowSurface, SDL_FLIP_VERTICAL);
     // You gotta do this for some reason
-    SDL_UpdateWindowSurface(window);
+    //SDL_UpdateWindowSurface(window);
     // Get the timing and FPS
     renderTime = CycleTimer::currentSeconds() - before;
-    //double fps = 1 / timeTaken;
-    //std::string fpsStr = "FPS: " + std::to_string(fps);
-    //SDL_Log("%.2f ms - %.1f FPS\n", 1000.f * timeTaken, fps);
-
     // Create a texture of the finished result
     SDL_Texture *cpuSurface = SDL_CreateTextureFromSurface(sdlRenderer, windowSurface);
     // Render the texture
@@ -149,6 +148,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), sdlRenderer);
 
     SDL_RenderPresent(sdlRenderer);
+    iterateTime = CycleTimer::currentSeconds() - beforeIterate;
     return SDL_APP_CONTINUE;
 }
 
@@ -194,7 +194,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
     }
     return SDL_APP_CONTINUE;
 }
-
 
 void SDL_AppQuit(void *appstate, SDL_AppResult result) {
     ImGui_ImplSDLRenderer3_Shutdown();
