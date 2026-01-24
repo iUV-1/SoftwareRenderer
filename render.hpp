@@ -45,8 +45,8 @@ class Scene {
 public:
     Scene() { }
     Scene(const Scene *scene);
-    Scene(int width, int height, float depth, Vec3f light)
-    : Width(width), Height(height), Depth(depth), Light(light) {}
+    Scene(int width, int height, float depth, Vec3f &&light)
+    : Width(width), Height(height), Depth(depth), Light(std::move(light)) {}
     //~Scene();
     int Width;
     int Height;
@@ -59,7 +59,7 @@ public:
     Camera() { }
     // Copy constructor
     //Camera(const Camera *camera);
-    Camera(Vec3f eye, Vec3f up, Vec3f cam): Eye(eye), Up(up), Cam(cam) {}
+    Camera(const Vec3f &eye, const Vec3f &up, const Vec3f &cam): Eye(std::move(eye)), Up(std::move(up)), Cam(std::move(cam)) {}
     //~Camera();
     Vec3f Eye;
     Vec3f Up;
@@ -72,8 +72,8 @@ public:
     //void LoadRendererSettings();
     void Render(SDL_Surface *surface);
     void DestroyRenderer();
-    void SetCamera(Vec3f eye, Vec3f up, Vec3f cam);
-    void SetupScene(int width, int height, float depth, Vec3f light);
+    void SetCamera(const Vec3f &eye, const Vec3f &up, const Vec3f &cam);
+    void SetupScene(int width, int height, float depth, Vec3f &&light);
     void SetupMaterial(std::string texPath, std::string normalPath, std::string specPath);
     void SetupModel(std::string modelPath);
 

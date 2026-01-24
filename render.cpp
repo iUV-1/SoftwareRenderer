@@ -35,11 +35,11 @@ void Renderer::SetupMaterial(std::string texPath, std::string normalPath, std::s
     mMaterial = new Material(texPath, normalPath, specPath);
 }
 
-void Renderer::SetupScene(int width, int height, float depth, Vec3f light) {
-    mScene = new Scene(width, height, depth, light);
+void Renderer::SetupScene(int width, int height, float depth, Vec3f &&light) {
+    mScene = new Scene(width, height, depth, std::move(light));
 }
 
-void Renderer::SetCamera(Vec3f eye, Vec3f up, Vec3f cam) {
+void Renderer::SetCamera(const Vec3f &eye, const Vec3f &up, const Vec3f &cam) {
     mCamera = new Camera(eye, up, cam);
 }
 

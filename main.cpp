@@ -23,9 +23,7 @@ constexpr float depth = 255.f;
 Renderer *renderer;
 
 Vec2i input;
-Vec3f eye(1, 1, 3);
-Vec3f up(0, 1, 0);
-Vec3f cam(0, 0, 0);
+
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     // Get the global struct by casting
@@ -37,8 +35,10 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     // --- SETUP RENDERER ---
     double beforeSetup = CycleTimer::currentSeconds();
     renderer = new Renderer();
-
-    renderer->SetCamera(eye, up, cam);
+//    Vec3f eye(1, 1, 3);
+//    Vec3f up(0, 1, 0);
+//    Vec3f cam(0, 0, 0);
+    renderer->SetCamera(Vec3f(1, 1, 3), Vec3f(0, 1, 0), Vec3f(0, 0, 0));
     if(argc < 2)
         renderer->SetupModel("obj/african_head.obj");
     else
@@ -59,9 +59,9 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 
     renderer->SetupMaterial(diffPath, normalPath, specularPath);
 
-    Vec3f light(1.0, 1.0, 1.0);
-    light.normalize();
-    renderer->SetupScene(width, height, 255.f, light);
+//    Vec3f light(1.0, 1.0, 1.0);
+//    light.normalize();
+    renderer->SetupScene(width, height, 255.f, Vec3f(1.0, 1.0, 1.0));
     double setupTimeTaken = CycleTimer::currentSeconds() - beforeSetup;
     SDL_Log("Setup time: %.2f ms\n", 1000.f * setupTimeTaken);
 
@@ -115,11 +115,11 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
         ImGui::Text("Render time/FPS: %.3f ms/frame (%.1f FPS)", renderTime * 1000, 1/renderTime);
         ImGui::Text("Iterate time/FPS: %.3f ms/frame (%.1f FPS)", iterateTime * 1000, 1/iterateTime);
 
-        // Since Light is a continous array, &rScene->Light.x works
+        // Since Light is a continuous array, &rScene->Light.x works
         ImGui::DragFloat3("Light", &rScene->Light.x, 0.1, -1.0, 1.0, "%.3f");
         ImGui::End();
     }
-    rScene->Light.normalize();
+    //rScene->Light.normalize();
     // IMGui render
     ImGui::Render();
     SDL_SetRenderScale(sdlRenderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
