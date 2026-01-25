@@ -35,10 +35,9 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     // --- SETUP RENDERER ---
     double beforeSetup = CycleTimer::currentSeconds();
     renderer = new Renderer();
-//    Vec3f eye(1, 1, 3);
-//    Vec3f up(0, 1, 0);
-//    Vec3f cam(0, 0, 0);
-    renderer->SetCamera(Vec3f(1, 1, 3), Vec3f(0, 1, 0), Vec3f(0, 0, 0));
+    renderer->SetCamera(Vec3f(1, 1, 3),
+                         Vec3f(0, 1, 0),
+                        Vec3f(0, 0, 0));
     if(argc < 2)
         renderer->SetupModel("obj/african_head.obj");
     else
@@ -107,9 +106,6 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     Scene *rScene = renderer->mScene;
     // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
     {
-        static float f = 0.0f;
-        static int counter = 0;
-
         ImGui::Begin("Renderer settings");
 
         ImGui::Text("Render time/FPS: %.3f ms/frame (%.1f FPS)", renderTime * 1000, 1/renderTime);

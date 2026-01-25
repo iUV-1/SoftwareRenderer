@@ -66,7 +66,7 @@ struct PhongShaderShadow: IShader {
         l *= -1;// The reflection formula below is for object pointing to the light.
         // Shadow
         float slope_bias = std::max(0.5f* (1.0f - n*(l*-1)), 1.f);
-        slope_bias = 43.34f;
+        //slope_bias = 43.34f;
         float depth_p = depth_buffer[shadow_buf_idx];
         if(depth_p != -MAX_FLOAT) {
             depth_p -= slope_bias;

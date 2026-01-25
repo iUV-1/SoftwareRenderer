@@ -35,8 +35,8 @@ void Renderer::SetupMaterial(std::string texPath, std::string normalPath, std::s
     mMaterial = new Material(texPath, normalPath, specPath);
 }
 
-void Renderer::SetupScene(int width, int height, float depth, Vec3f &&light) {
-    mScene = new Scene(width, height, depth, std::move(light));
+void Renderer::SetupScene(int width, int height, float depth, const Vec3f &light) {
+    mScene = new Scene(width, height, depth, light);
 }
 
 void Renderer::SetCamera(const Vec3f &eye, const Vec3f &up, const Vec3f &cam) {
@@ -56,7 +56,7 @@ void Renderer::Render(SDL_Surface *surface) {
     //float *depth_buffer_arr = create_buffer(mScene->Width, mScene->Height);
     RectBuffer depthBufferArr(mScene->Width, mScene->Height);
     // Init shader
-    LookAt(mCamera->Eye, mCamera->Cam, mCamera->Up); // Render from the mLight
+    LookAt(mScene->Light, mCamera->Cam, mCamera->Up); // Render from the mLight
     Project(0); // Render mLight in orthographic mode
     SetViewport(mScene->Width / 8, mScene->Height/8, mScene->Width * 3./4, mScene->Height * 3./4, mScene->Depth); // Clamp the image into the center with margins (3/4 of the screen)
 
@@ -79,9 +79,9 @@ void Renderer::Render(SDL_Surface *surface) {
 
     /* SSAO */
     /// Get depth from Camera
-    auto depth_from_cam = TGAImage(mScene->Width, mScene->Height, TGAImage::RGB);
+    //auto depth_from_cam = TGAImage(mScene->Width, mScene->Height, TGAImage::RGB);
     // Setup GL
-//    LookAt(mEye, mCam, mUp);
+    LookAt(mCamera->Eye, mCamera->Cam, mCamera->Up);
     Project(-1/(mCamera->Eye-mCamera->Cam).norm());
     //SetViewport(mWidth/8, mHeight/8, mWidth*3./4, mHeight*3./4, mDepth);
 
