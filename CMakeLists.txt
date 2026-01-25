@@ -18,7 +18,8 @@ set(SOURCE_FILE
 
         shaders/PhongShadowShader.h
         shaders/DepthShader.h
-        shaders/DepthShaderImage.h)
+        shaders/DepthShaderImage.h
+        shaders/GouraudShader.h)
 
 #add_link_options(-g)
 add_compile_options(-Wall -g -O2 -ffast-math )

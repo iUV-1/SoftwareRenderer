@@ -24,10 +24,14 @@ Renderer *renderer;
 
 Vec2i input;
 
+struct GlobalAppState {
+    const bool *keystate;
+    ImGuiIO imGuiIo;
+};
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     // Get the global struct by casting
-    appstate[0] = new ImGuiIO;
+    appstate[0] = new GlobalAppState;
     if(!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK)) {
         return SDL_APP_FAILURE;
     }
@@ -58,8 +62,6 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 
     renderer->SetupMaterial(diffPath, normalPath, specularPath);
 
-//    Vec3f light(1.0, 1.0, 1.0);
-//    light.normalize();
     renderer->SetupScene(width, height, 255.f, Vec3f(1.0, 1.0, 1.0));
     double setupTimeTaken = CycleTimer::currentSeconds() - beforeSetup;
     SDL_Log("Setup time: %.2f ms\n", 1000.f * setupTimeTaken);
@@ -76,7 +78,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();    (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    *(ImGuiIO*)appstate[0] = io; // ig this works
+    ((GlobalAppState*)appstate[0])->imGuiIo = io; // may lord forgives me
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
     //ImGui::StyleColorsLight();
@@ -90,15 +92,30 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     ImGui_ImplSDL3_InitForSDLRenderer(window, sdlRenderer);
     ImGui_ImplSDLRenderer3_Init(sdlRenderer);
 
+    const bool* keystate = SDL_GetKeyboardState(nullptr);
+    ((GlobalAppState*)appstate[0])->keystate = keystate;
+
     return SDL_APP_CONTINUE;
 }
 
 double renderTime = 30.f;
 double iterateTime = 30.f;
+void HandleInput(const bool *keystate, Camera *cam) {
+    Vec2i result;
+    result.x = keystate[SDL_SCANCODE_A] - keystate[SDL_SCANCODE_D];
+    result.y = keystate[SDL_SCANCODE_W] - keystate[SDL_SCANCODE_S];
+
+    cam->Eye.x += 0.1f * result.x;
+    cam->Eye.z += 0.1f * result.y;
+    cam->Cam.x += 0.1f * result.x;
+    cam->Cam.z += 0.1f * result.y;
+}
+
 SDL_AppResult SDL_AppIterate(void *appstate) {
     double beforeIterate = CycleTimer::currentSeconds();
     // --- IMGUI STUFF ---
-    ImGuiIO& io = *(ImGuiIO*)appstate; // this work
+    ImGuiIO& io = ((GlobalAppState*)appstate)->imGuiIo; // this work
+    const bool* keystate = ((GlobalAppState*)appstate)->keystate;
     // new frame blah blah blah
     ImGui_ImplSDLRenderer3_NewFrame();
     ImGui_ImplSDL3_NewFrame();
@@ -129,10 +146,11 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     SDL_ClearSurface(windowSurface, 0xFF, 0xFF, 0xFF, 0xFF);
     // Handle movement input
     Camera *rCamera = renderer->mCamera;
-    rCamera->Eye.x += 0.1f * input.x;
-    rCamera->Eye.z += 0.1f * input.y;
-    rCamera->Cam.x += 0.1f * input.x;
-    rCamera->Cam.z += 0.1f * input.y;
+    HandleInput(keystate, rCamera);
+//    rCamera->Eye.x += 0.1f * input.x;
+//    rCamera->Eye.z += 0.1f * input.y;
+//    rCamera->Cam.x += 0.1f * input.x;
+//    rCamera->Cam.z += 0.1f * input.y;
     // Render
     renderer->Render(windowSurface);
     // Flip the surface
@@ -151,31 +169,6 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 }
 
 
-void HandleInput(SDL_Event *event) {
-    // if A or D is pressed
-    // x = A + D
-    // if W or S is pressed
-    // y = W + S
-
-    switch (event->key.key) {
-        case SDLK_A:
-            input.x = -1;
-            break;
-        case SDLK_D:
-            input.x = 1;
-            break;
-        case SDLK_W:
-            input.y = 1;
-            break;
-        case SDLK_S:
-            input.y = -1;
-            break;
-        default:
-            input.x = 0; input.y = 0;
-            break;
-    }
-    // TODO: handle mouse
-}
 
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
     ImGui_ImplSDL3_ProcessEvent(event); // imgui event handler
@@ -184,8 +177,11 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
             return SDL_APP_FAILURE; // doing this will quit the program
             break;
         case SDL_EVENT_KEY_DOWN:
-            HandleInput(event);
+            //HandleInput(event);
             SDL_Log("%d was pressed", event->key.scancode);
+            break;
+        case SDL_EVENT_KEY_UP:
+            //HandleInput(event);
             break;
         default:
             break;

@@ -31,7 +31,7 @@ void Renderer::SetupModel(string modelPath) {
     mModel = new Model(modelPath.c_str());
 }
 
-void Renderer::SetupMaterial(std::string texPath, std::string normalPath, std::string specPath) {
+void Renderer::SetupMaterial(string texPath, string normalPath, string specPath) {
     mMaterial = new Material(texPath, normalPath, specPath);
 }
 
