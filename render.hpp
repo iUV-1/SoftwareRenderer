@@ -5,10 +5,10 @@
 
 #ifndef RENDER_HPP
 #define RENDER_HPP
-
-//#include "Model.h
+#include <optional>
 #include "tgaimage.h"
 #include "geometry.h"
+#include "RectBuffer.h"
 
 class IShader;
 class SDL_Surface;
@@ -33,7 +33,11 @@ public:
             UseSpecular = true;
         }
     }
-    //~Material();
+    ~Material() {
+        delete NormalFile;
+        delete TexFile;
+        delete SpecularFile;
+    }
     TGAImage *NormalFile = new TGAImage();
     TGAImage *TexFile = new TGAImage();
     TGAImage *SpecularFile = new TGAImage();
@@ -69,6 +73,7 @@ public:
 class Renderer {
 public:
     Renderer() { }
+    ~Renderer();
     //void LoadRendererSettings();
     void Render(SDL_Surface *surface);
     void DestroyRenderer();
@@ -76,14 +81,15 @@ public:
     void SetupScene(int width, int height, float depth, const Vec3f &light);
     void SetupMaterial(std::string texPath, std::string normalPath, std::string specPath);
     void SetupModel(std::string modelPath);
+    void SetupBuffers();
 
     Model *mModel;
     Material *mMaterial;
     Scene *mScene;
     Camera *mCamera;
-
+    RectBuffer *mShadowBuffer;
+    RectBuffer *mZbuffer;
+private:
     Vec3f rasterize(IShader *shader, int iface, int nthvert);
-
-
 };
 #endif //RENDER_HPP

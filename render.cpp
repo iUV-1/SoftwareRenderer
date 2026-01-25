@@ -31,30 +31,39 @@ void Renderer::SetupModel(string modelPath) {
     mModel = new Model(modelPath.c_str());
 }
 
+void Renderer::SetupBuffers() {
+
+}
+
 void Renderer::SetupMaterial(string texPath, string normalPath, string specPath) {
     mMaterial = new Material(texPath, normalPath, specPath);
 }
 
 void Renderer::SetupScene(int width, int height, float depth, const Vec3f &light) {
     mScene = new Scene(width, height, depth, light);
+    mShadowBuffer = new RectBuffer(width, height);
+    mZbuffer = new RectBuffer(width, height);
 }
 
 void Renderer::SetCamera(const Vec3f &eye, const Vec3f &up, const Vec3f &cam) {
     mCamera = new Camera(eye, up, cam);
 }
 
-void Renderer::DestroyRenderer() {
+Renderer::~Renderer() {
     delete mModel;
     delete mMaterial;
     delete mScene;
     delete mCamera;
+    delete mShadowBuffer;
+    delete mZbuffer;
 }
 
 void Renderer::Render(SDL_Surface *surface) {
     /* Depth map */
     // Init depth buffer
     //float *depth_buffer_arr = create_buffer(mScene->Width, mScene->Height);
-    RectBuffer depthBufferArr(mScene->Width, mScene->Height);
+    //RectBuffer depthBufferArr(mScene->Width, mScene->Height);
+    mShadowBuffer->resetBuffer();
     // Init shader
     LookAt(mScene->Light, mCamera->Cam, mCamera->Up); // Render from the mLight
     Project(0); // Render mLight in orthographic mode
@@ -73,7 +82,7 @@ void Renderer::Render(SDL_Surface *surface) {
 
         if (view_dir_intensity<1)
             // Doesn't save the image since we don't need it
-            triangle(screen_coords, mScene->Width, mScene->Height, depthBufferArr);
+            triangle(screen_coords, mScene->Width, mScene->Height, *mShadowBuffer);
     }
     Matrix4x4f M_Shadow = Viewport*Projection*ModelView;
 
@@ -119,16 +128,17 @@ void Renderer::Render(SDL_Surface *surface) {
     }
     ssao_frame.flip_vertically();*/
     /* Render */
-    auto frame = TGAImage(mScene->Width, mScene->Height, TGAImage::RGB);
+    //auto frame = TGAImage(mScene->Width, mScene->Height, TGAImage::RGB);
     // Setup zbuffer
 //    float *zbuffer = create_buffer(mScene->Width, mScene->Height);
-    RectBuffer zbuffer(mScene->Width, mScene->Height);
+    // RectBuffer zbuffer(mScene->Width, mScene->Height);
+    mZbuffer->resetBuffer();
     // GouraudShader shader = GouraudShader();
     // PhongShader shader = PhongShader();
     // GouraudShaderReference shader = GouraudShaderReference();
     Matrix4x4f MVP = Viewport*Projection*ModelView;
     MVP.invert();
-    PhongShaderShadow shader = PhongShaderShadow(mMaterial, mCamera, mModel, mScene, M_Shadow, depthBufferArr);
+    PhongShaderShadow shader = PhongShaderShadow(mMaterial, mCamera, mModel, mScene, M_Shadow, *mShadowBuffer);
     //PhongShader shader = PhongShader();
 
     for (int i=0; i< mModel->nfaces(); ++i) {
@@ -149,7 +159,7 @@ void Renderer::Render(SDL_Surface *surface) {
 
         if (view_dir_intensity<1) {
             //triangle(screen_coords, frame, zbuffer, mScene->Width, shader);
-            triangle(screen_coords, surface, zbuffer, shader);
+            triangle(screen_coords, surface, *mZbuffer, shader);
             //wireframe_trig(screen_coords, frame, TGAColor(255, 255, 255, 255));
         }
     }

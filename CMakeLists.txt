@@ -19,17 +19,19 @@ set(SOURCE_FILE
         shaders/PhongShadowShader.h
         shaders/DepthShader.h
         shaders/DepthShaderImage.h
-        shaders/GouraudShader.h)
+        shaders/GouraudShader.h
+        RectBuffer.h)
 
 #add_link_options(-g)
-add_compile_options(-Wall -g -O2 -ffast-math )
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=leak -fno-omit-frame-pointer -fsanitize-blacklist=blacklist.txt")
+add_compile_options(-Wall -g -O2 -ffast-math)
 add_executable(${PROJECT_NAME} ${SOURCE_FILE})
 #add_compile_options(-fopt-info-vec
 #        -fopt-info-vec-missed)
 
 # Copy the directory from source code tree to executable tree
 file(COPY ./obj DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-
+file(COPY blacklist.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 # Add OpenMP
 find_package(OpenMP REQUIRED)
 if(OpenMP_CXX_FOUND)

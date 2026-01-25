@@ -7,18 +7,11 @@
 #include "geometry.h"
 #include "tgaimage.h"
 #include "TGAtoSDLAdapter.hpp"
+#include "shaders.hpp"
 
 Matrix4x4f ModelView;
 Matrix4x4f Projection = Matrix4x4f::identity();
 Matrix4x4f Viewport;
-
-
-float *create_buffer(int width, int height) {
-    auto *buffer_arr = new float[width*height];
-    std::fill(buffer_arr, buffer_arr + width*height, -MAX_FLOAT); // set every value in zbuffer to -inf
-    return buffer_arr;
-}
-
 
 // Old function. Meant to project the points using a projection matrix
 //Vec3f project(Vec3f v) {

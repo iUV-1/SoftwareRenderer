@@ -4,10 +4,43 @@
 
 #pragma once
 
-#include <iostream>
-#include <random>
-#include <algorithm>
+//#include <iostream>
+//#include <random>
+//#include <algorithm>
 
+/* Interface for both vertex and fragment shader*/
+class IShader {
+public:
+    IShader() = delete;
+    IShader(Scene *scene) {
+        uniform_M = Projection*ModelView;
+        uniform_MIT = uniform_M;
+        uniform_MIT.inverseTranspose();
+        width = scene->Width;
+    }
+    IShader(Material *mat, Camera *cam, Model *model, Scene *scene)
+            : uniform_Material(mat), uniform_Camera(cam), uniform_Model(model), uniform_Scene(scene){
+//    :width(w){
+        //input = i;
+        uniform_M = Projection*ModelView;
+        uniform_MIT = uniform_M;
+        uniform_MIT.inverseTranspose();
+        width = scene->Width;
+    };
+    //IShader() = default; // don't use this
+
+    Matrix4x4f uniform_M;
+    Matrix<float> varying_uv = Matrix<float>(2, 3);
+    Matrix4x4f uniform_MIT; // Invert transpose
+    Material *uniform_Material = nullptr;
+    Camera  *uniform_Camera = nullptr;
+    Model *uniform_Model = nullptr;
+    Scene *uniform_Scene = nullptr;
+    int width;
+    //virtual ~IShader() = default;
+    virtual Vec4f vertex(int iface, int nthvert) = 0;
+    virtual bool fragment(Vec3f bar, TGAColor &color) = 0;
+};
 //#include "model.h"
 //#include "shaders.hpp"
 //#include "geometry.h"

@@ -14,15 +14,13 @@
 #include "CycleTimer.hpp"
 
 SDL_Window *window;
-SDL_Surface *windowSurface;
+//SDL_Surface *windowSurface;
 SDL_Renderer *sdlRenderer;
 
 constexpr int width = 800;
 constexpr int height = 800;
 constexpr float depth = 255.f;
 Renderer *renderer;
-
-Vec2i input;
 
 struct GlobalAppState {
     const bool *keystate;
@@ -61,8 +59,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
         specularPath = argv[4];
 
     renderer->SetupMaterial(diffPath, normalPath, specularPath);
-
-    renderer->SetupScene(width, height, 255.f, Vec3f(1.0, 1.0, 1.0));
+    renderer->SetupBuffers();
+    renderer->SetupScene(width, height, depth, Vec3f(1.0, 1.0, 1.0));
     double setupTimeTaken = CycleTimer::currentSeconds() - beforeSetup;
     SDL_Log("Setup time: %.2f ms\n", 1000.f * setupTimeTaken);
 
@@ -141,16 +139,12 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     // --- MY RENDERER ---
     double before = CycleTimer::currentSeconds();
     // Get the window surface
-    windowSurface = SDL_GetWindowSurface(window);
+    SDL_Surface *windowSurface = SDL_GetWindowSurface(window);
     // Clear the surface
     SDL_ClearSurface(windowSurface, 0xFF, 0xFF, 0xFF, 0xFF);
     // Handle movement input
     Camera *rCamera = renderer->mCamera;
     HandleInput(keystate, rCamera);
-//    rCamera->Eye.x += 0.1f * input.x;
-//    rCamera->Eye.z += 0.1f * input.y;
-//    rCamera->Cam.x += 0.1f * input.x;
-//    rCamera->Cam.z += 0.1f * input.y;
     // Render
     renderer->Render(windowSurface);
     // Flip the surface
@@ -168,8 +162,6 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     return SDL_APP_CONTINUE;
 }
 
-
-
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
     ImGui_ImplSDL3_ProcessEvent(event); // imgui event handler
     switch(event->type) {
@@ -177,11 +169,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
             return SDL_APP_FAILURE; // doing this will quit the program
             break;
         case SDL_EVENT_KEY_DOWN:
-            //HandleInput(event);
             SDL_Log("%d was pressed", event->key.scancode);
-            break;
-        case SDL_EVENT_KEY_UP:
-            //HandleInput(event);
             break;
         default:
             break;
@@ -190,12 +178,13 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 }
 
 void SDL_AppQuit(void *appstate, SDL_AppResult result) {
+    delete (GlobalAppState*)appstate;
     ImGui_ImplSDLRenderer3_Shutdown();
     ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();
-    renderer->DestroyRenderer();
+    delete renderer;
     SDL_DestroyRenderer(sdlRenderer);
     SDL_DestroyWindow(window);
-    SDL_DestroySurface(windowSurface);
+    //SDL_DestroySurface(windowSurface);
     SDL_Quit();
 }
