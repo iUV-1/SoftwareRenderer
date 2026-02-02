@@ -91,7 +91,9 @@ void Renderer::Render(SDL_Surface *surface) {
     //auto depth_from_cam = TGAImage(mScene->Width, mScene->Height, TGAImage::RGB);
     // Setup GL
     LookAt(mCamera->Eye, mCamera->Cam, mCamera->Up);
-    Project(-1/(mCamera->Eye-mCamera->Cam).norm());
+    Project(120, mScene->Width, mScene->Height, 0.1, mScene->Depth);
+
+//    Project(-1/(mCamera->Eye-mCamera->Cam).norm());
     //SetViewport(mWidth/8, mHeight/8, mWidth*3./4, mHeight*3./4, mDepth);
 
     // Setup zbuffer

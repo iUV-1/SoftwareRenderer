@@ -30,6 +30,7 @@ void triangle(Vec3f *pts, int w, int h, RectBuffer &zbuffer);
 Vec3f project(Vec3f v);
 Vec3f barycentric(Vec3f A, Vec3f B, Vec3f C, Vec3f P);
 void Project(float coeff);
+void Project(float fov, float width, float height, float near, float far);
 void LookAt(Vec3f eye, Vec3f center, Vec3f up);
 void world2screen(Vec3f v, int w, int h, float depth);
 void SetViewport(int width, int height, float depth);

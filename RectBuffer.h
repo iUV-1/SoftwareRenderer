@@ -19,7 +19,7 @@ public:
     }
 
     float &operator[] (size_t const i) {
-        if (i >= size) throw std::out_of_range("Buffer index out of range");
+        if (i >= size) return data[size];
         return data[i];
     }
 
