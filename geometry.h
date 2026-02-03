@@ -10,7 +10,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//#define INFINITY std::numeric_limits<float>::max();
+constexpr float MAX_FLOAT = std::numeric_limits<float>::max();
  template <typename T>
  class Matrix;
 template <class t> class Vec2 {
@@ -46,6 +46,7 @@ public:
     Vec3() : x(0), y(0), z(0) {}
     Vec3(t _x, t _y, t _z) : x(_x),y(_y),z(_z) {}
     Vec3(Matrix<t> mat);
+    ~Vec3() {}
 
     inline Vec3<t> operator ^(const Vec3<t> &v) const { return Vec3<t>(y*v.z-z*v.y, z*v.x-x*v.z, x*v.y-y*v.x); }
     inline Vec3<t> operator +(const Vec3<t> &v) const { return Vec3<t>(x+v.x, y+v.y, z+v.z); }
@@ -53,7 +54,11 @@ public:
     inline Vec3<t> operator *(float f)          const { return Vec3<t>(x*f, y*f, z*f); }
     inline t       operator *(const Vec3<t> &v) const { return x*v.x + y*v.y + z*v.z; }
     float norm () const { return std::sqrt(x*x+y*y+z*z); }
-    Vec3<t> & normalize(t l=1) { *this = (*this)*(l/norm()); return *this; }
+    Vec3<t> & normalize(t l=1) {
+
+        *this = (*this) * (l/norm());
+        return *this;
+    }
     template <class > friend std::ostream& operator<<(std::ostream& s, Vec3<t>& v);
     t& operator[](size_t const &index) {
         if(index == 0) return x;
@@ -68,6 +73,26 @@ public:
         z *= a;
         return *this;
     };
+
+    // Move constructor
+    Vec3(Vec3&& other) noexcept {
+        x = other.x;
+        y = other.y;
+        z = other.z;
+    }
+    // Copy constructor
+    Vec3(const Vec3 &other) {
+        x = other.x;
+        y = other.y;
+        z = other.z;
+    }
+    // Copy operator
+    Vec3& operator=(const Vec3 &other) {
+        x = other.x;
+        y = other.y;
+        z = other.z;
+        return *this;
+    }
 };
 
 template <class t> class Vec4 {
@@ -409,6 +434,10 @@ public:
 
     template <typename U>
     friend Matrix<U> operator* ( Matrix4x4<U> const &cur,  Matrix<U> const &other);
+
+    Matrix4x4(Matrix4x4&& other) noexcept {
+        this->data = std::move(other->data);
+    }
 };
 
 template <typename T>

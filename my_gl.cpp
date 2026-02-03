@@ -2,21 +2,16 @@
 // Created by iUV on 3/7/2025.
 //
 
+#include "pch.h"
 #include "my_gl.hpp"
 #include "geometry.h"
 #include "tgaimage.h"
+#include "TGAtoSDLAdapter.hpp"
+#include "shaders.hpp"
 
 Matrix4x4f ModelView;
-Matrix4x4f Projection = Matrix4x4f::identity();
+Matrix4x4f Projection;
 Matrix4x4f Viewport;
-
-
-float *create_buffer(int width, int height) {
-    auto *buffer_arr = new float[width*height];
-    std::fill(buffer_arr, buffer_arr + width*height, -std::numeric_limits<float>::max()); // set every value in zbuffer to -inf
-    return buffer_arr;
-}
-
 
 // Old function. Meant to project the points using a projection matrix
 //Vec3f project(Vec3f v) {
@@ -28,8 +23,30 @@ float *create_buffer(int width, int height) {
 //    return result;
 //}
 
+// Formula (8.3) in textbook
 void Project(float coeff) {
+    // Construct the orthographic projection matrix
+    Projection = Matrix4x4f ::identity();
     Projection[3][2] = coeff;
+}
+
+// Right hand side
+void Project(float fov, float width, float height, float near, float far) {
+    double fovCoeff = 1. / tan(fov / 2); // cot(fov/2)
+    float nearFar = near - far;
+    float aspectRatio = width/height;
+    Projection[0][0] = 1/aspectRatio * fovCoeff;
+    Projection[1][1] = fovCoeff;
+    Projection[2][2] = far/nearFar;
+    Projection[2][3] = 1;
+    Projection[3][2] = -far * near/nearFar;
+    Projection[3][3] = 0;
+}
+
+// Orthographic projection
+void OrthoProject(float coeff) {
+    Projection = Matrix4x4f ::identity();
+    Projection[3][2] = 0;
 }
 
 // Similar to gluLookAt, create a camera transformation matrix
@@ -65,6 +82,12 @@ void SetViewport(int width, int height, float depth) {
     Viewport[2][2] = depth/2.f;
 }
 
+/// Set the viewport plane matrix
+/// x: start point in x
+/// y: start point in y
+/// w: width
+/// h: height
+/// depth: depth
 void SetViewport(int x, int y, float w, float h, float depth) {
     Viewport = Matrix4x4f::identity();
     Viewport[0][3] = x + w / 2.f;
@@ -213,8 +236,8 @@ Vec3f barycentric(Vec3f A, Vec3f B, Vec3f C, Vec3f P) {
 }
 
 void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, int width, IShader &shader) {
-    Vec2f bboxmin( std::numeric_limits<float>::max(),  std::numeric_limits<float>::max());
-    Vec2f bboxmax(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
+    Vec2f bboxmin( MAX_FLOAT,  MAX_FLOAT);
+    Vec2f bboxmax(-MAX_FLOAT, -MAX_FLOAT);
     //std::cout << pts[0] << pts[1] << pts[2] << std::endl;
     Vec2f clamp(image.get_width()-1, image.get_height()-1);
     for (int i=0; i<3; i++) {
@@ -223,9 +246,10 @@ void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, int width, IShader &s
             bboxmax[j] = std::min(clamp[j], std::max(bboxmax[j], pts[i][j]));
         }
     }
-    Vec3f P;
-    for (P.x=bboxmin.x; P.x<=bboxmax.x; ++P.x) {
-        for (P.y=bboxmin.y; P.y<=bboxmax.y; ++P.y) {
+    //Vec3f P;
+    for (int i = bboxmin.x; i <=bboxmax.x; i++) {
+        for (int j = bboxmin.y; j<=bboxmax.y; j++) {
+            Vec3f P(i, j, 0);
             Vec3f bc_screen  = barycentric(pts[0], pts[1], pts[2], P);
             if (bc_screen.x<0 || bc_screen.y<0 || bc_screen.z<0) continue;
             P.z = 0;
@@ -239,6 +263,104 @@ void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, int width, IShader &s
                 TGAColor color;
                 shader.fragment(bc_screen, color);
                 image.set(P.x, P.y, color);
+            }
+        }
+    }
+}
+
+void triangle(Vec3f *pts, SDL_Surface *surface, float *zbuffer, int width, IShader &shader) {
+    Vec2f bboxmin( MAX_FLOAT,  MAX_FLOAT);
+    Vec2f bboxmax(-MAX_FLOAT, -MAX_FLOAT);
+    //std::cout << pts[0] << pts[1] << pts[2] << std::endl;
+    Vec2f clamp(surface->w -1, surface->h -1);
+    for (int i=0; i<3; i++) {
+        for (int j=0; j<2; j++) {
+            bboxmin[j] = std::max(0.f,      std::min(bboxmin[j], pts[i][j]));
+            bboxmax[j] = std::min(clamp[j], std::max(bboxmax[j], pts[i][j]));
+        }
+    }
+    //Vec3f P;
+    for (int i = bboxmin.x; i <=bboxmax.x; i++) {
+        for (int j = bboxmin.y; j<=bboxmax.y; j++) {
+            Vec3f P(i, j, 0);
+            Vec3f bc_screen  = barycentric(pts[0], pts[1], pts[2], P);
+            if (bc_screen.x<0 || bc_screen.y<0 || bc_screen.z<0) continue;
+            P.z = 0;
+            for (int i=0; i<3; ++i) {
+                P.z += pts[i][2]*bc_screen[i];
+            }
+            auto idx = static_cast<size_t>(P.x + P.y * width);
+            if(zbuffer[idx] < P.z) {
+                zbuffer[idx] = P.z;
+                // Use shader
+                TGAColor color;
+                shader.fragment(bc_screen, color);
+                TGAtoSDLAdapter::SetTGAPixel(surface, P.x, P.y, color);
+                //image.set(P.x, P.y, color);
+            }
+        }
+    }
+}
+
+void triangle(Vec3f *pts, SDL_Surface *surface, RectBuffer &zbuffer, IShader &shader) {
+    Vec2f bboxmin( MAX_FLOAT,  MAX_FLOAT);
+    Vec2f bboxmax(-MAX_FLOAT, -MAX_FLOAT);
+    //std::cout << pts[0] << pts[1] << pts[2] << std::endl;
+    Vec2f clamp(surface->w -1, surface->h -1);
+    for (int i=0; i<3; i++) {
+        for (int j=0; j<2; j++) {
+            bboxmin[j] = std::max(0.f,      std::min(bboxmin[j], pts[i][j]));
+            bboxmax[j] = std::min(clamp[j], std::max(bboxmax[j], pts[i][j]));
+        }
+    }
+    //Vec3f P;
+    for (int i = bboxmin.x; i <=bboxmax.x; i++) {
+        for (int j = bboxmin.y; j<=bboxmax.y; j++) {
+            Vec3f P(i, j, 0);
+            Vec3f bc_screen  = barycentric(pts[0], pts[1], pts[2], P);
+            if (bc_screen.x<0 || bc_screen.y<0 || bc_screen.z<0) continue;
+            P.z = 0;
+            for (int i=0; i<3; ++i) {
+                P.z += pts[i][2]*bc_screen[i];
+            }
+            auto idx = static_cast<size_t>(P.x + P.y * zbuffer.width);
+            if(zbuffer[idx] < P.z) {
+                zbuffer[idx] = P.z;
+                // Use shader
+                TGAColor color;
+                shader.fragment(bc_screen, color);
+                TGAtoSDLAdapter::SetTGAPixel(surface, P.x, P.y, color);
+                //image.set(P.x, P.y, color);
+            }
+        }
+    }
+}
+
+// Only for depth buffer
+void triangle(Vec3f *pts, int w, int h, RectBuffer &zbuffer) {
+    Vec2f bboxmin( MAX_FLOAT,  MAX_FLOAT);
+    Vec2f bboxmax(-MAX_FLOAT, -MAX_FLOAT);
+    //std::cout << pts[0] << pts[1] << pts[2] << std::endl;
+    Vec2f clamp(w -1, h -1);
+    for (int i=0; i<3; i++) {
+        for (int j=0; j<2; j++) {
+            bboxmin[j] = std::max(0.f,      std::min(bboxmin[j], pts[i][j]));
+            bboxmax[j] = std::min(clamp[j], std::max(bboxmax[j], pts[i][j]));
+        }
+    }
+    //Vec3f P;
+    for (int i = bboxmin.x; i <=bboxmax.x; i++) {
+        for (int j = bboxmin.y; j<=bboxmax.y; j++) {
+            Vec3f P(i, j, 0);
+            Vec3f bc_screen  = barycentric(pts[0], pts[1], pts[2], P);
+            if (bc_screen.x<0 || bc_screen.y<0 || bc_screen.z<0) continue;
+            P.z = 0;
+            for (int i=0; i<3; ++i) {
+                P.z += pts[i][2]*bc_screen[i];
+            }
+            auto idx = static_cast<size_t>(P.x + P.y * zbuffer.width);
+            if(zbuffer[idx] < P.z) {
+                zbuffer[idx] = P.z;
             }
         }
     }

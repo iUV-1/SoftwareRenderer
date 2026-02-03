@@ -3,11 +3,7 @@
 //
 #include "geometry.h"
 
-template class Vec2<float>;
-template class Vec3<float>;
-template class Matrix<float>;
-template class Matrix4x4<float>;
-template class Matrix3x3<float>;
+
 
 /// Create a homogonized matrix from a vector
 Vec4f homogonize(Vec3f const &v, float h) {
@@ -29,6 +25,12 @@ Vec3f dehomogonize(Vec4f const &v) {
     result.y = v.y / v.w;
     result.z = v.z / v.w;
     return result;
+}
+
+/// Reflect a vector from a surface
+//
+Vec3f reflect(Vec3f const n, Vec3f const i) {
+
 }
 
 template<typename T>
@@ -128,3 +130,8 @@ Matrix<T> Matrix<T>::operator*(const Vec3<T> &other) {
     }
     return result;
 }
+template class Vec2<float>;
+template class Vec3<float>;
+template class Matrix<float>;
+template class Matrix4x4<float>;
+template class Matrix3x3<float>;

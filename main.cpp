@@ -1,258 +1,190 @@
-#include <iostream>
-#include <chrono>
-#include <ctime>
-#include <sstream>
+//
+// Created by iUV on 1/6/2026.
+//
+#define SDL_MAIN_USE_CALLBACKS 1
 
-#include "model.h"
-#include "geometry.h"
-#include "my_gl.hpp"
-#include "tgaimage.h"
-#include "shaders.hpp"
+#include "pch.h"
+#include <SDL3/SDL_main.h>
+#include <imgui.h>
+#include <imgui_impl_sdlrenderer3.h>
+#include <imgui_impl_sdl3.h>
+#include <string>
+
+#include "render.hpp"
+#include "CycleTimer.hpp"
+
+SDL_Window *window;
+//SDL_Surface *windowSurface;
+SDL_Renderer *sdlRenderer;
 
 constexpr int width = 800;
 constexpr int height = 800;
 constexpr float depth = 255.f;
+Renderer *renderer;
 
-Model *model;
-TGAImage normal_file;
-TGAImage tex_file;
-TGAImage specular_file;
+struct GlobalAppState {
+    const bool *keystate;
+    ImGuiIO imGuiIo;
+};
 
-bool use_specular;
-bool use_normal;
-Vec3f light = Vec3f(-1.0, 1.0, 1.0).normalize();
-
-Vec3f rasterize(IShader *shader, int iface, int nthvert) {
-    // Apply vertex shader
-    Vec4f homogonized = shader->vertex(iface, nthvert);
-    Vec3f result = dehomogonize(homogonized);
-    // Round the result to apply to screen
-    result.x = std::round(result.x);
-    result.y = std::round(result.y);
-    result.z = std::round(result.z);
-
-    return result;
-}
-
-float max_elevation_angle(float *zbuffer, Vec2f p, Vec2f dir) {
-    float maxangle = 0;
-    for (float t=0.; t<1000.; t+=1.) {
-        Vec2f cur = p + dir*t;
-        if (cur.x>=width || cur.y>=height || cur.x<0 || cur.y<0) return maxangle;
-
-        float distance = (p-cur).norm();
-        if (distance < 1.f) continue;
-        float elevation = zbuffer[int(cur.x)+int(cur.y)*width]-zbuffer[int(p.x)+int(p.y)*width];
-        maxangle = std::max(maxangle, atanf(elevation/distance));
+SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
+    // Get the global struct by casting
+    appstate[0] = new GlobalAppState;
+    if(!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK)) {
+        return SDL_APP_FAILURE;
     }
-    return maxangle;
-}
-
-#define M_PI 3.14159265358979323846
-
-int main(int argc, char** argv) {
-    /* the famous rainbow triangle */
-#if false
-    float *zbuffer = new float[width*height];
-    std::fill(zbuffer, zbuffer + width*height, -std::numeric_limits<float>::max()); // set every value in zbuffer to -inf
-
-    Vec3f pt1(0, 0, 0);
-    Vec3f pt2(128, 256, 0);
-    Vec3f pt3(256, 0, 0);
-    Vec3f trig[3] = {pt1, pt2, pt3};
-
-    RainbowShader shader = RainbowShader();
-
-    auto frame = new TGAImage(width, width, TGAImage::RGB);
-
-    triangle(trig, *frame, zbuffer, width, shader);
-    frame->flip_vertically();
-    // Get timing of the render
-    frame->write_tga_file("rainbow triangle.tga");
-    delete[] zbuffer;
-    delete frame;
-    return 0;
-#endif
-
-    // Time the render
-    auto before = std::chrono::system_clock::now();
-
+    window = SDL_CreateWindow("Software Renderer", width, height, SDL_WINDOW_RESIZABLE);
+    // --- SETUP RENDERER ---
+    double beforeSetup = CycleTimer::currentSeconds();
+    renderer = new Renderer();
+    renderer->SetCamera(Vec3f(1, 1, 3),
+                         Vec3f(0, 1, 0),
+                        Vec3f(0, 0, 0));
     if(argc < 2)
-        model = new Model("obj/african_head.obj");
+        renderer->SetupModel("obj/african_head.obj");
     else
-        model = new Model(argv[1]);
+        renderer->SetupModel(argv[1]);
 
+    std::string diffPath;
+    std::string normalPath;
+    std::string specularPath;
     if(argc < 3)
-        tex_file.read_tga_file("obj/UV Grid.tga");
+        diffPath = "obj/UV Grid.tga";
     else
-        tex_file.read_tga_file(argv[2]);
+        diffPath = argv[2];
 
-    tex_file.flip_vertically();
+    if(argc >= 3)
+        normalPath = argv[3];
+    if(argc >= 4)
+        specularPath = argv[4];
 
-    // Check if normal map is included in the args
-    // If not, use the model embeded normal
-    if(argc >= 3) {
-        normal_file.read_tga_file(argv[3]);
-        normal_file.flip_vertically();
-        use_normal = true;
+    renderer->SetupMaterial(diffPath, normalPath, specularPath);
+    renderer->SetupBuffers();
+    renderer->SetupScene(width, height, depth, Vec3f(1.0, 1.0, 1.0));
+    double setupTimeTaken = CycleTimer::currentSeconds() - beforeSetup;
+    SDL_Log("Setup time: %.2f ms\n", 1000.f * setupTimeTaken);
+
+    // --- SETUP IMGUI ---
+    sdlRenderer = SDL_CreateRenderer(window, nullptr);
+    if (renderer == nullptr)
+    {
+        SDL_Log("Error: SDL_CreateRenderer(): %s\n", SDL_GetError());
+        return SDL_APP_FAILURE;
     }
+    // imgui stuff
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();    (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    ((GlobalAppState*)appstate[0])->imGuiIo = io; // may lord forgives me
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsLight();
+    float main_scale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
 
-    if(argc >= 4) {
-        specular_file.read_tga_file(argv[4]);
-        specular_file.flip_vertically();
-        use_specular = true;
+    // Setup scaling
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.ScaleAllSizes(main_scale);        // Bake a fixed style scale. (until we have a solution for dynamic style scaling, changing this requires resetting Style + calling this again)
+    style.FontScaleDpi = main_scale;        // Set initial font scale. (using io.ConfigDpiScaleFonts=true makes this unnecessary. We leave both here for documentation purpose)
+    // Setup Platform/Renderer backends
+    ImGui_ImplSDL3_InitForSDLRenderer(window, sdlRenderer);
+    ImGui_ImplSDLRenderer3_Init(sdlRenderer);
+
+    const bool* keystate = SDL_GetKeyboardState(nullptr);
+    ((GlobalAppState*)appstate[0])->keystate = keystate;
+
+    return SDL_APP_CONTINUE;
+}
+
+double renderTime = 30.f;
+double iterateTime = 30.f;
+void HandleInput(const bool *keystate, Camera *cam) {
+    Vec2i result;
+    result.x = keystate[SDL_SCANCODE_A] - keystate[SDL_SCANCODE_D];
+    result.y = keystate[SDL_SCANCODE_W] - keystate[SDL_SCANCODE_S];
+
+    cam->Eye.x += 0.1f * result.x;
+    cam->Eye.z += 0.1f * result.y;
+    cam->Cam.x += 0.1f * result.x;
+    cam->Cam.z += 0.1f * result.y;
+}
+
+SDL_AppResult SDL_AppIterate(void *appstate) {
+    double beforeIterate = CycleTimer::currentSeconds();
+    // --- IMGUI STUFF ---
+    ImGuiIO& io = ((GlobalAppState*)appstate)->imGuiIo; // this work
+    const bool* keystate = ((GlobalAppState*)appstate)->keystate;
+    // new frame blah blah blah
+    ImGui_ImplSDLRenderer3_NewFrame();
+    ImGui_ImplSDL3_NewFrame();
+    ImGui::NewFrame();
+    Scene *rScene = renderer->mScene;
+    // 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
+    {
+        ImGui::Begin("Renderer settings");
+
+        ImGui::Text("Render time/FPS: %.3f ms/frame (%.1f FPS)", renderTime * 1000, 1/renderTime);
+        ImGui::Text("Iterate time/FPS: %.3f ms/frame (%.1f FPS)", iterateTime * 1000, 1/iterateTime);
+
+        // Since Light is a continuous array, &rScene->Light.x works
+        ImGui::DragFloat3("Light", &rScene->Light.x, 0.1, -1.0, 1.0, "%.3f");
+        ImGui::End();
     }
+    //rScene->Light.normalize();
+    // IMGui render
+    ImGui::Render();
+    SDL_SetRenderScale(sdlRenderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
+    SDL_RenderClear(sdlRenderer);
 
-    // camera setting
-    Vec3f up(0, 1, 0);
-/*    Vec3f eye(0, 0, 2);
-    Vec3f cam(0, 0, 0);
-*/
-
-/*    Vec3f eye(1, 1, 3);
-    Vec3f cam(0, 0, 0);
-*/
-
-    Vec3f eye(3, 2, 3);
-    Vec3f cam(0, 0, 0);
-
-    auto render = std::chrono::system_clock::now();
-
-    /* Depth map */
-    // Init depth buffer
-    float *depth_buffer_arr = create_buffer(width, height);
-    auto depth_buffer = TGAImage(width, height, TGAImage::RGB);
-    // Init shader
-    LookAt(light, cam, up); // Render from the light
-    Project(0); // Render light in orthographic mode
-    SetViewport(width / 8, height/8, width * 3./4, height * 3./4, depth); // Clamp the image into the center with margins (3/4 of the screen)
-
-    auto depth_shader = DepthShaderImage();
+    // --- MY RENDERER ---
+    double before = CycleTimer::currentSeconds();
+    // Get the window surface
+    SDL_Surface *windowSurface = SDL_GetWindowSurface(window);
+    // Clear the surface
+    SDL_ClearSurface(windowSurface, 0xFF, 0xFF, 0xFF, 0xFF);
+    // Handle movement input
+    Camera *rCamera = renderer->mCamera;
+    HandleInput(keystate, rCamera);
     // Render
-    for(int i = 0; i < model->nfaces(); ++i) {
-        Vec3f screen_coords[3];
-        for (int j=0; j<3; ++j)
-            screen_coords[j] = rasterize(&depth_shader, i, j);
+    renderer->Render(windowSurface);
+    // Flip the surface
+    SDL_FlipSurface(windowSurface, SDL_FLIP_VERTICAL);
+    // Get the timing and FPS
+    renderTime = CycleTimer::currentSeconds() - before;
+    // Create a texture of the finished result
+    SDL_Texture *cpuSurface = SDL_CreateTextureFromSurface(sdlRenderer, windowSurface);
+    // Render the texture
+    SDL_RenderTexture(sdlRenderer, cpuSurface, nullptr, nullptr);
+    ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), sdlRenderer);
 
-        Vec3f n = (screen_coords[2]-screen_coords[0])^(screen_coords[1]-screen_coords[0]);
-        n.normalize();
-        float view_dir_intensity = eye*n;
+    SDL_RenderPresent(sdlRenderer);
+    iterateTime = CycleTimer::currentSeconds() - beforeIterate;
+    return SDL_APP_CONTINUE;
+}
 
-        if (view_dir_intensity<1)
-        triangle(screen_coords, depth_buffer, depth_buffer_arr, width, depth_shader);
+SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
+    ImGui_ImplSDL3_ProcessEvent(event); // imgui event handler
+    switch(event->type) {
+        case SDL_EVENT_QUIT:
+            return SDL_APP_FAILURE; // doing this will quit the program
+            break;
+        case SDL_EVENT_KEY_DOWN:
+            SDL_Log("%d was pressed", event->key.scancode);
+            break;
+        default:
+            break;
     }
-    depth_buffer.flip_vertically();
-    Matrix4x4f M_Shadow = Viewport*Projection*ModelView;
+    return SDL_APP_CONTINUE;
+}
 
-    /* SSAO */
-    /// Get depth from Camera
-    auto depth_from_cam = TGAImage(width, height, TGAImage::RGB);
-    // Setup GL
-    LookAt(eye, cam, up);
-    Project(-1/(eye-cam).norm());
-    SetViewport(width/8, height/8, width*3./4, height*3./4, depth);
-
-    // Setup zbuffer
-/*    float *depth_cam_buf = create_buffer(width, height);
-    auto depth_shader_image = DepthShaderImage();
-    for(int i = 0; i < model->nfaces(); ++i) {
-        Vec3f screen_coords[3];
-        for (int j=0; j<3; ++j)
-            screen_coords[j] = rasterize(&depth_shader_image, i, j);
-
-        Vec3f n = (screen_coords[2]-screen_coords[0])^(screen_coords[1]-screen_coords[0]);
-        n.normalize();
-        float view_dir_intensity = eye*n;
-
-        if (view_dir_intensity<1)
-            triangle(screen_coords, depth_from_cam, depth_cam_buf, width, depth_shader_image);
-    }
-    depth_from_cam.flip_vertically();*/
-
-    /// SSAO
-    /*auto ssao_frame = TGAImage(width, height, TGAImage::RGB);
-
-    for (int x=0; x<width; x++) {
-        for (int y=0; y<height; y++) {
-            if (depth_cam_buf[x+y*width] < -1e5) continue;
-            float total = 0;
-            for (float a=0; a<M_PI*2-1e-4; a += M_PI/4) {
-                total += M_PI/2 - max_elevation_angle(depth_cam_buf, Vec2f(x, y), Vec2f(cos(a), sin(a)));
-            }
-            total /= (M_PI/2)*8;
-            total = pow(total, 100.f);
-            ssao_frame.set(x, y, TGAColor(total*255, total*255, total*255));
-        }
-    }
-    ssao_frame.flip_vertically();*/
-    /* Render */
-    auto frame = TGAImage(width, height, TGAImage::RGB);
-    // Setup zbuffer
-    float *zbuffer = create_buffer(width, height);
-    // GouraudShader shader = GouraudShader();
-    // PhongShader shader = PhongShader();
-    // GouraudShaderReference shader = GouraudShaderReference();
-    Matrix4x4f MVP = Viewport*Projection*ModelView;
-    MVP.invert();
-    PhongShaderShadow shader = PhongShaderShadow(M_Shadow, depth_buffer_arr);
-    //PhongShader shader = PhongShader();
-
-    for (int i=0; i<model->nfaces(); ++i) {
-        Vec3f screen_coords[3];
-
-        for (int j=0; j<3; ++j)
-            screen_coords[j] = rasterize(&shader, i, j);
-
-        // calculate normal
-        // ^ is an overloaded operator that performs cross product calculation
-        // world_coords[2] - world_coords[0] and the other are 2 vectors pointing from point
-        // world_coords[0].
-        Vec3f n = (screen_coords[2]-screen_coords[0])^(screen_coords[1]-screen_coords[0]);
-        n.normalize();
-        // calculate eye intensity by dot product between normal and eye vector
-        float view_dir_intensity = eye*n;
-        // back face culling
-
-        if (view_dir_intensity<1) {
-            triangle(screen_coords, frame, zbuffer, width, shader);
-            //wireframe_trig(screen_coords, frame, TGAColor(255, 255, 255, 255));
-        }
-    }
-    // set origin to the bottom left corner
-    frame.flip_vertically();
-
-/*    for(int x=0; x<width;++x) {
-        for(int y=0; y<height; ++y) {
-            TGAColor c = frame.get(x,y) + ssao_frame.get(x, y)*0.3f;
-            c.a = 255;
-            frame.set(x, y, c);
-        }
-    }*/
-
-    // Get timing of the render
-    auto now = std::chrono::system_clock::now();
-    auto finish_time = std::chrono::system_clock::to_time_t(now);
-    std::tm local_time = *std::localtime(&finish_time);
-    std::stringstream sstream;
-    sstream << "../output/" << local_time.tm_mon + 1 << "-" << local_time.tm_mday << "_"
-            << local_time.tm_hour << "-" << local_time.tm_min << ".tga";
-    frame.write_tga_file(sstream.str().c_str());
-/*    sstream << "_ssao.tga";
-    ssao_frame.write_tga_file(sstream.str().c_str());*/
-    sstream << "_depth.tga";
-    depth_from_cam.write_tga_file(sstream.str().c_str());
-
-
-    // How long the render takes
-    std::chrono::duration<double> diff = now - before;
-    auto ms = duration_cast<std::chrono::milliseconds>(diff);
-    std::cout << "Elapsed time: " << ms.count() << " ms" << std::endl;
-    diff = now-render;
-    ms = duration_cast<std::chrono::milliseconds>(diff);
-    std::cout << "Render time: " << ms.count() << " ms" << std::endl;
-
-    delete model;
-    delete[] zbuffer;
-    delete[] depth_buffer_arr;
-    return 0;
+void SDL_AppQuit(void *appstate, SDL_AppResult result) {
+    delete (GlobalAppState*)appstate;
+    ImGui_ImplSDLRenderer3_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
+    ImGui::DestroyContext();
+    delete renderer;
+    SDL_DestroyRenderer(sdlRenderer);
+    SDL_DestroyWindow(window);
+    //SDL_DestroySurface(windowSurface);
+    SDL_Quit();
 }
