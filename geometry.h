@@ -435,9 +435,6 @@ public:
     template <typename U>
     friend Matrix<U> operator* ( Matrix4x4<U> const &cur,  Matrix<U> const &other);
 
-    Matrix4x4(Matrix4x4&& other) noexcept {
-        this->data = std::move(other->data);
-    }
 };
 
 template <typename T>

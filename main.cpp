@@ -17,8 +17,8 @@ SDL_Window *window;
 //SDL_Surface *windowSurface;
 SDL_Renderer *sdlRenderer;
 
-constexpr int width = 800;
-constexpr int height = 800;
+int width = 800;
+int height = 800;
 constexpr float depth = 255.f;
 Renderer *renderer;
 
@@ -130,6 +130,8 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
         ImGui::DragFloat3("Light", &rScene->Light.x, 0.1, -1.0, 1.0, "%.3f");
         ImGui::End();
     }
+    rScene->Width = width;
+    rScene->Height = height;
     //rScene->Light.normalize();
     // IMGui render
     ImGui::Render();
@@ -148,7 +150,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     // Render
     renderer->Render(windowSurface);
     // Flip the surface
-    SDL_FlipSurface(windowSurface, SDL_FLIP_VERTICAL);
+    //SDL_FlipSurface(windowSurface, SDL_FLIP_VERTICAL);
     // Get the timing and FPS
     renderTime = CycleTimer::currentSeconds() - before;
     // Create a texture of the finished result
@@ -164,12 +166,17 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
     ImGui_ImplSDL3_ProcessEvent(event); // imgui event handler
+
     switch(event->type) {
         case SDL_EVENT_QUIT:
             return SDL_APP_FAILURE; // doing this will quit the program
             break;
         case SDL_EVENT_KEY_DOWN:
             SDL_Log("%d was pressed", event->key.scancode);
+            break;
+        case SDL_EVENT_WINDOW_RESIZED:
+            width = event->window.data1;
+            height = event->window.data2;
             break;
         default:
             break;

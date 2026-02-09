@@ -30,15 +30,20 @@ void Project(float coeff) {
     Projection[3][2] = coeff;
 }
 
+float degToRad(float deg) {
+    return deg * M_PI / 180;
+}
+
 // Right hand side
 void Project(float fov, float width, float height, float near, float far) {
-    double fovCoeff = 1. / tan(fov / 2); // cot(fov/2)
+
+    double fovCoeff = 1. / tan(degToRad(fov) / 2); // cot(fov/2)
     float nearFar = near - far;
     float aspectRatio = width/height;
     Projection[0][0] = 1/aspectRatio * fovCoeff;
     Projection[1][1] = fovCoeff;
     Projection[2][2] = far/nearFar;
-    Projection[2][3] = 1;
+    Projection[2][3] = -1;
     Projection[3][2] = -far * near/nearFar;
     Projection[3][3] = 0;
 }

@@ -35,6 +35,10 @@ struct PhongShaderShadow: IShader {
         varying_uv.set_col(nthvert, uniform_Model->texcoord(iface, nthvert));
         // Set the column of vertex the triangle using vert index
         Vec4f transformed_vert = Viewport*uniform_M*homogonize(v, 1.);
+//        bool x_c = -transformed_vert.w <= transformed_vert.x && transformed_vert.x <= transformed_vert.w;
+//        bool y_c = -transformed_vert.w <= transformed_vert.y && transformed_vert.y <= transformed_vert.w;
+//        bool z_c = 0 <= transformed_vert.z && transformed_vert.z <= transformed_vert.w;
+//        if(!x_c || !y_c || !z_c) return Vec4f(1, 1, 1, 1);
         varying_tri.set_col(nthvert, dehomogonize(transformed_vert));
         varying_shadow_tri.set_col(nthvert, dehomogonize(uniform_Mshadow * homogonize(v, 1.)));
 
