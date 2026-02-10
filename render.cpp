@@ -36,11 +36,13 @@ void Renderer::SetupBuffers() {
 }
 
 // Invalidate
-void Renderer::ChangeResolution() {
+void Renderer::ChangeResolution(int w, int h) {
     delete mShadowBuffer;
     delete mZbuffer;
-    mShadowBuffer = new RectBuffer(mScene->Width, mScene->Height);
-    mZbuffer = new RectBuffer(mScene->Width, mScene->Height);
+    mShadowBuffer = new RectBuffer(w, h);
+    mZbuffer = new RectBuffer(w, h);
+    mScene->Width = w;
+    mScene->Height = h;
 }
 
 void Renderer::SetupMaterial(string texPath, string normalPath, string specPath) {
@@ -53,8 +55,8 @@ void Renderer::SetupScene(int width, int height, float depth, const Vec3f &light
     mZbuffer = new RectBuffer(width, height);
 }
 
-void Renderer::SetCamera(const Vec3f &eye, const Vec3f &up, const Vec3f &cam) {
-    mCamera = new Camera(eye, up, cam);
+void Renderer::SetCamera(const Vec3f &eye, const Vec3f &up, const Vec3f &cam, float fov) {
+    mCamera = new Camera(eye, up, cam, fov);
 }
 
 Renderer::~Renderer() {
@@ -99,10 +101,7 @@ void Renderer::Render(SDL_Surface *surface) {
     //auto depth_from_cam = TGAImage(mScene->Width, mScene->Height, TGAImage::RGB);
     // Setup GL
     LookAt(mCamera->Eye, mCamera->Cam, mCamera->Up);
-    Project(120, mScene->Width, mScene->Height, 0.1, mScene->Depth);
-
-//    Project(-1/(mCamera->Eye-mCamera->Cam).norm());
-    //SetViewport(mWidth/8, mHeight/8, mWidth*3./4, mHeight*3./4, mDepth);
+    Project(mCamera->Fov, mScene->Width, mScene->Height, 0.1, mScene->Depth);
 
     // Setup zbuffer
 /*    float *depth_cam_buf = create_buffer(mWidth, mHeight);
@@ -138,10 +137,6 @@ void Renderer::Render(SDL_Surface *surface) {
     }
     ssao_frame.flip_vertically();*/
     /* Render */
-    //auto frame = TGAImage(mScene->Width, mScene->Height, TGAImage::RGB);
-    // Setup zbuffer
-//    float *zbuffer = create_buffer(mScene->Width, mScene->Height);
-    // RectBuffer zbuffer(mScene->Width, mScene->Height);
     mZbuffer->resetBuffer();
     // GouraudShader shader = GouraudShader();
     // PhongShader shader = PhongShader();

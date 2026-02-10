@@ -39,7 +39,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     renderer = new Renderer();
     renderer->SetCamera(Vec3f(1, 1, 3),
                          Vec3f(0, 1, 0),
-                        Vec3f(0, 0, 0));
+                        Vec3f(0, 0, 0),
+                        90);
     if(argc < 2)
         renderer->SetupModel("obj/african_head.obj");
     else
@@ -130,9 +131,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
         ImGui::DragFloat3("Light", &rScene->Light.x, 0.1, -1.0, 1.0, "%.3f");
         ImGui::End();
     }
-    rScene->Width = width;
-    rScene->Height = height;
-    renderer->ChangeResolution();
+    renderer->ChangeResolution(width, height);
     //rScene->Light.normalize();
     // IMGui render
     ImGui::Render();

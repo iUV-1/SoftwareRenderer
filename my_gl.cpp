@@ -30,7 +30,7 @@ void Project(float coeff) {
     Projection[3][2] = coeff;
 }
 
-float degToRad(float deg) {
+inline float degToRad(float deg) {
     return deg * M_PI / 180;
 }
 

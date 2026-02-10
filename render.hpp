@@ -63,11 +63,12 @@ public:
     Camera() { }
     // Copy constructor
     //Camera(const Camera *camera);
-    Camera(const Vec3f &eye, const Vec3f &up, const Vec3f &cam): Eye(eye), Up(up), Cam(std::move(cam)) {}
+    Camera(const Vec3f &eye, const Vec3f &up, const Vec3f &cam, float fov): Eye(eye), Up(up), Cam(cam), Fov(fov) {}
     //~Camera();
     Vec3f Eye;
     Vec3f Up;
     Vec3f Cam;
+    float Fov;
 };
 
 class Renderer {
@@ -77,11 +78,11 @@ public:
     //void LoadRendererSettings();
     void Render(SDL_Surface *surface);
     void DestroyRenderer();
-    void SetCamera(const Vec3f &eye, const Vec3f &up, const Vec3f &cam);
+    void SetCamera(const Vec3f &eye, const Vec3f &up, const Vec3f &cam, float fov);
     void SetupScene(int width, int height, float depth, const Vec3f &light);
     void SetupMaterial(std::string texPath, std::string normalPath, std::string specPath);
     void SetupModel(std::string modelPath);
-    void ChangeResolution();
+    void ChangeResolution(int width, int height);
     void SetupBuffers();
 
     Model *mModel;
