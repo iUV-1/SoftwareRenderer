@@ -81,6 +81,7 @@ public:
     void SetupScene(int width, int height, float depth, const Vec3f &light);
     void SetupMaterial(std::string texPath, std::string normalPath, std::string specPath);
     void SetupModel(std::string modelPath);
+    void ChangeResolution();
     void SetupBuffers();
 
     Model *mModel;

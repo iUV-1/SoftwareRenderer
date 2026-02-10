@@ -18,7 +18,7 @@ SDL_Window *window;
 SDL_Renderer *sdlRenderer;
 
 int width = 800;
-int height = 800;
+int height = 600;
 constexpr float depth = 255.f;
 Renderer *renderer;
 
@@ -132,6 +132,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     }
     rScene->Width = width;
     rScene->Height = height;
+    renderer->ChangeResolution();
     //rScene->Light.normalize();
     // IMGui render
     ImGui::Render();

@@ -35,6 +35,14 @@ void Renderer::SetupBuffers() {
 
 }
 
+// Invalidate
+void Renderer::ChangeResolution() {
+    delete mShadowBuffer;
+    delete mZbuffer;
+    mShadowBuffer = new RectBuffer(mScene->Width, mScene->Height);
+    mZbuffer = new RectBuffer(mScene->Width, mScene->Height);
+}
+
 void Renderer::SetupMaterial(string texPath, string normalPath, string specPath) {
     mMaterial = new Material(texPath, normalPath, specPath);
 }
