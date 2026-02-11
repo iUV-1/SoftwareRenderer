@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.28)
 project(SoftwareRenderer)
 
+include(FetchContent)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
@@ -39,7 +41,13 @@ if(OpenMP_CXX_FOUND)
 endif()
 
 # Add SDL
-add_subdirectory(third_party/SDL EXCLUDE_FROM_ALL)
+FetchContent_Declare(
+        SDL
+        GIT_REPOSITORY git@github.com:libsdl-org/SDL.git
+        GIT_TAG         a962f40 #3.4.0
+)
+FetchContent_MakeAvailable(SDL)
+#add_subdirectory(third_party/SDL EXCLUDE_FROM_ALL)
 #add_compile_options(-DSDL_X11_XCURSOR=OFF)
 target_precompile_headers(${PROJECT_NAME} PUBLIC pch.h)
 
@@ -62,5 +70,5 @@ add_library(imgui STATIC
 
 # 4. Add the include directory so #include "imgui.h" works
 target_include_directories(imgui PUBLIC "${IMGUI_DIR}" "${IMGUI_DIR}/backends")
-target_link_libraries(imgui PUBLIC SDL3::SDL3)
+target_link_libraries(imgui PUBLIC SDL3::SDL3) #imgui needs SDL3 as well since we are using their implementation functions
 target_link_libraries(${PROJECT_NAME} PRIVATE imgui)
