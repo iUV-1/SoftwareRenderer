@@ -3,8 +3,7 @@
 //
 #include <algorithm>
 #include <stdexcept>
-#include "geometry.h"
-
+#include "Math/geometry.h"
 
 #pragma once
 class RectBuffer {
@@ -19,7 +18,7 @@ public:
     }
 
     float &operator[] (size_t const i) {
-        if (i >= size) return data[size];
+        if (i >= size) throw std::out_of_range("out of range!");
         return data[i];
     }
 

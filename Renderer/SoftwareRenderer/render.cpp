@@ -2,16 +2,16 @@
 // Created by iuv on 7/30/25.
 //
 #include <string>
-#include "pch.h"
+#include "../../pch.h"
 
 #include "render.hpp"
-#include "model.h"
-#include "tgaimage.h"
+#include "../../Resources/model.h"
+#include "../../Resources/tgaimage.h"
 #include "my_gl.hpp"
 //#include "shaders.hpp"
 
-#include "shaders/PhongShadowShader.h"
-#include "shaders/DepthShaderImage.h"
+#include "../../shaders/PhongShadowShader.h"
+#include "../../shaders/DepthShaderImage.h"
 
 using namespace std;
 
@@ -88,6 +88,7 @@ void Renderer::Render(SDL_Surface *surface) {
 
         Vec3f n = (screen_coords[2]-screen_coords[0])^(screen_coords[1]-screen_coords[0]);
         n.normalize();
+
         float view_dir_intensity = mCamera->Eye*n;
 
         if (view_dir_intensity<1)
@@ -158,6 +159,7 @@ void Renderer::Render(SDL_Surface *surface) {
         // world_coords[0].
         Vec3f n = (screen_coords[2]-screen_coords[0])^(screen_coords[1]-screen_coords[0]);
         n.normalize();
+        //Vec3f n = mModel->normal(i, 0);
         // calculate mEye intensity by dot product between normal and mEye vector
         float view_dir_intensity = mCamera->Eye*n;
         // back face culling

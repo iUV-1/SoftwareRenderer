@@ -94,7 +94,7 @@ struct GouraudShaderReference: IShader {
 // This is also called smooth shading
 struct GouraudShader: IShader {
     Vec3f varying_intensity; // intensity of a vertex
-    Matrix<float> varying_uv = Matrix<float>(2, 3); // 2x3 matrix containing uv coordinate of 3 vertex (a trig)
+    Matrix<float> vary1ing_uv = Matrix<float>(2, 3); // 2x3 matrix containing uv coordinate of 3 vertex (a trig)
     Matrix4x4f uniform_M; // Projection*ModelView
     Matrix4x4f uniform_MIT; // same as above but invert_transpose()
 

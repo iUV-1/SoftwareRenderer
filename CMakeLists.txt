@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(SoftwareRenderer)
+project(Renderer/SoftwareRenderer)
 
 include(FetchContent)
 
@@ -7,22 +7,36 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 set(SOURCE_FILE
-        tgaimage.h tgaimage.cpp
-        model.cpp model.h
-        geometry.h geometry.cpp
-        my_gl.hpp my_gl.cpp
-        shaders.hpp
-        CycleTimer.hpp
+        Resources/tgaimage.h Resources/tgaimage.cpp
+        Resources/model.cpp Resources/model.h
+        Utilities/Math/geometry.h Utilities/Math/geometry.cpp
+        Renderer/SoftwareRenderer/my_gl.hpp Renderer/SoftwareRenderer/my_gl.cpp
+        Utilities/Interfaces/IShader.hpp
+        Utilities/CycleTimer.hpp
         main.cpp
-        TGAtoSDLAdapter.cpp TGAtoSDLAdapter.hpp
-        render.cpp render.hpp
+        Utilities/Adapters/TGAtoSDLAdapter.hpp
+        Renderer/SoftwareRenderer/render.cpp Renderer/SoftwareRenderer/render.hpp
         pch.h
-
-        shaders/PhongShadowShader.h
-        shaders/DepthShader.h
-        shaders/DepthShaderImage.h
-        shaders/GouraudShader.h
-        RectBuffer.h)
+        Renderer/SoftwareRenderer/shaders/PhongShadowShader.h
+        Renderer/SoftwareRenderer/shaders/DepthShader.h
+        Renderer/SoftwareRenderer/shaders/DepthShaderImage.h
+        Renderer/SoftwareRenderer/shaders/GouraudShader.h
+        Utilities/RectBuffer.h
+        engine.cpp
+        engine.h
+        Utilities/Interfaces/IRenderer.h
+        Utilities/Math/math.cpp
+        Utilities/Math/math.h
+        Resources/Material.cpp
+        Resources/Material.h
+        Resources/Scene.cpp
+        Resources/Scene.h
+        Resources/Camera.cpp
+        Resources/Camera.h
+        OS/Window.cpp
+        OS/Window.h
+        OS/ScreenBuffer.cpp
+        OS/ScreenBuffer.h)
 
 #add_link_options(-g)
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=leak -fno-omit-frame-pointer -fsanitize-blacklist=blacklist.txt")
@@ -43,7 +57,7 @@ endif()
 # Add SDL
 FetchContent_Declare(
         SDL
-        GIT_REPOSITORY git@github.com:libsdl-org/SDL.git
+        GIT_REPOSITORY https://github.com/libsdl-org/SDL
         GIT_TAG         a962f40 #3.4.0
 )
 FetchContent_MakeAvailable(SDL)

@@ -10,8 +10,8 @@
 #include <imgui_impl_sdl3.h>
 #include <string>
 
-#include "render.hpp"
-#include "CycleTimer.hpp"
+#include "SoftwareRenderer/render.hpp"
+#include "Utilities/CycleTimer.hpp"
 
 SDL_Window *window;
 //SDL_Surface *windowSurface;
@@ -54,9 +54,9 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     else
         diffPath = argv[2];
 
-    if(argc >= 3)
+    if(argc > 3)
         normalPath = argv[3];
-    if(argc >= 4)
+    if(argc > 4)
         specularPath = argv[4];
 
     renderer->SetupMaterial(diffPath, normalPath, specularPath);
@@ -94,6 +94,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     const bool* keystate = SDL_GetKeyboardState(nullptr);
     ((GlobalAppState*)appstate[0])->keystate = keystate;
 
+    SDL_SetWindowRelativeMouseMode(window, true);
     return SDL_APP_CONTINUE;
 }
 
@@ -104,10 +105,14 @@ void HandleInput(const bool *keystate, Camera *cam) {
     result.x = keystate[SDL_SCANCODE_A] - keystate[SDL_SCANCODE_D];
     result.y = keystate[SDL_SCANCODE_W] - keystate[SDL_SCANCODE_S];
 
+    Vec2f mouse;
+    SDL_GetRelativeMouseState(&mouse.x, &mouse.y);
+    std::cout << "mouse_x: " << mouse.x << " mouse_y: " << mouse.y << "\n";
     cam->Eye.x += 0.1f * result.x;
     cam->Eye.z += 0.1f * result.y;
-    cam->Cam.x += 0.1f * result.x;
+    cam->Cam.x += 0.1f * result.x - mouse.x * 0.001;
     cam->Cam.z += 0.1f * result.y;
+    cam->Cam.y -= mouse.y * 0.001;
 }
 
 SDL_AppResult SDL_AppIterate(void *appstate) {
@@ -172,7 +177,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
             return SDL_APP_FAILURE; // doing this will quit the program
             break;
         case SDL_EVENT_KEY_DOWN:
-            SDL_Log("%d was pressed", event->key.scancode);
             break;
         case SDL_EVENT_WINDOW_RESIZED:
             width = event->window.data1;

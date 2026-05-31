@@ -3,11 +3,11 @@
 #include <ctime>
 #include <sstream>
 
-#include "geometry.h"
-#include "my_gl.hpp"
-#include "tgaimage.h"
-#include "shaders.hpp"
-#include "CycleTimer.hpp"
+#include "Utilities/Math/geometry.h"
+#include "Renderer/SoftwareRenderer/my_gl.hpp"
+#include "Resources/tgaimage.h"
+#include "Utilities/Interfaces/IShader.hpp"
+#include "Utilities/CycleTimer.hpp"
 
 constexpr int width = 800;
 constexpr int height = 800;

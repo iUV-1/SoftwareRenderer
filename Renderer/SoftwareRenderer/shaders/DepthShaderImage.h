@@ -7,11 +7,11 @@
 #include <random>
 #include <algorithm>
 
-#include "../model.h"
-#include "../shaders.hpp"
-#include "../geometry.h"
+#include "../../../Resources/model.h"
+#include "../../../Utilities/Interfaces/IShader.hpp"
+#include "../../../Utilities/Math/geometry.h"
 #include "../my_gl.hpp"
-#include "../render.hpp"
+#include "../SoftwareRenderer/render.hpp"
 
 // Copy zbuffer to a framebuffer (Image in this case)
 struct DepthShaderImage: IShader {

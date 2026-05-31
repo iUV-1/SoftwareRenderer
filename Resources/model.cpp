@@ -8,7 +8,7 @@
 #include <vector>
 #include "model.h"
 
-#include "my_gl.hpp"
+#include "../Renderer/SoftwareRenderer/my_gl.hpp"
 
 Model::Model(const char *filename) {
     faces_.reserve(100);

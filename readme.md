@@ -1,5 +1,5 @@
 # Software Renderer
-![Rendered Model](showcase.png)
+![Rendered Model](docs/showcase.png)
 A CPU-based 3D renderer built entirely from scratch. No OpenGL, Vulkan, or DirectX.
 This project demonstrates a complete graphics pipeline implemented in software, inspired by TinyRenderer, and designed to explore how modern rendering works at the lowest level.
 

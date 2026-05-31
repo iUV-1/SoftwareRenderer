@@ -7,11 +7,11 @@
 #include <random>
 #include <algorithm>
 
-#include "../model.h"
-#include "../shaders.hpp"
-#include "../geometry.h"
+#include "../../../Resources/model.h"
+#include "../../../Utilities/Interfaces/IShader.hpp"
+#include "../../../Utilities/Math/geometry.h"
 #include "../my_gl.hpp"
-#include "../render.hpp"
+#include "../SoftwareRenderer/render.hpp"
 // Gouraud Shader uses vertex data to calculate light value
 // However, this shader uses interpolation to compute the normal vector per pixel
 // This is also called smooth shading

@@ -3,16 +3,15 @@
 //
 
 
-#ifndef __MODEL_H__
-#define __MODEL_H__
+#pragma once
 
 #include <vector>
-#include "geometry.h"
+#include "../Utilities/Math/geometry.h"
 
 class Model {
 private:
     std::vector<Vec3f> verts_;
-    std::vector< std::vector<int> > faces_;
+    std::vector<std::vector<int> > faces_;
     std::vector<std::vector<int>> faces_texture;
     std::vector<std::vector<int>> faces_normal;
     std::vector<Vec2f> texcoords_;
@@ -31,5 +30,3 @@ public:
     std::vector<int> face(int idx);
     std::vector<int> face_tex(int idx);
 };
-
-#endif //__MODEL_H__

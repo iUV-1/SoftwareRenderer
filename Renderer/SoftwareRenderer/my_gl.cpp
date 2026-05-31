@@ -2,12 +2,12 @@
 // Created by iUV on 3/7/2025.
 //
 
-#include "pch.h"
+#include "../../pch.h"
 #include "my_gl.hpp"
-#include "geometry.h"
-#include "tgaimage.h"
-#include "TGAtoSDLAdapter.hpp"
-#include "shaders.hpp"
+#include "../../Utilities/Math/geometry.h"
+#include "../../Resources/tgaimage.h"
+#include "../../Utilities/Adapters/TGAtoSDLAdapter.hpp"
+#include "../../Utilities/Interfaces/IShader.hpp"
 
 Matrix4x4f ModelView;
 Matrix4x4f Projection;

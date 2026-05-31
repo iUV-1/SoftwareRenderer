@@ -4,9 +4,9 @@
 
 
 #pragma once
-#include "tgaimage.h"
-#include "geometry.h"
-#include "model.h"
+#include "../../Resources/tgaimage.h"
+#include "../../Utilities/Math/geometry.h"
+#include "../../Resources/model.h"
 #include "render.hpp"
 
 extern Matrix4x4f ModelView;
@@ -14,8 +14,6 @@ extern Matrix4x4f Projection;
 extern Matrix4x4f Viewport;
 
 #define TEX2D(tex, uv) (tex->get(uv.u * tex->get_width(), uv.v * tex->get_height()))
-
-
 
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color);
 void line(Vec2i t0, Vec2i t1, TGAImage &image, TGAColor color);
@@ -35,4 +33,3 @@ void LookAt(Vec3f eye, Vec3f center, Vec3f up);
 void world2screen(Vec3f v, int w, int h, float depth);
 void SetViewport(int width, int height, float depth);
 void SetViewport(int x, int y, float w, float h, float depth);
-
