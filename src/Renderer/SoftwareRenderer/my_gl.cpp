@@ -377,24 +377,3 @@ void wireframe_trig(Vec3f *pts, TGAImage &image, TGAColor color) {
     line(pts[1], pts[2], image, color);
     line(pts[0], pts[2], image, color);
 }
-
-/* retirement home */
-
-/*
-Vec3f world2screen(Vec3f v) {
-    return Vec3f(static_cast<int>((v.x+1.)*width/2.+.5), static_cast<int>((v.y+1.)*height/2. + .5), v.z);
-}
-
-// Matrix representation of viewport transformation
-// Also includes depth because viewport is a box
-void world2screen(Vec3f v, int w, int h, float depth) {
-    Viewport = Matrix4x4f::identity();
-    Viewport[0][3] = v.x+w/2.f;
-    Viewport[1][3] = v.y+h/2.f;
-    Viewport[2][3] = depth/2.f;
-
-    Viewport[0][0] = w/2.f;
-    Viewport[1][1] = h/2.f;
-    Viewport[2][2] = depth/2.f;
-}
-*/

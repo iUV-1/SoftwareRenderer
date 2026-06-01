@@ -10,6 +10,9 @@
 #include "Resources/Scene.h"
 #include <stdexcept>
 
+constexpr int width = 800;
+constexpr int height = 800;
+
 using namespace std;
 
 void Engine::InitializeUniforms()
@@ -17,19 +20,38 @@ void Engine::InitializeUniforms()
 
 }
 
-void Engine::Initialize(int agrc, char *argv[])
+void Engine::Initialize(int argc, char *argv[])
 {
-    double beforeSetupTime = CycleTimer::currentSeconds();
+    double setupTimeTaken = CycleTimer::currentSeconds();
     // --- WINDOW SETUP ---
-    mWindow = new Window("Software Renderer", 800, 800);
+    mWindow = new Window("Software Renderer", width, height);
     keystate = mWindow->GetKeyboardState();
     mRelativeMouse = mWindow->GetRelativeMouse();
     // --- SCENE SETUP ---
+    string modelPath = "obj/african_head.obj";
+    if(argc >= 2) {
+        modelPath = argv[1];
+    }
+    Mesh *mesh = new Mesh(modelPath.c_str());
 
+    string diffPath = "obj/UV Grid.tga";
+    string normalPath;
+    string specularPath;
+
+    if(argc >= 3)
+        diffPath = argv[2];
+    if(argc > 3)
+        normalPath = argv[3];
+    if(argc > 4)
+        specularPath = argv[4];
+
+    Material *material = new Material(diffPath, normalPath, specularPath);
+
+//    Model *model = new Model();
     // --- RENDERER SETUP ---
 
     // Timing
-    double setupTimeTaken = CycleTimer::currentSeconds() - beforeSetupTime;
+    setupTimeTaken = CycleTimer::currentSeconds() - setupTimeTaken;
     SDL_Log("Setup time: %.2f ms\n", 1000.f * setupTimeTaken);
 }
 
