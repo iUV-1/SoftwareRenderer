@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(Renderer/SoftwareRenderer)
+project(SoftwareRenderer)
 
 include(FetchContent)
 
@@ -7,36 +7,42 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 set(SOURCE_FILE
-        Resources/tgaimage.h Resources/tgaimage.cpp
-        Resources/model.cpp Resources/model.h
-        Utilities/Math/geometry.h Utilities/Math/geometry.cpp
-        Renderer/SoftwareRenderer/my_gl.hpp Renderer/SoftwareRenderer/my_gl.cpp
-        Utilities/Interfaces/IShader.hpp
-        Utilities/CycleTimer.hpp
-        main.cpp
-        Utilities/Adapters/TGAtoSDLAdapter.hpp
-        Renderer/SoftwareRenderer/render.cpp Renderer/SoftwareRenderer/render.hpp
-        pch.h
-        Renderer/SoftwareRenderer/shaders/PhongShadowShader.h
-        Renderer/SoftwareRenderer/shaders/DepthShader.h
-        Renderer/SoftwareRenderer/shaders/DepthShaderImage.h
-        Renderer/SoftwareRenderer/shaders/GouraudShader.h
-        Utilities/RectBuffer.h
-        engine.cpp
-        engine.h
-        Utilities/Interfaces/IRenderer.h
-        Utilities/Math/math.cpp
-        Utilities/Math/math.h
-        Resources/Material.cpp
-        Resources/Material.h
-        Resources/Scene.cpp
-        Resources/Scene.h
-        Resources/Camera.cpp
-        Resources/Camera.h
-        OS/Window.cpp
-        OS/Window.h
-        OS/ScreenBuffer.cpp
-        OS/ScreenBuffer.h)
+        src/Resources/tgaimage.h
+        src/Resources/tgaimage.cpp
+        src/Resources/Mesh.cpp src/Resources/Mesh.h
+        src/Utilities/Math/geometry.h
+        src/Utilities/Math/geometry.cpp
+        src/Renderer/SoftwareRenderer/my_gl.hpp
+        src/Renderer/SoftwareRenderer/my_gl.cpp
+        src/Utilities/Interfaces/IShader.hpp
+        src/Utilities/CycleTimer.hpp
+        src/main.cpp
+        src/Utilities/Adapters/TGAtoSDLAdapter.hpp
+        src/Renderer/SoftwareRenderer/render.cpp
+        src/Renderer/SoftwareRenderer/render.hpp
+        src/pch.h
+        src/Renderer/SoftwareRenderer/shaders/PhongShadowShader.h
+        src/Renderer/SoftwareRenderer/shaders/DepthShader.h
+        src/Renderer/SoftwareRenderer/shaders/DepthShaderImage.h
+        src/Renderer/SoftwareRenderer/shaders/GouraudShader.h
+        src/Utilities/RectBuffer.h
+        src/engine.cpp
+        src/engine.h
+        src/Utilities/Interfaces/IRenderer.h
+        src/Utilities/Math/math.cpp
+        src/Utilities/Math/math.h
+        src/Resources/Material.cpp
+        src/Resources/Material.h
+        src/Resources/Scene.cpp
+        src/Resources/Scene.h
+        src/Resources/Camera.cpp
+        src/Resources/Camera.h
+        src/OS/Window.cpp
+        src/OS/Window.h
+        src/OS/ScreenBuffer.cpp
+        src/OS/ScreenBuffer.h
+        src/Resources/Model.cpp
+        src/Resources/Model.h)
 
 #add_link_options(-g)
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=leak -fno-omit-frame-pointer -fsanitize-blacklist=blacklist.txt")
@@ -63,13 +69,13 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(SDL)
 #add_subdirectory(third_party/SDL EXCLUDE_FROM_ALL)
 #add_compile_options(-DSDL_X11_XCURSOR=OFF)
-target_precompile_headers(${PROJECT_NAME} PUBLIC pch.h)
+target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 
 target_link_libraries(SoftwareRenderer PUBLIC SDL3::SDL3)
 
 # Add imgui
 # 1. Setup paths
-set(IMGUI_DIR "${CMAKE_SOURCE_DIR}/third_party/imgui")
+set(IMGUI_DIR "${CMAKE_SOURCE_DIR}/src/third_party/imgui")
 
 # 3. Add ImGui sources DIRECTLY to your executable
 add_library(imgui STATIC

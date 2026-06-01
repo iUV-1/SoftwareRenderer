@@ -1,5 +1,5 @@
 # Software Renderer
-![Rendered Model](docs/showcase.png)
+![Rendered Mesh](docs/showcase.png)
 A CPU-based 3D renderer built entirely from scratch. No OpenGL, Vulkan, or DirectX.
 This project demonstrates a complete graphics pipeline implemented in software, inspired by TinyRenderer, and designed to explore how modern rendering works at the lowest level.
 
@@ -13,7 +13,7 @@ The goal is to understand and visualize how GPUs work internally by recreating t
 ## Features
 - OBJ file loading with vertex, normal, and UV data
 - Custom Matrix and Vector math library
-- Model, View, Projection, and Viewport transformations
+- Mesh, View, Projection, and Viewport transformations
 - Triangle rasterization using barycentric coordinates
 - Perspective-correct interpolation for attributes
 - Depth buffering (Z-buffer) for visibility
