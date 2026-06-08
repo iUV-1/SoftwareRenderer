@@ -10,9 +10,9 @@
 // Interface for renderers
 class IRenderer {
 public:
-    IRenderer() = delete;
     IRenderer(Window *window);
-    ~IRenderer() = delete;
+
     virtual void RenderIMGUI();
-    virtual void RenderModel(Model *model);
+//    virtual void RenderModel(Model *model);
+    virtual void RenderScene(Scene *scene);
 };

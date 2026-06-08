@@ -8,6 +8,8 @@
 #include "Utilities/Interfaces/IRenderer.h"
 #include "Resources/Camera.h"
 #include "Resources/Scene.h"
+#include "Utilities/Math/math.h"
+#include "Renderer/SoftwareRenderer/render.hpp"
 #include <stdexcept>
 
 constexpr int width = 800;
@@ -17,6 +19,10 @@ using namespace std;
 
 void Engine::InitializeUniforms()
 {
+    Matrix4x4f projection = Project(60, width, height, 0, 255.f);
+    Matrix4x4f viewport = SetViewport(width / 8, height / 8, width * 3./4, height * 3./4, 255.f);
+    Matrix4x4f modelview = LookAt(mCamera->Eye, mCamera->Cam, mCamera->Up);
+    static_cast<Renderer*>(mRenderer)->SetupUniforms(projection, viewport, modelview);
 
 }
 
@@ -32,7 +38,7 @@ void Engine::Initialize(int argc, char *argv[])
     if(argc >= 2) {
         modelPath = argv[1];
     }
-    Mesh *mesh = new Mesh(modelPath.c_str());
+    Mesh mesh(modelPath.c_str());
 
     string diffPath = "obj/UV Grid.tga";
     string normalPath;
@@ -40,16 +46,17 @@ void Engine::Initialize(int argc, char *argv[])
 
     if(argc >= 3)
         diffPath = argv[2];
-    if(argc > 3)
+    if(argc >= 4)
         normalPath = argv[3];
-    if(argc > 4)
+    if(argc >= 5)
         specularPath = argv[4];
 
-    Material *material = new Material(diffPath, normalPath, specularPath);
+    Material material(diffPath, normalPath, specularPath);
 
-//    Model *model = new Model();
+    auto *model = new Model(Vec3f(1, 1, 1), mesh, material);
     // --- RENDERER SETUP ---
 
+    mRenderer = new Renderer(mWindow);
     // Timing
     setupTimeTaken = CycleTimer::currentSeconds() - setupTimeTaken;
     SDL_Log("Setup time: %.2f ms\n", 1000.f * setupTimeTaken);
@@ -84,16 +91,12 @@ void Engine::HandleInput()
 void Engine::Update()
 {
     mUpdateTime = CycleTimer::currentSeconds();
-
     HandleInput();
+    InitializeUniforms();
     // --- RENDER ---
     mRenderTime = CycleTimer::currentSeconds();
-    vector<Model*> models = mScene->GetModels();
-    for(int i = 0; i < mScene->GetModelSize(); i++) {
-        mRenderer->RenderModel(models[i]);
-    }
+    mRenderer->RenderScene(mScene);
     mRenderTime = CycleTimer::currentSeconds() - mRenderTime;
-
 
     RenderIMGUI();
     mWindow->Update();

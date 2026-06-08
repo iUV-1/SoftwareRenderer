@@ -1,9 +1,10 @@
 //
 // Created by iUV on 5/26/2026.
 //
-
+// For MSVC because they don't define M_PI by default
+#define _USE_MATH_DEFINES
 #include "math.h"
-Matrix4x4f Viewport;
+//Matrix4x4f Viewport;
 
 inline float degToRad(float deg) {
     return deg * M_PI / 180;

@@ -10,9 +10,15 @@
 
 class Model {
 private:
+
+
+public:
     Vec3f mPosition;
     Mesh mMesh;
     Material mMaterial;
+    Model() = delete;
+    Model(const Vec3f &pos, const Mesh &mesh, const Material &mat):
+         mPosition(pos), mMesh(mesh), mMaterial(mat) { }
 };
 
 

@@ -20,6 +20,8 @@ public:
     float Fov;
     float mNear;
     float mFar;
+    int Width;
+    int Height;
 };
 
 #endif //SOFTWARERENDERER_CAMERA_H

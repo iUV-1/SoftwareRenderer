@@ -46,7 +46,7 @@ set(SOURCE_FILE
 
 #add_link_options(-g)
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=leak -fno-omit-frame-pointer -fsanitize-blacklist=blacklist.txt")
-add_compile_options(-Wall -g -O2 -ffast-math)
+add_compile_options(-Wall -g -ffast-math)
 add_executable(${PROJECT_NAME} ${SOURCE_FILE})
 #add_compile_options(-fopt-info-vec
 #        -fopt-info-vec-missed)

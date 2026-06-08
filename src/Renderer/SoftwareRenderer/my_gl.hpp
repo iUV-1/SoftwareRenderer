@@ -23,6 +23,7 @@ void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, TGAColor const &color
 void triangle(Vec3f *pts, SDL_Surface *surface, float *zbuffer, int width, IShader &shader);
 void triangle(Vec3f *pts, SDL_Surface *surface, RectBuffer &zbuffer, IShader &shader);
 void triangle(Vec3f *pts, int w, int h, RectBuffer &zbuffer);
+void triangle(Vec3f *pts, Window *window, RectBuffer &zbuffer, IShader &shader);
 //Matrix<float> homogonize(Vec3f v, float h);
 //Vec3f dehomogonize(Matrix<float> const &m);
 Vec3f project(Vec3f v);

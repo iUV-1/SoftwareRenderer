@@ -8,8 +8,8 @@
 #include <algorithm>
 
 #include "../../../Resources/Mesh.h"
-#include "../../../../Utilities/Interfaces/IShader.hpp"
-#include "../../../../Utilities/Math/geometry.h"
+#include "../../Utilities/Interfaces/IShader.hpp"
+#include "../../Utilities/Math/geometry.h"
 #include "../my_gl.hpp"
 #include "../SoftwareRenderer/render.hpp"
 
@@ -17,9 +17,14 @@
 struct DepthShaderImage: IShader {
     Matrix3x3<float> varying_tri; // 3x3 matrix containing vertex position of a trig
     // Typical vertex rendering
-    DepthShaderImage(Mesh *model, Scene *scene): IShader(scene) { uniform_Model = model; uniform_Scene = scene; }
+    float mDepth;
+    DepthShaderImage(Matrix4x4f viewport, Matrix4x4f projection, Matrix4x4f modelview, Model *model, float depth):
+        IShader(viewport, projection, modelview, model),  mDepth(depth)
+    {
+
+    }
     Vec4f vertex(int iface, int nthvert) override{
-        Vec3f v = uniform_Model->vert(iface, nthvert);
+        Vec3f v = uniform_Model->mMesh.vert(iface, nthvert);
         // Set the column of varying_uv to texture position in Vec2f
         Vec4f transformed_vert = Viewport*uniform_M*homogonize(v, 1.);
         varying_tri.set_col(nthvert, dehomogonize(transformed_vert));
@@ -30,7 +35,7 @@ struct DepthShaderImage: IShader {
         // Set the brightness based on how far is it from the camera
         Vec3f p = varying_tri*bar;
         // clamp
-        float dist = std::clamp(p.z/uniform_Scene->Depth, 0.f, 1.f);
+        float dist = std::clamp(p.z/mDepth, 0.f, 1.f);
         color = TGAColor(255, 255, 255) *
                 (dist);
 

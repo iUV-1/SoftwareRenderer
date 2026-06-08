@@ -17,24 +17,25 @@ class Mesh;
 class Scene;
 class Camera;
 
-class Renderer: IRenderer {
+class Renderer: public IRenderer {
 public:
     //Renderer() { }
+    Renderer(Window *window): IRenderer(window), mWindow(window) { };
     ~Renderer();
     //void LoadRendererSettings();
     void Render(SDL_Surface *surface);
-    void DestroyRenderer();
-    void SetCamera(const Vec3f &eye, const Vec3f &up, const Vec3f &cam, float fov);
-    void SetupScene(int width, int height, float depth, const Vec3f &light);
-    void SetupMaterial(std::string texPath, std::string normalPath, std::string specPath);
-    void SetupModel(std::string modelPath);
-    void ChangeResolution(int width, int height);
-    void SetupBuffers();
-
+    void SetupBuffers(int width, int height);
+    void RenderScene(int *scene) override;
+    void SetupUniforms(Matrix4x4f projection, Matrix4x4f modelview, Matrix4x4f viewport);
     Scene *mScene;
     Camera *mCamera;
+    Window *mWindow;
     RectBuffer *mShadowBuffer;
     RectBuffer *mZbuffer;
+
+    Matrix4x4f mProjection;
+    Matrix4x4f mModelView;
+    Matrix4x4f mViewport;
 private:
     Vec3f rasterize(IShader *shader, int iface, int nthvert);
 };

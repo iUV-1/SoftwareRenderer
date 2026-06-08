@@ -12,8 +12,7 @@
 /// Handler for SDL3 and initialize ImGUI
 class Window{
 private:
-    int mWidth;
-    int mHeight;
+
     std::string mTitle;
     SDL_Window *mWindow;
     SDL_Renderer *mSDLRenderer;
@@ -27,6 +26,8 @@ private:
     Vec2f mRelativeMouse;
     const bool *mKeyboardState;
 public:
+    int mWidth;
+    int mHeight;
     Window(std::string title, int width, int height);
     ~Window();
     void Plot(int x, int y, int r, int g, int b, int a);

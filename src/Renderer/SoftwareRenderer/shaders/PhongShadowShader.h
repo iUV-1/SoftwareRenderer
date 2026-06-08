@@ -7,8 +7,8 @@
 #include <algorithm>
 
 #include "../../../Resources/Mesh.h"
-#include "../../../../Utilities/Interfaces/IShader.hpp"
-#include "../../../../Utilities/Math/geometry.h"
+#include "../../../Utilities/Interfaces/IShader.hpp"
+#include "../../../Utilities/Math/geometry.h"
 #include "../my_gl.hpp"
 #include "../SoftwareRenderer/render.hpp"
 
@@ -16,23 +16,27 @@
 struct PhongShaderShadow: IShader {
     Matrix3x3<float> varying_tri; // 3x3 matrix containing verticies of a trig
     Matrix3x3<float> varying_shadow_tri; // 3x3 matrix containing verticies of a shadow trig
-
     Matrix4x4f uniform_Mshadow; // Shadow transformation
+    Vec3f uniform_light;
     RectBuffer &depth_buffer;
-
-    PhongShaderShadow(Material *mat, Camera *cam, Mesh *model, Scene *scene,
+    Mesh *mesh;
+    Material *mat;
+    PhongShaderShadow(Matrix4x4f viewport, Matrix4x4f projection, Matrix4x4f modelview,
+                      Model *model, Vec3f light,
                       Matrix4x4f uniform_shadow, RectBuffer &depth_buffer)
-    : IShader(mat, cam, model, scene), depth_buffer(depth_buffer) {
+    : IShader(viewport, projection, modelview, model), depth_buffer(depth_buffer), uniform_light(light) {
 
         Matrix4x4f M = (Viewport*Projection*ModelView);
         M.invert();
         uniform_Mshadow = uniform_shadow*M;
+        mesh = &model->mMesh;
+        mat = &model->mMaterial;
     }
 
     Vec4f vertex(int iface, int nthvert) override{
-        Vec3f v = uniform_Model->vert(iface, nthvert);
+        Vec3f v = mesh->vert(iface, nthvert);
         // Set the column of varying_uv to texture position in Vec2f
-        varying_uv.set_col(nthvert, uniform_Model->texcoord(iface, nthvert));
+        varying_uv.set_col(nthvert, mesh->texcoord(iface, nthvert));
         // Set the column of vertex the triangle using vert index
         Vec4f transformed_vert = Viewport*uniform_M*homogonize(v, 1.);
 //        bool x_c = -transformed_vert.w <= transformed_vert.x && transformed_vert.x <= transformed_vert.w;
@@ -52,21 +56,21 @@ struct PhongShaderShadow: IShader {
         // Get shadow position from buffer
         Vec3f p = varying_tri * bar;
         Vec3f shadow_p = dehomogonize(uniform_Mshadow * homogonize(p, 1.));
-        auto shadow_buf_idx = int(shadow_p.x)  + int(shadow_p.y) * width;
+        auto shadow_buf_idx = int(shadow_p.x)  + int(shadow_p.y) * depth_buffer.width;
 
         // Get the normal vector of that mesh based on the setting
         Vec3f norm;
-        if(!uniform_Material->UseNormal)
-            norm = uniform_Model->normal(uv.u, uv.v);
+        if(!mat->UseNormal)
+            norm = mesh->normal(uv.u, uv.v);
         else {
-            TGAColor normal_color = TEX2D(uniform_Material->NormalFile, uv);
+            TGAColor normal_color = TEX2D(mat->NormalFile, uv);
             norm = Vec3f(normal_color.r, normal_color.g, normal_color.b);
         }
         /// Insanely costly calculations
         // Transform the normal vector to the mEye space
         Vec3f n = dehomogonize(uniform_MIT*homogonize(norm, 1.f)).normalize();
         // Same as above
-        Vec3f l = dehomogonize(uniform_M  *homogonize(uniform_Scene->Light, 0.f)).normalize();
+        Vec3f l = dehomogonize(uniform_M  *homogonize(uniform_Light, 0.f)).normalize();
         l *= -1;// The reflection formula below is for object pointing to the light.
         // Shadow
         float slope_bias = std::max(0.5f* (1.0f - n*(l*-1)), 1.f);
@@ -82,14 +86,14 @@ struct PhongShaderShadow: IShader {
         float diff = std::max(0.f, n * l); // diffuse intensity value
         // Specular
         float spec = 0.f;
-        if(uniform_Material->UseSpecular) {
-            float spec_map_val = TEX2D(uniform_Material->SpecularFile, uv).r;
+        if(mat->UseSpecular) {
+            float spec_map_val = TEX2D(mat->SpecularFile, uv).r;
             spec = std::pow(std::max(r.z, 0.f), spec_map_val);
         } else {
             spec = std::max(r.z, 0.f);
         }
 
-        TGAColor texColor = TEX2D(uniform_Material->TexFile, uv);
+        TGAColor texColor = TEX2D(mat->TexFile, uv);
         for (int i = 0; i < 3; i++)
             color[i] = std::min<float>(5 + texColor[i]*shadow*(1.2*diff + .6*spec), 255.f);
 

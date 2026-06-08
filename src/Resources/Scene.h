@@ -28,6 +28,10 @@ public:
     int GetModelSize() {
         return mModels.size();
     };
+
+    Vec3f GetLight() {
+        return mLight;
+    }
 };
 
 
