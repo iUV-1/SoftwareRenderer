@@ -42,16 +42,28 @@ set(SOURCE_FILE
         src/Resources/Model.cpp
         src/Resources/Model.h)
 
-#add_link_options(-g)
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=leak -fno-omit-frame-pointer -fsanitize-blacklist=blacklist.txt")
+
+if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
+    # For Address Sanitizer, only available on Clang
+    add_compile_options(-mavx2)
+    add_compile_options(-fsanitize=leak -fno-omit-frame-pointer -fsanitize-blacklist=blacklist.txt)
+    add_compile_options(-Rpass=loop-vectorize -Rpass-missed=loop-vectorize)
+elseif(CMAKE_CXX_COMPILER_ID MATCHES GNU)
+    add_compile_options(-mavx2)
+    add_compile_options(-fopt-info-vec -fopt-info-vec-missed) # Auto vectorization info
+elseif(CMAKE_CXX_COMPILER_ID MATCHES MSVC)
+    add_compile_options(/O2 /arch:AVX2)
+    add_compile_options( /Qvec-report:2) # Auto vectorization info
+endif()
+
 add_compile_options(-Wall -g -ffast-math)
 add_executable(${PROJECT_NAME} ${SOURCE_FILE})
-#add_compile_options(-fopt-info-vec
-#        -fopt-info-vec-missed)
 
 # Copy the directory from source code tree to executable tree
 file(COPY ./obj DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY blacklist.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+# --- LIBRARIES ---
 # Add OpenMP
 find_package(OpenMP REQUIRED)
 if(OpenMP_CXX_FOUND)
@@ -72,13 +84,14 @@ target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 target_link_libraries(SoftwareRenderer PUBLIC SDL3::SDL3)
 
 # Add imgui
+# imgui is only available as source code and does not have their own CMake config
 # 1. Setup paths
 set(IMGUI_DIR "${CMAKE_SOURCE_DIR}/src/third_party/imgui")
 
 # 3. Add ImGui sources DIRECTLY to your executable
 add_library(imgui STATIC
         "${IMGUI_DIR}/imgui.cpp"
-        "${IMGUI_DIR}/imgui_demo.cpp"
+#        "${IMGUI_DIR}/imgui_demo.cpp"
         "${IMGUI_DIR}/imgui_draw.cpp"
         "${IMGUI_DIR}/imgui_tables.cpp"
         "${IMGUI_DIR}/imgui_widgets.cpp"

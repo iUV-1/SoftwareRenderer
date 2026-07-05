@@ -65,9 +65,9 @@ void Engine::Initialize(int argc, char *argv[])
             60
             );
 
-    auto *model = new Model(Vec3f(1, 1, 1), mesh, material);
+    Model* model = new Model(Vec3f(1, 1, 1), mesh, material);
     mScene = new Scene();
-    mScene->AddModel(model);
+    mScene->AddModel( model );
     mScene->SetCamera(mCamera);
     mScene->SetLight(Vec3f(1, -1, 0));
     // --- RENDERER SETUP ---

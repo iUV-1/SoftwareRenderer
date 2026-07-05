@@ -4,13 +4,15 @@
 
 #ifndef SOFTWARERENDERER_SCENE_H
 #define SOFTWARERENDERER_SCENE_H
+#include <memory>
 #include "../../Utilities/Math/geometry.h"
 #include "Model.h"
 #include "Camera.h"
 
+
 class Scene {
 private:
-    std::vector<Model*> mModels;
+    std::vector< Model* > mModels;
     Vec3f mLight;
     Camera *mCamera;
 public:
@@ -20,9 +22,12 @@ public:
 //            : Width(width), Height(height), Light(light) {}
     //~Scene();
 //    std::vector<Vec3f> Light; // Only supports directional light for now
+
+// Now scene holds this model
     void AddModel(Model *model) {
-        mModels.push_back(model);
+        mModels.push_back( model );
     };
+
     void SetCamera(Camera *camera) {
         mCamera = camera;
     };
@@ -30,7 +35,7 @@ public:
     void SetLight(Vec3f light) {
         mLight = light;
     }
-    std::vector<Model*> GetModels() {
+    std::vector< Model* >& GetModels() {
         return mModels;
     }
     int GetModelSize() {

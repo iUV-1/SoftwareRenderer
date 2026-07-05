@@ -6,7 +6,6 @@
 #include "pch.h"
 #include <SDL3/SDL_main.h>
 #include <imgui.h>
-#include <imgui_impl_sdlrenderer3.h>
 #include <imgui_impl_sdl3.h>
 #include <string>
 
@@ -14,10 +13,6 @@
 #include "Utilities/CycleTimer.hpp"
 #include "engine.h"
 
-
-int width = 800;
-int height = 600;
-constexpr float depth = 255.f;
 Engine *engine;
 struct GlobalAppState {
     const bool *keystate;
