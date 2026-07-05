@@ -23,7 +23,6 @@ void Engine::InitializeUniforms()
     Matrix4x4f viewport = SetViewport(width / 8, height / 8, width * 3./4, height * 3./4, 255.f);
     Matrix4x4f modelview = LookAt(mCamera->Eye, mCamera->Cam, mCamera->Up);
     dynamic_cast<Renderer*>(mRenderer)->SetupUniforms(projection, modelview, viewport);
-
 }
 
 void Engine::ResizeWindow(int width, int height)
@@ -105,8 +104,13 @@ void Engine::HandleInput()
 
 void Engine::Update()
 {
+    // Capture the start time in a temporary local variable
+    // This is done for mUpdateTime since we render imgui in the middle of this block
+    // meaning when imgui renders, it will be currentSeconds(), which is the amount of seconds have passed since this program starts.
+    // imgui wont get to render the proper updateTime since the calculation is after RenderImGUI()
+    double startTime = CycleTimer::currentSeconds();
+
     mWindow->StartUpdate();
-    mUpdateTime = CycleTimer::currentSeconds();
     HandleInput();
     InitializeUniforms();
     // --- RENDER ---
@@ -114,9 +118,10 @@ void Engine::Update()
     dynamic_cast<Renderer*>(mRenderer)->SetupBuffers(mWindow->mWidth, mWindow->mHeight);
     mRenderer->RenderScene(mScene);
     mRenderTime = CycleTimer::currentSeconds() - mRenderTime;
+
     RenderIMGUI();
     mWindow->EndUpdate();
-    mUpdateTime = CycleTimer::currentSeconds() - mUpdateTime;
+    mUpdateTime = CycleTimer::currentSeconds() - startTime;
 }
 
 Engine::~Engine() {

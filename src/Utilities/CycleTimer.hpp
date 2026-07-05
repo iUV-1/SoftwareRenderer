@@ -14,7 +14,7 @@ public:
     // Returns seconds elapsed since the first call, using a monotonic clock.
     // Thread-safe since C++11 (static local initialization is thread-safe).
     static inline double currentSeconds() {
-        static const Clock::time_point t0 = Clock::now();
+        static const Clock::time_point t0 = Clock::now(); // ran exactly once, at the start of the program since its static
         return Seconds{Clock::now() - t0}.count();
     }
 

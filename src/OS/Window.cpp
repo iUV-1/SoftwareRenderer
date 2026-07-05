@@ -65,15 +65,18 @@ void Window::StartUpdate()
 
 void Window::EndUpdate()
 {
-    SDL_UpdateWindowSurface(mWindow);
+    //SDL_UpdateWindowSurface(mWindow);
 
+    // Creating a texture from the surface and rendering it
+    SDL_Texture *windowTex = SDL_CreateTextureFromSurface(mSDLRenderer, mSurface);
+    SDL_RenderTexture(mSDLRenderer, windowTex, nullptr, nullptr);
     // ImGUI Render
     ImGui::Render();
     SDL_SetRenderScale(mSDLRenderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
     ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), mSDLRenderer);
 
     // disabled due to interfering with my software renderer. Will think up of a solution
-    //SDL_RenderPresent(mSDLRenderer);
+    SDL_RenderPresent(mSDLRenderer);
 }
 
 void Window::Update() {
