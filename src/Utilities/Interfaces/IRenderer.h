@@ -7,12 +7,13 @@
 #include "../../OS/Window.h"
 #include "../../Resources/Model.h"
 
+class Scene;
+
 // Interface for renderers
 class IRenderer {
 public:
-    IRenderer(Window *window);
-
-    virtual void RenderIMGUI();
+    virtual ~IRenderer() = default;
+    virtual void RenderIMGUI() = 0;
 //    virtual void RenderModel(Model *model);
-    virtual void RenderScene(Scene *scene);
+    virtual void RenderScene(Scene *scene) = 0;
 };

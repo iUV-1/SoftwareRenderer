@@ -20,18 +20,21 @@ class Camera;
 class Renderer: public IRenderer {
 public:
     //Renderer() { }
-    Renderer(Window *window): IRenderer(window), mWindow(window) { };
+    Renderer(Window *window):  mWindow(window) {
+        SetupBuffers(mWindow->mWidth, mWindow->mHeight);
+    };
     ~Renderer();
     //void LoadRendererSettings();
     void Render(SDL_Surface *surface);
     void SetupBuffers(int width, int height);
-    void RenderScene(int *scene) override;
+    void RenderScene(Scene *scene) override;
+    void RenderIMGUI() override;
     void SetupUniforms(Matrix4x4f projection, Matrix4x4f modelview, Matrix4x4f viewport);
     Scene *mScene;
     Camera *mCamera;
     Window *mWindow;
-    RectBuffer *mShadowBuffer;
-    RectBuffer *mZbuffer;
+    RectBuffer *mShadowBuffer = nullptr;
+    RectBuffer *mZbuffer = nullptr;
 
     Matrix4x4f mProjection;
     Matrix4x4f mModelView;

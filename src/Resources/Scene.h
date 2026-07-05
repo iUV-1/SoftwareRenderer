@@ -20,8 +20,16 @@ public:
 //            : Width(width), Height(height), Light(light) {}
     //~Scene();
 //    std::vector<Vec3f> Light; // Only supports directional light for now
-    void AddModel(Model *model);
-    void SetCamera(Camera *camera);
+    void AddModel(Model *model) {
+        mModels.push_back(model);
+    };
+    void SetCamera(Camera *camera) {
+        mCamera = camera;
+    };
+
+    void SetLight(Vec3f light) {
+        mLight = light;
+    }
     std::vector<Model*> GetModels() {
         return mModels;
     }
@@ -31,6 +39,10 @@ public:
 
     Vec3f GetLight() {
         return mLight;
+    }
+
+    Camera* GetCamera() {
+        return mCamera;
     }
 };
 

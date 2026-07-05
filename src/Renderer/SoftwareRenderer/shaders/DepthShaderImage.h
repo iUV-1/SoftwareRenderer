@@ -11,7 +11,7 @@
 #include "../../Utilities/Interfaces/IShader.hpp"
 #include "../../Utilities/Math/geometry.h"
 #include "../my_gl.hpp"
-#include "../SoftwareRenderer/render.hpp"
+#include "../render.hpp"
 
 // Copy zbuffer to a framebuffer (Image in this case)
 struct DepthShaderImage: IShader {

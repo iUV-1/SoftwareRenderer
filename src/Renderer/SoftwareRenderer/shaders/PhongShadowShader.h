@@ -10,7 +10,7 @@
 #include "../../../Utilities/Interfaces/IShader.hpp"
 #include "../../../Utilities/Math/geometry.h"
 #include "../my_gl.hpp"
-#include "../SoftwareRenderer/render.hpp"
+#include "../render.hpp"
 
 // Like above but includes a shadow pass
 struct PhongShaderShadow: IShader {
@@ -26,7 +26,7 @@ struct PhongShaderShadow: IShader {
                       Matrix4x4f uniform_shadow, RectBuffer &depth_buffer)
     : IShader(viewport, projection, modelview, model), depth_buffer(depth_buffer), uniform_light(light) {
 
-        Matrix4x4f M = (Viewport*Projection*ModelView);
+        Matrix4x4f M = (viewport*projection*modelview);
         M.invert();
         uniform_Mshadow = uniform_shadow*M;
         mesh = &model->mMesh;
@@ -70,7 +70,7 @@ struct PhongShaderShadow: IShader {
         // Transform the normal vector to the mEye space
         Vec3f n = dehomogonize(uniform_MIT*homogonize(norm, 1.f)).normalize();
         // Same as above
-        Vec3f l = dehomogonize(uniform_M  *homogonize(uniform_Light, 0.f)).normalize();
+        Vec3f l = dehomogonize(uniform_M  *homogonize(uniform_light, 1.f)).normalize();
         l *= -1;// The reflection formula below is for object pointing to the light.
         // Shadow
         float slope_bias = std::max(0.5f* (1.0f - n*(l*-1)), 1.f);

@@ -32,6 +32,8 @@ public:
     ~Window();
     void Plot(int x, int y, int r, int g, int b, int a);
     void Update();
+    void StartUpdate();
+    void EndUpdate();
     /// The global state of the input.
     /// Technically not handled by the window but since
     /// the backend is in SDL3, the window hold it for clarity

@@ -19,7 +19,6 @@ Window::Window(std::string title, int width, int height): mTitle(title), mWidth(
         throw std::invalid_argument("Failed to create SDL renderer!");
     }
 
-    mSurface = SDL_GetWindowSurface(mWindow);
     mKeyboardState = SDL_GetKeyboardState(nullptr);
 //    frontBuffer = new ScreenBuffer(SDL_CreateTextureFromSurface(sdlRenderer, surf));
 //    backBuffer = new ScreenBuffer(SDL_CreateTextureFromSurface(sdlRenderer, surf));
@@ -49,24 +48,36 @@ void Window::Plot(int x, int y, int r, int g, int b, int a) {
             a << 24 | r << 16 | g << 8 | b;
 }
 
-void Window::Update() {
+void Window::StartUpdate()
+{
+    mSurface = SDL_GetWindowSurface(mWindow);
+
     ImGui_ImplSDLRenderer3_NewFrame();
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
+
+    // Input
+    SDL_GetRelativeMouseState(&mRelativeMouse.x, &mRelativeMouse.y);
+    // Swap surfaces
+    SDL_RenderClear(mSDLRenderer);
+    SDL_ClearSurface(mSurface, 0xff, 0xff, 0xff, 0xff);
+}
+
+void Window::EndUpdate()
+{
+    SDL_UpdateWindowSurface(mWindow);
 
     // ImGUI Render
     ImGui::Render();
     SDL_SetRenderScale(mSDLRenderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
     ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), mSDLRenderer);
 
-    // Swap surfaces
-    SDL_RenderClear(mSDLRenderer);
-    SDL_ClearSurface(mSurface, 0xff, 0xff, 0xff, 0xff);
-    SDL_UpdateWindowSurface(mWindow);
-
-    // Input
-    SDL_GetRelativeMouseState(&mRelativeMouse.x, &mRelativeMouse.y);
     SDL_RenderPresent(mSDLRenderer);
+}
+
+void Window::Update() {
+
+
 
 }
 

@@ -31,8 +31,8 @@ Vec3f Renderer::rasterize(IShader *shader, int iface, int nthvert) {
 void Renderer::SetupBuffers(int width, int height) {
     // Invalidate the previous buffer (if it exists)
     // Used to change the resolution of the screen and camera
-    delete mShadowBuffer;
-    delete mZbuffer;
+    if(mShadowBuffer) delete mShadowBuffer;
+    if(mZbuffer) delete mZbuffer;
     mShadowBuffer = new RectBuffer(width, height);
     mZbuffer = new RectBuffer(width, height);
 }
@@ -49,15 +49,23 @@ Renderer::~Renderer() {
     delete mZbuffer;
 }
 
-void Renderer::RenderScene(int *scene) {
+void Renderer::RenderIMGUI() {
+
+}
+
+void Renderer::RenderScene(Scene *scene) {
     /* Depth map */
+    mScene = scene;
+    mCamera = scene->GetCamera();
+    Model *model = mScene->GetModels()[0];
+
     // Init depth buffer
     mShadowBuffer->resetBuffer();
     // Init shader
+    Matrix4x4f shadowModelView = LookAt(mScene->GetLight(), mCamera->Cam, mCamera->Up);
     Matrix4x4f shadowProjection = OrthoProject(0); // Render mLight in orthographic mode
-    auto depth_shader = DepthShaderImage(mModel, mScene);
+    auto depth_shader = DepthShaderImage(mViewport, shadowProjection, shadowModelView, model, mCamera->Depth);
     // Render
-    Model *model = mScene->GetModels()[0];
     for(int i = 0; i < model->mMesh.nfaces(); ++i) {
         Vec3f screen_coords[3];
         for (int j=0; j<3; ++j)
@@ -72,7 +80,7 @@ void Renderer::RenderScene(int *scene) {
             // Doesn't save the image since we don't need it
             triangle(screen_coords, mCamera->Width, mCamera->Height, *mShadowBuffer);
     }
-    Matrix4x4f M_Shadow = Viewport*Projection*ModelView;
+    Matrix4x4f M_Shadow = mViewport*shadowProjection*mModelView;
 
     /* SSAO */
     /// Get depth from Camera
@@ -119,8 +127,9 @@ void Renderer::RenderScene(int *scene) {
     // GouraudShader shader = GouraudShader();
     // PhongShader shader = PhongShader();
     // GouraudShaderReference shader = GouraudShaderReference();
-    Matrix4x4f MVP = Viewport*Projection*ModelView;
-    MVP.invert();
+//    Matrix4x4f MVP = mViewport*mProjection*mModelView;
+//    Matrix4x4f MVP = mModelView * mViewport * mProjection;
+//    MVP.invert();
     PhongShaderShadow shader = PhongShaderShadow(mViewport, mProjection, mModelView, model, mScene->GetLight(), M_Shadow, *mShadowBuffer);
     //PhongShader shader = PhongShader();
 

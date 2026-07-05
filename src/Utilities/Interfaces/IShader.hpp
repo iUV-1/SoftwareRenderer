@@ -12,24 +12,9 @@
 class IShader {
 public:
     IShader() = delete;
-//    IShader(Scene *scene) {
-//        uniform_M = Projection*ModelView;
-//        uniform_MIT = uniform_M;
-//        uniform_MIT.inverseTranspose();
-//        width = scene->Width;
-//    }
-//    IShader(Material *mat, Camera *cam, Mesh *model, Scene *scene)
-//            : uniform_Material(mat), uniform_Camera(cam), uniform_Model(model), uniform_Scene(scene){
-////    :width(w){
-//        //input = i;
-//        uniform_M = Projection*ModelView;
-//        uniform_MIT = uniform_M;
-//        uniform_MIT.inverseTranspose();
-//        width = scene->Width;
-//    };
 
     IShader(Matrix4x4f viewport, Matrix4x4f projection, Matrix4x4f modelview, Model *model)
-            : uniform_Model(model), Viewport(viewport){
+            : Viewport(viewport), uniform_Model(model){
 //    :width(w){
         //input = i;
         uniform_M = projection*modelview;
@@ -41,7 +26,6 @@ public:
     Matrix<float> varying_uv = Matrix<float>(2, 3);
     Matrix4x4f uniform_MIT; // Invert transpose
     Model *uniform_Model = nullptr;
-    Vec3f uniform_Light;
     //virtual ~IShader() = default;
     virtual Vec4f vertex(int iface, int nthvert) = 0;
     virtual bool fragment(Vec3f bar, TGAColor &color) = 0;

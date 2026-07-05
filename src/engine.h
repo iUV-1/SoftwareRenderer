@@ -25,10 +25,12 @@ private:
     double mRenderTime;
     double mUpdateTime;
 public:
-    void Initialize(int agrc, char *argv[]);
+    ~Engine();
+    void Initialize(int argc, char *argv[]);
     void Update();
     void RenderIMGUI();
     void HandleInput();
+    void ResizeWindow(int width, int height);
 };
 
 

@@ -8,7 +8,7 @@
 #pragma once
 class RectBuffer {
 public:
-    RectBuffer() { };
+    RectBuffer() = delete;
     RectBuffer(int const w, const int h): width(w), size(w*h) {
         data = new float[size];
         resetBuffer();
@@ -27,5 +27,5 @@ public:
     }
     size_t width;
     size_t size;
-    float *data;
+    float *data = nullptr;
 };

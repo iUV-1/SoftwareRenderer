@@ -19,11 +19,17 @@ using namespace std;
 
 void Engine::InitializeUniforms()
 {
-    Matrix4x4f projection = Project(60, width, height, 0, 255.f);
+    Matrix4x4f projection = Project(60, width, height, 0.1f, 255.f);
     Matrix4x4f viewport = SetViewport(width / 8, height / 8, width * 3./4, height * 3./4, 255.f);
     Matrix4x4f modelview = LookAt(mCamera->Eye, mCamera->Cam, mCamera->Up);
-    static_cast<Renderer*>(mRenderer)->SetupUniforms(projection, viewport, modelview);
+    dynamic_cast<Renderer*>(mRenderer)->SetupUniforms(projection, modelview, viewport);
 
+}
+
+void Engine::ResizeWindow(int width, int height)
+{
+    mCamera->Width = width;
+    mCamera->Height = height;
 }
 
 void Engine::Initialize(int argc, char *argv[])
@@ -52,10 +58,19 @@ void Engine::Initialize(int argc, char *argv[])
         specularPath = argv[4];
 
     Material material(diffPath, normalPath, specularPath);
+    mCamera = new Camera(
+            Vec3f(1, 1, 3),
+            Vec3f(0, 1, 0),
+            Vec3f(0, 0, 0),
+            60
+            );
 
     auto *model = new Model(Vec3f(1, 1, 1), mesh, material);
+    mScene = new Scene();
+    mScene->AddModel(model);
+    mScene->SetCamera(mCamera);
+    mScene->SetLight(Vec3f(1, -1, 0));
     // --- RENDERER SETUP ---
-
     mRenderer = new Renderer(mWindow);
     // Timing
     setupTimeTaken = CycleTimer::currentSeconds() - setupTimeTaken;
@@ -90,14 +105,22 @@ void Engine::HandleInput()
 
 void Engine::Update()
 {
+    mWindow->StartUpdate();
     mUpdateTime = CycleTimer::currentSeconds();
     HandleInput();
     InitializeUniforms();
     // --- RENDER ---
     mRenderTime = CycleTimer::currentSeconds();
+    dynamic_cast<Renderer*>(mRenderer)->SetupBuffers(mWindow->mWidth, mWindow->mHeight);
     mRenderer->RenderScene(mScene);
     mRenderTime = CycleTimer::currentSeconds() - mRenderTime;
-
     RenderIMGUI();
-    mWindow->Update();
+    mWindow->EndUpdate();
+    mUpdateTime = CycleTimer::currentSeconds() - mUpdateTime;
+}
+
+Engine::~Engine() {
+    delete mWindow;
+    delete mRenderer;
+    delete mScene;
 }

@@ -9,9 +9,9 @@
 #include "../../Resources/Mesh.h"
 #include "render.hpp"
 
-extern Matrix4x4f ModelView;
-extern Matrix4x4f Projection;
-extern Matrix4x4f Viewport;
+//extern Matrix4x4f ModelView;
+//extern Matrix4x4f Projection;
+//extern Matrix4x4f Viewport;
 
 #define TEX2D(tex, uv) (tex->get(uv.u * tex->get_width(), uv.v * tex->get_height()))
 
@@ -28,9 +28,9 @@ void triangle(Vec3f *pts, Window *window, RectBuffer &zbuffer, IShader &shader);
 //Vec3f dehomogonize(Matrix<float> const &m);
 Vec3f project(Vec3f v);
 Vec3f barycentric(Vec3f A, Vec3f B, Vec3f C, Vec3f P);
-void Project(float coeff);
-void Project(float fov, float width, float height, float near, float far);
-void LookAt(Vec3f eye, Vec3f center, Vec3f up);
-void world2screen(Vec3f v, int w, int h, float depth);
-void SetViewport(int width, int height, float depth);
-void SetViewport(int x, int y, float w, float h, float depth);
+//void Project(float coeff);
+//void Project(float fov, float width, float height, float near, float far);
+//void LookAt(Vec3f eye, Vec3f center, Vec3f up);
+//void world2screen(Vec3f v, int w, int h, float depth);
+//void SetViewport(int width, int height, float depth);
+//void SetViewport(int x, int y, float w, float h, float depth);

@@ -27,11 +27,11 @@ Vec3f dehomogonize(Vec4f const &v) {
     return result;
 }
 
-/// Reflect a vector from a surface
+///// Reflect a vector from a surface
+////
+//Vec3f reflect(Vec3f const n, Vec3f const i) {
 //
-Vec3f reflect(Vec3f const n, Vec3f const i) {
-
-}
+//}
 
 template<typename T>
 Vec2<T>::Vec2(Matrix<T> mat) {

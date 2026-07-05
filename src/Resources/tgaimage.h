@@ -111,6 +111,11 @@ public:
     TGAImage();
     TGAImage(int w, int h, int bpp);
     TGAImage(const TGAImage &img);
+
+//    // Move constructor
+//    TGAImage(TGAImage &&other) {
+//        other.data = data;
+//    }
     bool read_tga_file(const char *filename);
     bool write_tga_file(const char *filename, bool rle=true);
     bool flip_horizontally();
