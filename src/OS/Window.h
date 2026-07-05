@@ -7,12 +7,10 @@
 #include "imgui.h"
 #include "SDL3/SDL.h"
 #include <string>
-#include "ScreenBuffer.h"
 #include "../../Utilities/Math/geometry.h"
 /// Handler for SDL3 and initialize ImGUI
 class Window{
 private:
-
     std::string mTitle;
     SDL_Window *mWindow;
     SDL_Renderer *mSDLRenderer;

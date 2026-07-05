@@ -39,8 +39,6 @@ set(SOURCE_FILE
         src/Resources/Camera.h
         src/OS/Window.cpp
         src/OS/Window.h
-        src/OS/ScreenBuffer.cpp
-        src/OS/ScreenBuffer.h
         src/Resources/Model.cpp
         src/Resources/Model.h)
 

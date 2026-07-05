@@ -72,7 +72,8 @@ void Window::EndUpdate()
     SDL_SetRenderScale(mSDLRenderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
     ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), mSDLRenderer);
 
-    SDL_RenderPresent(mSDLRenderer);
+    // disabled due to interfering with my software renderer. Will think up of a solution
+    //SDL_RenderPresent(mSDLRenderer);
 }
 
 void Window::Update() {
