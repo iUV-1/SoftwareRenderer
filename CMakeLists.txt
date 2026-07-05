@@ -41,27 +41,34 @@ set(SOURCE_FILE
         src/OS/Window.h
         src/Resources/Model.cpp
         src/Resources/Model.h)
-
+add_compile_options( )
+add_executable(${PROJECT_NAME} ${SOURCE_FILE})
 
 if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
+    add_compile_options(-mavx2)
     # For Address Sanitizer, only available on Clang
-    add_compile_options(-mavx2)
-    add_compile_options(-fsanitize=leak -fno-omit-frame-pointer -fsanitize-blacklist=blacklist.txt)
-    add_compile_options(-Rpass=loop-vectorize -Rpass-missed=loop-vectorize)
+    target_compile_options(${PROJECT_NAME} PRIVATE
+            $<$<CONFIG:Release>: -ffast-math;-O2;-mavx2;-Rpass=loop-vectorize;-Rpass-missed=loop-vectorize>
+            $<$<CONFIG:Debug>: -Wall;-fsanitize=leak;-fno-omit-frame-pointer;-fsanitize-blacklist=blacklist.txt>)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES GNU)
-    add_compile_options(-mavx2)
-    add_compile_options(-fopt-info-vec -fopt-info-vec-missed) # Auto vectorization info
+    # Auto vectorization info
+    target_compile_options(${PROJECT_NAME} PRIVATE
+            $<$<CONFIG:Release>: -O2;-mavx2;-fopt-info-vec;-fopt-info-vec-missed>
+            $<$<CONFIG:Debug>:-Wall;>)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES MSVC)
-    add_compile_options(/O2 /arch:AVX2)
-    add_compile_options( /Qvec-report:2) # Auto vectorization info
+    # /analyze: static memory analysis
+    # /fsanitize=address: microsoft ver. of AddressSanitizer
+    # Requires AddressSanitizer, will crash if its not enabled.
+    # /Qvec-report:2: Auto vectorization info
+    target_compile_options(${PROJECT_NAME} PRIVATE
+            $<$<CONFIG:Release>: /O2;/arch:AVX2;/Qvec-report:2>
+            $<$<CONFIG:Debug>:/analyze;>)
 endif()
-
-add_compile_options(-Wall -g -ffast-math)
-add_executable(${PROJECT_NAME} ${SOURCE_FILE})
 
 # Copy the directory from source code tree to executable tree
 file(COPY ./obj DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY blacklist.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
 
 # --- LIBRARIES ---
 # Add OpenMP
@@ -79,8 +86,6 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(SDL)
 #add_subdirectory(third_party/SDL EXCLUDE_FROM_ALL)
 #add_compile_options(-DSDL_X11_XCURSOR=OFF)
-target_precompile_headers(${PROJECT_NAME} PUBLIC src/pch.h)
-
 target_link_libraries(SoftwareRenderer PUBLIC SDL3::SDL3)
 
 # Add imgui
