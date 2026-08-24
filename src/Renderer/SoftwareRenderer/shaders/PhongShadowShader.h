@@ -21,7 +21,7 @@ struct PhongShaderShadow: IShader {
     RectBuffer &depth_buffer;
     Mesh *mesh;
     Material *mat;
-    PhongShaderShadow(Matrix4x4f viewport, Matrix4x4f projection, Matrix4x4f modelview,
+    PhongShaderShadow(Matrix4x4f viewport, const Matrix4x4f& projection, const Matrix4x4f& modelview,
                       Model *model, Vec3f light,
                       Matrix4x4f uniform_shadow, RectBuffer &depth_buffer)
     : IShader(viewport, projection, modelview, model), depth_buffer(depth_buffer), uniform_light(light) {
@@ -51,8 +51,13 @@ struct PhongShaderShadow: IShader {
     // bar is the barycentric of that vertex
     bool fragment(Vec3f bar, TGAColor &color) override {
         // Interpolate the uv vector
-        Vec2f uv(varying_uv * bar);
+        // Heavy operation, Matrix*Vec<3> returns a matrix
+        // And then this cast it to a vector
+//        Vec2f uv(varying_uv * bar);
 
+        Vec2f uv{};
+        uv.x = varying_uv[0][0] * bar.x + varying_uv[0][1] * bar.y + varying_uv[0][2] * bar.z;
+        uv.y = varying_uv[1][0] * bar.x + varying_uv[1][1] * bar.y + varying_uv[1][2] * bar.z;
         // Get shadow position from buffer
         Vec3f p = varying_tri * bar;
         Vec3f shadow_p = dehomogonize(uniform_Mshadow * homogonize(p, 1.));
@@ -73,7 +78,7 @@ struct PhongShaderShadow: IShader {
         Vec3f l = dehomogonize(uniform_M  *homogonize(uniform_light, 1.f)).normalize();
         l *= -1;// The reflection formula below is for object pointing to the light.
         // Shadow
-        float slope_bias = std::max(0.5f* (1.0f - n*(l*-1)), 1.f);
+        float slope_bias = std::max( 0.5f* (1.0f - n * (l*-1)), 1.f );
         //slope_bias = 43.34f;
         float depth_p = depth_buffer[shadow_buf_idx];
         if(depth_p != -MAX_FLOAT) {

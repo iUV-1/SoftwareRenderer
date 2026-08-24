@@ -12,15 +12,15 @@
 #include "Renderer/SoftwareRenderer/render.hpp"
 #include <stdexcept>
 
-constexpr int width = 800;
-constexpr int height = 800;
+constexpr int window_width = 800;
+constexpr int window_height = 800;
 
 using namespace std;
 
 void Engine::InitializeUniforms()
 {
-    Matrix4x4f projection = Project(60, width, height, 0.1f, 255.f);
-    Matrix4x4f viewport = SetViewport(width / 8, height / 8, width * 3./4, height * 3./4, 255.f);
+    Matrix4x4f projection = Project(60, mWindow->mWidth, mWindow->mHeight, 0.1f, 255.f);
+    Matrix4x4f viewport = SetViewport(mWindow->mWidth / 8, mWindow->mHeight / 8, mWindow->mWidth * 3./4, mWindow->mHeight * 3./4, 255.f);
     Matrix4x4f modelview = LookAt(mCamera->Eye, mCamera->Cam, mCamera->Up);
     dynamic_cast<Renderer*>(mRenderer)->SetupUniforms(projection, modelview, viewport);
 }
@@ -29,23 +29,24 @@ void Engine::ResizeWindow(int width, int height)
 {
     mCamera->Width = width;
     mCamera->Height = height;
+    dynamic_cast<Renderer*>(mRenderer)->SetupBuffers(mWindow->mWidth, mWindow->mHeight);
 }
 
 void Engine::Initialize(int argc, char *argv[])
 {
     double setupTimeTaken = CycleTimer::currentSeconds();
     // --- WINDOW SETUP ---
-    mWindow = new Window("Software Renderer", width, height);
+    mWindow = new Window("Software Renderer", window_width, window_height);
     keystate = mWindow->GetKeyboardState();
     mRelativeMouse = mWindow->GetRelativeMouse();
     // --- SCENE SETUP ---
-    string modelPath = "obj/african_head.obj";
+    string modelPath = "../obj/african_head.obj";
     if(argc >= 2) {
         modelPath = argv[1];
     }
     Mesh mesh(modelPath.c_str());
 
-    string diffPath = "obj/UV Grid.tga";
+    string diffPath = "../obj/UV Grid.tga";
     string normalPath;
     string specularPath;
 
@@ -60,17 +61,18 @@ void Engine::Initialize(int argc, char *argv[])
     mCamera = new Camera(
             Vec3f(1, 1, 3),
             Vec3f(0, 1, 0),
-            Vec3f(0, 0, 0),
+            Vec3f(-1, 1, -1),
             60
             );
 
-    Model* model = new Model(Vec3f(1, 1, 1), mesh, material);
+    Model* model = new Model(Vec3f(0, 0, 0), mesh, material);
     mScene = new Scene();
     mScene->AddModel( model );
     mScene->SetCamera(mCamera);
     mScene->SetLight(Vec3f(1, -1, 0));
     // --- RENDERER SETUP ---
     mRenderer = new Renderer(mWindow);
+    dynamic_cast<Renderer*>(mRenderer)->SetupBuffers(mWindow->mWidth, mWindow->mHeight);
     // Timing
     setupTimeTaken = CycleTimer::currentSeconds() - setupTimeTaken;
     SDL_Log("Setup time: %.2f ms\n", 1000.f * setupTimeTaken);
@@ -115,7 +117,7 @@ void Engine::Update()
     InitializeUniforms();
     // --- RENDER ---
     mRenderTime = CycleTimer::currentSeconds();
-    dynamic_cast<Renderer*>(mRenderer)->SetupBuffers(mWindow->mWidth, mWindow->mHeight);
+    //dynamic_cast<Renderer*>(mRenderer)->SetupBuffers(mWindow->mWidth, mWindow->mHeight);
     mRenderer->RenderScene(mScene);
     mRenderTime = CycleTimer::currentSeconds() - mRenderTime;
 

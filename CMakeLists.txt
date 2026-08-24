@@ -53,16 +53,16 @@ if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES GNU)
     # Auto vectorization info
     target_compile_options(${PROJECT_NAME} PRIVATE
-            $<$<CONFIG:Release>: -O2;-mavx2;-fopt-info-vec;-fopt-info-vec-missed>
-            $<$<CONFIG:Debug>:-Wall;>)
+            $<$<CONFIG:Release>: -O2;-mavx2;-fopt-info-vec;-fopt-info-vec-missed;-fopenmp>
+            $<$<CONFIG:Debug>:-Wall;-fopenmp>)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES MSVC)
     # /analyze: static memory analysis
     # /fsanitize=address: microsoft ver. of AddressSanitizer
     # Requires AddressSanitizer, will crash if its not enabled.
     # /Qvec-report:2: Auto vectorization info
     target_compile_options(${PROJECT_NAME} PRIVATE
-            $<$<CONFIG:Release>: /O2;/arch:AVX2;/Qvec-report:2>
-            $<$<CONFIG:Debug>:/analyze;>)
+            $<$<CONFIG:Release>: /O2;/arch:AVX2;/Qvec-report:2;/openmp;/openmp:llvm>
+            $<$<CONFIG:Debug>:/analyze;/openmp:llvm>)
 endif()
 
 # Copy the directory from source code tree to executable tree

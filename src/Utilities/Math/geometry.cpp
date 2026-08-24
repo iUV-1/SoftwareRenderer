@@ -98,6 +98,7 @@ template<typename T>
 Vec3<T> Matrix3x3<T>::operator*(const Vec3<T> &other) {
     Vec3<T> result;
     const auto& A = this->data;
+#pragma unroll
     for(int i = 0; i < 3; i++) {
         result[i] = other.x * A[i][0] + other.y * A[i][1] + other.z * A[i][2];
     }

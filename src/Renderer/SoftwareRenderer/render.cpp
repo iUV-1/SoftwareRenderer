@@ -22,9 +22,9 @@ Vec3f Renderer::rasterize(IShader *shader, int iface, int nthvert)
     Vec4f homogonized = shader->vertex(iface, nthvert);
     Vec3f result = dehomogonize(homogonized);
     // Round the result to apply to screen
-    result.x = round(result.x);
-    result.y = round(result.y);
-    result.z = round(result.z);
+//    result.x = round(result.x);
+//    result.y = round(result.y);
+//    result.z = round(result.z);
 
     return result;
 }
@@ -76,7 +76,10 @@ void Renderer::RenderScene(Scene *scene)
         Vec3f screen_coords[3];
         for (int j=0; j<3; ++j)
             screen_coords[j] = rasterize(&depth_shader, i, j);
-
+        // calculate normal
+        // ^ is an overloaded operator that performs cross product calculation
+        // world_coords[2] - world_coords[0] and the other are 2 vectors pointing from point
+        // world_coords[0].
         Vec3f n = (screen_coords[2]-screen_coords[0])^(screen_coords[1]-screen_coords[0]);
         n.normalize();
 
@@ -138,30 +141,22 @@ void Renderer::RenderScene(Scene *scene)
 //    MVP.invert();
     PhongShaderShadow shader = PhongShaderShadow(mViewport, mProjection, mModelView, model, mScene->GetLight(), M_Shadow, *mShadowBuffer);
     //PhongShader shader = PhongShader();
-
     for (int i=0; i< model->mMesh.nfaces(); ++i) {
         Vec3f screen_coords[3];
 
         for (int j=0; j<3; ++j)
             screen_coords[j] = rasterize(&shader, i, j);
 
-        // calculate normal
-        // ^ is an overloaded operator that performs cross product calculation
-        // world_coords[2] - world_coords[0] and the other are 2 vectors pointing from point
-        // world_coords[0].
+
         Vec3f n = (screen_coords[2]-screen_coords[0])^(screen_coords[1]-screen_coords[0]);
         n.normalize();
-        //Vec3f n = mModel->normal(i, 0);
         // calculate mEye intensity by dot product between normal and mEye vector
         float view_dir_intensity = mCamera->Eye*n;
         // back face culling
-
         if (view_dir_intensity<1) {
             //triangle(screen_coords, frame, zbuffer, mScene->Width, shader);
             triangle(screen_coords, mWindow, *mZbuffer, shader);
             //wireframe_trig(screen_coords, frame, TGAColor(255, 255, 255, 255));
         }
     }
-    // set origin to the bottom left corner
-    // frame.flip_vertically();
 }
