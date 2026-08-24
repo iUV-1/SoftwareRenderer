@@ -29,7 +29,7 @@ public:
     void SetupBuffers(int width, int height);
     void RenderScene(Scene *scene) override;
     void RenderIMGUI() override;
-    void SetupUniforms(Matrix4x4f projection, Matrix4x4f modelview, Matrix4x4f viewport);
+    void SetupUniforms(Matrix4x4f const &projection, Matrix4x4f const &modelview, Matrix4x4f const &viewport);
     Scene *mScene;
     Camera *mCamera;
     Window *mWindow;

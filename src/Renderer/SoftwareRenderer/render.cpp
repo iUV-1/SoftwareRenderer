@@ -39,7 +39,7 @@ void Renderer::SetupBuffers(int width, int height)
     mZbuffer = new RectBuffer(width, height);
 }
 
-void Renderer::SetupUniforms(Matrix4x4f projection, Matrix4x4f modelview, Matrix4x4f viewport)
+void Renderer::SetupUniforms(Matrix4x4f const &projection, Matrix4x4f const &modelview, Matrix4x4f const &viewport)
 {
     mProjection = projection;
     mModelView = modelview;
@@ -64,11 +64,11 @@ void Renderer::RenderScene(Scene *scene)
     mScene = scene;
     mCamera = scene->GetCamera();
     Model *model = mScene->GetModels()[0];
-
+    Vec3f light = *mScene->GetLight();
     // Init depth buffer
     mShadowBuffer->resetBuffer();
     // Init shader
-    Matrix4x4f shadowModelView = LookAt(mScene->GetLight(), mCamera->Cam, mCamera->Up);
+    Matrix4x4f shadowModelView = LookAt(light, mCamera->Cam, mCamera->Up);
     Matrix4x4f shadowProjection = OrthoProject(0); // Render mLight in orthographic mode
     auto depth_shader = DepthShaderImage(mViewport, shadowProjection, shadowModelView, model, mCamera->Depth);
     // Render
@@ -139,7 +139,7 @@ void Renderer::RenderScene(Scene *scene)
 //    Matrix4x4f MVP = mViewport*mProjection*mModelView;
 //    Matrix4x4f MVP = mModelView * mViewport * mProjection;
 //    MVP.invert();
-    PhongShaderShadow shader = PhongShaderShadow(mViewport, mProjection, mModelView, model, mScene->GetLight(), M_Shadow, *mShadowBuffer);
+    PhongShaderShadow shader = PhongShaderShadow(mViewport, mProjection, mModelView, model, light, M_Shadow, *mShadowBuffer);
     //PhongShader shader = PhongShader();
     for (int i=0; i< model->mMesh.nfaces(); ++i) {
         Vec3f screen_coords[3];

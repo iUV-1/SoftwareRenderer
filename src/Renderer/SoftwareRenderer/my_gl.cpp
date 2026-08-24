@@ -245,8 +245,9 @@ void triangle(Vec3f *pts, SDL_Surface *surface, RectBuffer &zbuffer, IShader &sh
 void triangle(Vec3f *pts, Window *window, RectBuffer &zbuffer, IShader &shader) {
     Vec2f bboxmin( MAX_FLOAT,  MAX_FLOAT);
     Vec2f bboxmax(-MAX_FLOAT, -MAX_FLOAT);
-    //std::cout << pts[0] << pts[1] << pts[2] << std::endl;
+
     Vec2f clamp(window->mWidth -1, window->mHeight -1);
+
     for (int i=0; i<3; i++) {
         for (int j=0; j<2; j++) {
             bboxmin[j] = std::max(0.f,      std::min(bboxmin[j], pts[i][j]));
@@ -282,6 +283,7 @@ void triangle(Vec3f *pts, int w, int h, RectBuffer &zbuffer) {
     Vec2f bboxmax(-MAX_FLOAT, -MAX_FLOAT);
 
     Vec2f clamp(w -1, h -1);
+
     for (int i=0; i<3; i++) {
         for (int j=0; j<2; j++) {
             bboxmin[j] = std::max(0.f,      std::min(bboxmin[j], pts[i][j]));

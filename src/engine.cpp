@@ -86,7 +86,8 @@ void Engine::RenderIMGUI()
     ImGui::Text("Update time/FPS: %.3f ms/frame (%.1f FPS)", mUpdateTime * 1000, 1/mUpdateTime);
 
     // Since Light is a continuous array, &rScene->Light.x works
-    //ImGui::DragFloat3("Light", &rScene->Light.x, 0.1, -1.0, 1.0, "%.3f");
+    Vec3f *light = mScene->GetLight();
+    ImGui::DragFloat3("Light", &light->x, 0.1, -1.0, 1.0, "%.3f");
     ImGui::End();
 }
 

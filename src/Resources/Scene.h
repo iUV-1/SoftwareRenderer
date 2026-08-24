@@ -42,8 +42,8 @@ public:
         return mModels.size();
     };
 
-    Vec3f GetLight() {
-        return mLight;
+    Vec3f* GetLight() {
+        return &mLight;
     }
 
     Camera* GetCamera() {
