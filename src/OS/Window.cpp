@@ -44,6 +44,7 @@ Window::Window(std::string title, int width, int height): mTitle(title), mWidth(
 
 /// No guard checking for performance. Good luck!
 void Window::Plot(int x, int y, int r, int g, int b, int a) {
+//#pragma omp atomic write
     static_cast<uint32_t*>(mSurface->pixels)[y * mWidth + x] =
             a << 24 | r << 16 | g << 8 | b;
 }

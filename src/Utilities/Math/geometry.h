@@ -293,29 +293,29 @@ public:
 
     // optimized calculation just for 4x4
     Matrix4x4 multiply4x4(const Matrix4x4 &other) {
-     Matrix4x4 result;
+        Matrix4x4 result;
 
-     const auto& A = this->data;
-     const auto& B = other.data;
+        const auto& A = this->data;
+        const auto& B = other.data;
 
-     for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 4; i++) {
          result[i][0] = A[i][0] * B[0][0] + A[i][1] * B[1][0] + A[i][2] * B[2][0] + A[i][3] * B[3][0];
          result[i][1] = A[i][0] * B[0][1] + A[i][1] * B[1][1] + A[i][2] * B[2][1] + A[i][3] * B[3][1];
          result[i][2] = A[i][0] * B[0][2] + A[i][1] * B[1][2] + A[i][2] * B[2][2] + A[i][3] * B[3][2];
          result[i][3] = A[i][0] * B[0][3] + A[i][1] * B[1][3] + A[i][2] * B[2][3] + A[i][3] * B[3][3];
-     }
+        }
 
-     return result;
+        return result;
     }
 
     // create a 4x4 identity matrix
     static constexpr Matrix4x4 identity() {
-     Matrix4x4 result;
+        Matrix4x4 result;
 
-     for (int i = 4; i--; ) {
+        for (int i = 4; i--; ) {
          result[i][i] = 1;
-     }
-     return result;
+        }
+        return result;
     }
 
     // Invert its own matrix
@@ -376,46 +376,19 @@ public:
 
     // From ChatGPT lol
     void inverseTranspose() {
-    Matrix4x4<T> temp = *this;
+        Matrix4x4<T> temp = *this;
 
-    // Step 1: Compute determinant via cofactor expansion along row 0
-    T det = 0;
-    for (int j = 0; j < 4; ++j) {
-        Matrix<T> minor(3, 3);
-        for (int mi = 1; mi < 4; ++mi) {
-            int r = mi - 1;
-            int c = 0;
-            for (int mj = 0; mj < 4; ++mj) {
-                if (mj == j) continue;
-                minor[r][c++] = temp[mi][mj];
-            }
-        }
-
-        T cofactor =
-                minor[0][0]*(minor[1][1]*minor[2][2] - minor[1][2]*minor[2][1]) -
-                minor[0][1]*(minor[1][0]*minor[2][2] - minor[1][2]*minor[2][0]) +
-                minor[0][2]*(minor[1][0]*minor[2][1] - minor[1][1]*minor[2][0]);
-
-        det += ((j % 2 == 0 ? 1 : -1) * temp[0][j] * cofactor);
-    }
-
-    if (std::abs(det) < std::numeric_limits<T>::epsilon() * std::abs(det)) {
-        std::cerr << "Matrix is not invertible!\n";
-        *this = Matrix4x4<T>::identity();
-        return;
-    }
-
-    // Step 2: Compute inverse and transpose at the same time (adjugate / det)
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
+        // Step 1: Compute determinant via cofactor expansion along row 0
+        T det = 0;
+        for (int j = 0; j < 4; ++j) {
             Matrix<T> minor(3, 3);
-            for (int mi = 0, r = 0; mi < 4; mi++) {
-                if (mi == i) continue;
-                for (int mj = 0, c = 0; mj < 4; mj++) {
+            for (int mi = 1; mi < 4; ++mi) {
+                int r = mi - 1;
+                int c = 0;
+                for (int mj = 0; mj < 4; ++mj) {
                     if (mj == j) continue;
                     minor[r][c++] = temp[mi][mj];
                 }
-                r++;
             }
 
             T cofactor =
@@ -423,9 +396,36 @@ public:
                     minor[0][1]*(minor[1][0]*minor[2][2] - minor[1][2]*minor[2][0]) +
                     minor[0][2]*(minor[1][0]*minor[2][1] - minor[1][1]*minor[2][0]);
 
-            (*this)[j][i] = ((i + j) % 2 == 0 ? 1 : -1) * cofactor / det;  // transpose here
+            det += ((j % 2 == 0 ? 1 : -1) * temp[0][j] * cofactor);
         }
-    }
+
+        if (std::abs(det) < std::numeric_limits<T>::epsilon() * std::abs(det)) {
+            std::cerr << "Matrix is not invertible!\n";
+            *this = Matrix4x4<T>::identity();
+            return;
+        }
+
+        // Step 2: Compute inverse and transpose at the same time (adjugate / det)
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                Matrix<T> minor(3, 3);
+                for (int mi = 0, r = 0; mi < 4; mi++) {
+                    if (mi == i) continue;
+                    for (int mj = 0, c = 0; mj < 4; mj++) {
+                        if (mj == j) continue;
+                        minor[r][c++] = temp[mi][mj];
+                    }
+                    r++;
+                }
+
+                T cofactor =
+                        minor[0][0]*(minor[1][1]*minor[2][2] - minor[1][2]*minor[2][1]) -
+                        minor[0][1]*(minor[1][0]*minor[2][2] - minor[1][2]*minor[2][0]) +
+                        minor[0][2]*(minor[1][0]*minor[2][1] - minor[1][1]*minor[2][0]);
+
+                (*this)[j][i] = ((i + j) % 2 == 0 ? 1 : -1) * cofactor / det;  // transpose here
+            }
+        }
     }
 
     /* Operator overloads */

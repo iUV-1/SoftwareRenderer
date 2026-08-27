@@ -36,6 +36,7 @@ public:
     RectBuffer *mShadowBuffer = nullptr;
     RectBuffer *mZbuffer = nullptr;
 
+    // Own by the engine
     Matrix4x4f mProjection;
     Matrix4x4f mModelView;
     Matrix4x4f mViewport;

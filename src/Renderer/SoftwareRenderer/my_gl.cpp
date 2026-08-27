@@ -254,19 +254,20 @@ void triangle(Vec3f *pts, Window *window, RectBuffer &zbuffer, IShader &shader) 
             bboxmax[j] = std::min(clamp[j], std::max(bboxmax[j], pts[i][j]));
         }
     }
-#pragma omp parallel for schedule(static)
+
+#pragma omp parallel for schedule(dynamic)
     for(int i = static_cast<int>(bboxmin.x); i <= static_cast<int>(bboxmax.x); i++) {
         for(int j = static_cast<int>(bboxmin.y); j <= static_cast<int>(bboxmax.y); j++) {
             Vec3f P(i, j, 0);
             Vec3f bc_screen  = barycentric(pts[0], pts[1], pts[2], P);
             if (bc_screen.x<0 || bc_screen.y<0 || bc_screen.z<0) continue;
             P.z = 0;
-            for (int z=0; z<3; ++z) {
-                P.z += pts[z][2]*bc_screen[z];
+            for (int k=0; k<3; ++k) {
+                P.z += pts[k].z * bc_screen[k];
             }
             auto idx = static_cast<size_t>(P.x + P.y * zbuffer.width);
             if(zbuffer[idx] < P.z) {
-#pragma omp atomic write
+//#pragma omp atomic write
                 zbuffer[idx] = P.z;
                 // Use shader
                 TGAColor color;
@@ -291,7 +292,7 @@ void triangle(Vec3f *pts, int w, int h, RectBuffer &zbuffer) {
         }
     }
 
-#pragma omp parallel for
+#pragma omp parallel for schedule(dynamic)
     for(int i = static_cast<int>(bboxmin.x); i <= static_cast<int>(bboxmax.x); i++) {
         for(int j = static_cast<int>(bboxmin.y); j <= static_cast<int>(bboxmax.y); j++) {
             Vec3f P(i, j, 0);
@@ -303,7 +304,7 @@ void triangle(Vec3f *pts, int w, int h, RectBuffer &zbuffer) {
             }
             auto idx = static_cast<size_t>(P.x + P.y * zbuffer.width);
             if(zbuffer[idx] < P.z) {
-#pragma omp atomic write
+//#pragma omp atomic write
                 zbuffer[idx] = P.z;
             }
         }

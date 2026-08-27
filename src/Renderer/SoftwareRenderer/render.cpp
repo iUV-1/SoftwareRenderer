@@ -72,6 +72,7 @@ void Renderer::RenderScene(Scene *scene)
     Matrix4x4f shadowProjection = OrthoProject(0); // Render mLight in orthographic mode
     auto depth_shader = DepthShaderImage(mViewport, shadowProjection, shadowModelView, model, mCamera->Depth);
     // Render
+
     for(int i = 0; i < model->mMesh.nfaces(); ++i) {
         Vec3f screen_coords[3];
         for (int j=0; j<3; ++j)
@@ -80,16 +81,18 @@ void Renderer::RenderScene(Scene *scene)
         // ^ is an overloaded operator that performs cross product calculation
         // world_coords[2] - world_coords[0] and the other are 2 vectors pointing from point
         // world_coords[0].
-        Vec3f n = (screen_coords[2]-screen_coords[0])^(screen_coords[1]-screen_coords[0]);
-        n.normalize();
+//        Vec3f n = (screen_coords[2]-screen_coords[0])^(screen_coords[1]-screen_coords[0]);
+//        n.normalize();
 
-        float view_dir_intensity = mCamera->Eye*n;
+        Vec3f n = model->mMesh.normal(i, 0);
+        n *= -1;
+        float view_dir_intensity = light*n;
 
         if (view_dir_intensity<1)
             // Doesn't save the image since we don't need it
             triangle(screen_coords, mCamera->Width, mCamera->Height, *mShadowBuffer);
     }
-    Matrix4x4f M_Shadow = mViewport*shadowProjection*mModelView;
+    Matrix4x4f M_Shadow = mViewport*shadowProjection*shadowModelView;
 
     /* SSAO */
     /// Get depth from Camera
@@ -148,8 +151,10 @@ void Renderer::RenderScene(Scene *scene)
             screen_coords[j] = rasterize(&shader, i, j);
 
 
-        Vec3f n = (screen_coords[2]-screen_coords[0])^(screen_coords[1]-screen_coords[0]);
-        n.normalize();
+//        Vec3f n = (screen_coords[2]-screen_coords[0])^(screen_coords[1]-screen_coords[0]);
+//        n.normalize();
+        Vec3f n = model->mMesh.normal(i, 0); // just choose a random vertex in this face
+        n *= -1;
         // calculate mEye intensity by dot product between normal and mEye vector
         float view_dir_intensity = mCamera->Eye*n;
         // back face culling

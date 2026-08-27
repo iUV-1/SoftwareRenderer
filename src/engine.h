@@ -24,6 +24,10 @@ private:
 
     double mRenderTime;
     double mUpdateTime;
+
+    Matrix4x4f mProjection;
+    Matrix4x4f mViewport;
+    Matrix4x4f mModelView;
 public:
     ~Engine();
     void Initialize(int argc, char *argv[]);
