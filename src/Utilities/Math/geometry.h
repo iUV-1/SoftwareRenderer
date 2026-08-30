@@ -10,6 +10,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 constexpr float MAX_FLOAT = std::numeric_limits<float>::max();
+constexpr float EPS = std::numeric_limits<float>::epsilon();
 
 // Forward declaration for Vectors
 template <typename T>
@@ -40,7 +41,6 @@ public:
 
 template<class u>
 class Vec4;
-constexpr float EPS = std::numeric_limits<float>::epsilon();
 
 template <class t> class Vec3 {
 public:
@@ -459,6 +459,3 @@ Matrix<T> operator* ( Matrix4x4<T> const &cur,  Matrix<T> const &other) {
 template Matrix<float> operator*( Matrix<float> const & ,  Matrix4x4<float> const &);
 template Matrix<float> operator*( Matrix4x4<float> const &,  Matrix<float> const &);
 typedef Matrix4x4<float> Matrix4x4f;
-
-Vec4f homogonize(Vec3f const &v, float h);
-Vec3f dehomogonize(Vec4f const &v);

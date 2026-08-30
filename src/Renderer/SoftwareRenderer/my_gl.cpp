@@ -141,107 +141,6 @@ Vec3f barycentric(Vec3f A, Vec3f B, Vec3f C, Vec3f P) {
     return Vec3f(-1,1,1); // in this case generate negative coordinates, it will be thrown away by the rasterizator
 }
 
-void triangle(Vec3f *pts, TGAImage &image, float *zbuffer, int width, IShader &shader) {
-    Vec2f bboxmin( MAX_FLOAT,  MAX_FLOAT);
-    Vec2f bboxmax(-MAX_FLOAT, -MAX_FLOAT);
-    //std::cout << pts[0] << pts[1] << pts[2] << std::endl;
-    Vec2f clamp(image.get_width()-1, image.get_height()-1);
-    for (int i=0; i<3; i++) {
-        for (int j=0; j<2; j++) {
-            bboxmin[j] = std::max(0.f,      std::min(bboxmin[j], pts[i][j]));
-            bboxmax[j] = std::min(clamp[j], std::max(bboxmax[j], pts[i][j]));
-        }
-    }
-    //Vec3f P;
-    for (int i = bboxmin.x; i <=bboxmax.x; i++) {
-        for (int j = bboxmin.y; j<=bboxmax.y; j++) {
-            Vec3f P(i, j, 0);
-            Vec3f bc_screen  = barycentric(pts[0], pts[1], pts[2], P);
-            if (bc_screen.x<0 || bc_screen.y<0 || bc_screen.z<0) continue;
-            P.z = 0;
-            for (int i=0; i<3; ++i) {
-                P.z += pts[i][2]*bc_screen[i];
-            }
-            auto idx = static_cast<size_t>(P.x + P.y * width);
-            if(zbuffer[idx] < P.z) {
-                zbuffer[idx] = P.z;
-                // Use shader
-                TGAColor color;
-                shader.fragment(bc_screen, color);
-                image.set(P.x, P.y, color);
-            }
-        }
-    }
-}
-
-void triangle(Vec3f *pts, SDL_Surface *surface, float *zbuffer, int width, IShader &shader) {
-    Vec2f bboxmin( MAX_FLOAT,  MAX_FLOAT);
-    Vec2f bboxmax(-MAX_FLOAT, -MAX_FLOAT);
-    //std::cout << pts[0] << pts[1] << pts[2] << std::endl;
-    Vec2f clamp(surface->w -1, surface->h -1);
-    for (int i=0; i<3; i++) {
-        for (int j=0; j<2; j++) {
-            bboxmin[j] = std::max(0.f,      std::min(bboxmin[j], pts[i][j]));
-            bboxmax[j] = std::min(clamp[j], std::max(bboxmax[j], pts[i][j]));
-        }
-    }
-    //Vec3f P;
-    for (int i = bboxmin.x; i <=bboxmax.x; i++) {
-        for (int j = bboxmin.y; j<=bboxmax.y; j++) {
-            Vec3f P(i, j, 0);
-            Vec3f bc_screen  = barycentric(pts[0], pts[1], pts[2], P);
-            if (bc_screen.x<0 || bc_screen.y<0 || bc_screen.z<0) continue;
-            P.z = 0;
-            for (int i=0; i<3; ++i) {
-                P.z += pts[i][2]*bc_screen[i];
-            }
-            auto idx = static_cast<size_t>(P.x + P.y * width);
-            if(zbuffer[idx] < P.z) {
-                zbuffer[idx] = P.z;
-                // Use shader
-                TGAColor color;
-                shader.fragment(bc_screen, color);
-                TGAtoSDLAdapter::SetTGAPixel(surface, P.x, P.y, color);
-                //image.set(P.x, P.y, color);
-            }
-        }
-    }
-}
-
-void triangle(Vec3f *pts, SDL_Surface *surface, RectBuffer &zbuffer, IShader &shader) {
-    Vec2f bboxmin( MAX_FLOAT,  MAX_FLOAT);
-    Vec2f bboxmax(-MAX_FLOAT, -MAX_FLOAT);
-    //std::cout << pts[0] << pts[1] << pts[2] << std::endl;
-    Vec2f clamp(surface->w -1, surface->h -1);
-    for (int i=0; i<3; i++) {
-        for (int j=0; j<2; j++) {
-            bboxmin[j] = std::max(0.f,      std::min(bboxmin[j], pts[i][j]));
-            bboxmax[j] = std::min(clamp[j], std::max(bboxmax[j], pts[i][j]));
-        }
-    }
-    //Vec3f P;
-    for (int i = bboxmin.x; i <=bboxmax.x; i++) {
-        for (int j = bboxmin.y; j<=bboxmax.y; j++) {
-            Vec3f P(i, j, 0);
-            Vec3f bc_screen  = barycentric(pts[0], pts[1], pts[2], P);
-            if (bc_screen.x<0 || bc_screen.y<0 || bc_screen.z<0) continue;
-            P.z = 0;
-            for (int i=0; i<3; ++i) {
-                P.z += pts[i][2]*bc_screen[i];
-            }
-            auto idx = static_cast<size_t>(P.x + P.y * zbuffer.width);
-            if(zbuffer[idx] < P.z) {
-                zbuffer[idx] = P.z;
-                // Use shader
-                TGAColor color;
-                shader.fragment(bc_screen, color);
-                TGAtoSDLAdapter::SetTGAPixel(surface, P.x, P.y, color);
-                //image.set(P.x, P.y, color);
-            }
-        }
-    }
-}
-
 void triangle(Vec3f *pts, Window *window, RectBuffer &zbuffer, IShader &shader) {
     Vec2f bboxmin( MAX_FLOAT,  MAX_FLOAT);
     Vec2f bboxmax(-MAX_FLOAT, -MAX_FLOAT);
@@ -268,7 +167,7 @@ void triangle(Vec3f *pts, Window *window, RectBuffer &zbuffer, IShader &shader) 
             }
             auto idx = static_cast<size_t>(P.x + P.y * zbuffer.width);
             if(zbuffer[idx] < P.z) {
-//#pragma omp atomic write
+#pragma omp atomic write
                 zbuffer[idx] = P.z;
                 // Use shader
                 TGAColor color;
@@ -294,8 +193,8 @@ void triangle(Vec3f *pts, int w, int h, RectBuffer &zbuffer) {
     }
 
 //#pragma omp parallel for schedule(guided, 64)
-    for(int i = static_cast<int>(bboxmin.x); i <= static_cast<int>(bboxmax.x); i++) {
-        for(int j = static_cast<int>(bboxmin.y); j <= static_cast<int>(bboxmax.y); j++) {
+    for(int j = static_cast<int>(bboxmin.y); j <= static_cast<int>(bboxmax.y); j++) {
+        for(int i = static_cast<int>(bboxmin.x); i <= static_cast<int>(bboxmax.x); i++) {
             Vec3f P(i, j, 0);
             Vec3f bc_screen  = barycentric(pts[0], pts[1], pts[2], P);
             if (bc_screen.x<0 || bc_screen.y<0 || bc_screen.z<0) continue;
@@ -305,7 +204,7 @@ void triangle(Vec3f *pts, int w, int h, RectBuffer &zbuffer) {
             }
             auto idx = static_cast<size_t>(P.x + P.y * zbuffer.width);
             if(zbuffer[idx] < P.z) {
-//#pragma omp atomic write
+#pragma omp atomic write
                 zbuffer[idx] = P.z;
             }
         }

@@ -18,10 +18,10 @@ struct PhongShaderShadow: IShader {
     Matrix3x3<float> varying_shadow_tri; // 3x3 matrix containing verticies of a shadow trig
     Matrix4x4f uniform_Mshadow; // Shadow transformation
     Vec3f uniform_light;
-    RectBuffer &depth_buffer;
+    RectBuffer &depth_buffer; // for shadow
     Mesh *mesh;
     Material *mat;
-    PhongShaderShadow(Matrix4x4f viewport, const Matrix4x4f& projection, const Matrix4x4f& modelview,
+    PhongShaderShadow(Matrix4x4f viewport, Matrix4x4f projection, Matrix4x4f modelview,
                       Model *model, Vec3f light,
                       Matrix4x4f uniform_shadow, RectBuffer &depth_buffer)
     : IShader(viewport, projection, modelview, model), depth_buffer(depth_buffer), uniform_light(light) {

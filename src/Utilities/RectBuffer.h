@@ -20,9 +20,10 @@ public:
 
     float &operator[] (size_t const i) {
 //        if (i >= size) throw std::out_of_range("out of range!");
-        if (i >= size) std::cerr << "out of range!\n";
+        //if (i >= size) std::cerr << "out of range!\n";
+        size_t idx = std::min(i, size - 1);
 
-        return data[i];
+        return data[idx];
     }
 
     void resetBuffer() {

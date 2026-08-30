@@ -55,7 +55,9 @@ Renderer::~Renderer()
 
 void Renderer::RenderIMGUI()
 {
-
+    ImGui::Begin("Renderer settings");
+    ImGui::Text("Testing");
+    ImGui::End();
 }
 
 void Renderer::RenderScene(Scene *scene)
@@ -143,11 +145,10 @@ void Renderer::RenderScene(Scene *scene)
 //    Matrix4x4f MVP = mViewport*mProjection*mModelView;
 //    Matrix4x4f MVP = mModelView * mViewport * mProjection;
 //    MVP.invert();
-#pragma omp parallel for schedule(guided, 64)
+#pragma omp parallel for schedule(static, 64)
     for (int i=0; i< model->mMesh.nfaces(); ++i) {
-        PhongShaderShadow shader = PhongShaderShadow(mViewport, mProjection, mModelView, model, light, M_Shadow, *mShadowBuffer);
         Vec3f screen_coords[3];
-
+        PhongShaderShadow shader = PhongShaderShadow(mViewport, mProjection, mModelView, model, light, M_Shadow, *mShadowBuffer);
         for (int j=0; j<3; ++j)
             screen_coords[j] = rasterize(&shader, i, j);
 

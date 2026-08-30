@@ -11,6 +11,7 @@
 #include "Utilities/Math/math.h"
 #include "Renderer/SoftwareRenderer/render.hpp"
 #include <stdexcept>
+#include <omp.h>
 
 constexpr int window_width = 800;
 constexpr int window_height = 800;
@@ -36,7 +37,7 @@ void Engine::ResizeWindow(int width, int height)
 void Engine::Initialize(int argc, char *argv[])
 {
     double setupTimeTaken = CycleTimer::currentSeconds();
-
+    omp_set_num_threads(16); // Sets default for subsequent regions
     // --- SCENE SETUP ---
     string modelPath = "../obj/african_head.obj";
     if(argc >= 2) {
@@ -96,7 +97,7 @@ void Engine::Initialize(int argc, char *argv[])
 
 void Engine::RenderIMGUI()
 {
-    ImGui::Begin("Renderer settings");
+    ImGui::Begin("Engine settings");
 
     ImGui::Text("Render time/FPS: %.3f ms/frame (%.1f FPS)", mRenderTime * 1000, 1/mRenderTime);
     ImGui::Text("Update time/FPS: %.3f ms/frame (%.1f FPS)", mUpdateTime * 1000, 1/mUpdateTime);
@@ -144,6 +145,7 @@ void Engine::Update()
     // --- RENDER ---
     mRenderTime = CycleTimer::currentSeconds();
     //dynamic_cast<Renderer*>(mRenderer)->SetupBuffers(mWindow->mWidth, mWindow->mHeight);
+    mRenderer->RenderIMGUI();
     mRenderer->RenderScene(mScene);
     mRenderTime = CycleTimer::currentSeconds() - mRenderTime;
 

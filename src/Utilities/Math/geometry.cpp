@@ -3,24 +3,6 @@
 //
 #include "geometry.h"
 
-
-
-/// Create a homogonized matrix from a vector
-Vec4f homogonize(Vec3f const &v, float h) {
-    Vec4f result;
-    result.x = v.x;
-    result.y = v.y;
-    result.z = v.z;
-    result.w = h;
-    return result;
-}
-
-//constexpr float EPS = std::numeric_limits<float>::epsilon();
-/// De-homogonize it
-Vec3f dehomogonize(Vec4f const &v) {
-    return {v.x / (v.w + EPS), v.y / (v.w + EPS), v.z / (v.w + EPS)};
-}
-
 ///// Reflect a vector from a surface
 ////
 //Vec3f reflect(Vec3f const n, Vec3f const i) {
@@ -82,6 +64,7 @@ template<typename T>
 Vec4<T> Matrix4x4<T>::operator*(const Vec4<T> &other) {
     Vec4<T> result;
     const auto& A = this->data;
+#pragma unroll
     for(int i = 0; i < 4; i++) {
         result[i] = other.x * A[i][0] + other.y * A[i][1] + other.z * A[i][2] + other.w * A[i][3];
     }
