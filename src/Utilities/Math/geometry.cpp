@@ -15,16 +15,10 @@ Vec4f homogonize(Vec3f const &v, float h) {
     return result;
 }
 
+//constexpr float EPS = std::numeric_limits<float>::epsilon();
 /// De-homogonize it
 Vec3f dehomogonize(Vec4f const &v) {
-    if(v.w == 0.) {
-        throw std::invalid_argument("what the fuck");
-    }
-    Vec3f result;
-    result.x = v.x / v.w;
-    result.y = v.y / v.w;
-    result.z = v.z / v.w;
-    return result;
+    return {v.x / (v.w + EPS), v.y / (v.w + EPS), v.z / (v.w + EPS)};
 }
 
 ///// Reflect a vector from a surface

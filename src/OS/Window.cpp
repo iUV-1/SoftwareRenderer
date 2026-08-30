@@ -20,8 +20,8 @@ Window::Window(std::string title, int width, int height): mTitle(title), mWidth(
     }
 
     mKeyboardState = SDL_GetKeyboardState(nullptr);
-//    frontBuffer = new ScreenBuffer(SDL_CreateTextureFromSurface(sdlRenderer, surf));
-//    backBuffer = new ScreenBuffer(SDL_CreateTextureFromSurface(sdlRenderer, surf));
+    mSurface = SDL_GetWindowSurface(mWindow);
+    mTex = SDL_CreateTextureFromSurface(mSDLRenderer, mSurface);
     // --- SETUP IMGUI ---
     // imgui stuff
     IMGUI_CHECKVERSION();
@@ -44,15 +44,23 @@ Window::Window(std::string title, int width, int height): mTitle(title), mWidth(
 
 /// No guard checking for performance. Good luck!
 void Window::Plot(int x, int y, int r, int g, int b, int a) {
-//#pragma omp atomic write
     static_cast<uint32_t*>(mSurface->pixels)[y * mWidth + x] =
             a << 24 | r << 16 | g << 8 | b;
 }
 
-void Window::StartUpdate()
+void Window::ToggleRelativeMouse() {
+    SDL_SetWindowRelativeMouseMode(mWindow, !mMouseState);
+    mMouseState = !mMouseState;
+}
+
+void Window::Resize(int width, int height)
 {
     mSurface = SDL_GetWindowSurface(mWindow);
+    mTex = SDL_CreateTextureFromSurface(mSDLRenderer, mSurface);
+}
 
+void Window::StartUpdate()
+{
     ImGui_ImplSDLRenderer3_NewFrame();
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
@@ -69,8 +77,9 @@ void Window::EndUpdate()
     //SDL_UpdateWindowSurface(mWindow);
 
     // Creating a texture from the surface and rendering it
-    SDL_Texture *windowTex = SDL_CreateTextureFromSurface(mSDLRenderer, mSurface);
-    SDL_RenderTexture(mSDLRenderer, windowTex, nullptr, nullptr);
+//    mTex = SDL_CreateTextureFromSurface(mSDLRenderer, mSurface);
+    SDL_UpdateTexture(mTex, nullptr, mSurface->pixels, mSurface->pitch);
+    SDL_RenderTexture(mSDLRenderer, mTex, nullptr, nullptr);
     // ImGUI Render
     ImGui::Render();
     SDL_SetRenderScale(mSDLRenderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
@@ -92,6 +101,7 @@ Window::~Window() {
     ImGui::DestroyContext();
     SDL_DestroyRenderer(mSDLRenderer);
     SDL_DestroyWindow(mWindow);
+    SDL_DestroyTexture(mTex);
     //SDL_DestroySurface(windowSurface);
     SDL_Quit();
 }

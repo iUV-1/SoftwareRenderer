@@ -255,9 +255,10 @@ void triangle(Vec3f *pts, Window *window, RectBuffer &zbuffer, IShader &shader) 
         }
     }
 
-#pragma omp parallel for schedule(dynamic)
-    for(int i = static_cast<int>(bboxmin.x); i <= static_cast<int>(bboxmax.x); i++) {
+//#pragma omp parallel for schedule(guided, 64)
         for(int j = static_cast<int>(bboxmin.y); j <= static_cast<int>(bboxmax.y); j++) {
+            for(int i = static_cast<int>(bboxmin.x); i <= static_cast<int>(bboxmax.x); i++) {
+
             Vec3f P(i, j, 0);
             Vec3f bc_screen  = barycentric(pts[0], pts[1], pts[2], P);
             if (bc_screen.x<0 || bc_screen.y<0 || bc_screen.z<0) continue;
@@ -292,7 +293,7 @@ void triangle(Vec3f *pts, int w, int h, RectBuffer &zbuffer) {
         }
     }
 
-#pragma omp parallel for schedule(dynamic)
+//#pragma omp parallel for schedule(guided, 64)
     for(int i = static_cast<int>(bboxmin.x); i <= static_cast<int>(bboxmax.x); i++) {
         for(int j = static_cast<int>(bboxmin.y); j <= static_cast<int>(bboxmax.y); j++) {
             Vec3f P(i, j, 0);
@@ -300,7 +301,7 @@ void triangle(Vec3f *pts, int w, int h, RectBuffer &zbuffer) {
             if (bc_screen.x<0 || bc_screen.y<0 || bc_screen.z<0) continue;
             P.z = 0;
             for (int i=0; i<3; ++i) {
-                P.z += pts[i][2]*bc_screen[i];
+                P.z += pts[i].z*bc_screen[i];
             }
             auto idx = static_cast<size_t>(P.x + P.y * zbuffer.width);
             if(zbuffer[idx] < P.z) {

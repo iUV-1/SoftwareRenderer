@@ -38,13 +38,13 @@ struct PhongShaderShadow: IShader {
         // Set the column of varying_uv to texture position in Vec2f
         varying_uv.set_col(nthvert, mesh->texcoord(iface, nthvert));
         // Set the column of vertex the triangle using vert index
-        Vec4f transformed_vert = Viewport*uniform_M*homogonize(v, 1.);
+        Vec4f transformed_vert = Viewport*uniform_M*Vec4f(v, 1.);
 //        bool x_c = -transformed_vert.w <= transformed_vert.x && transformed_vert.x <= transformed_vert.w;
 //        bool y_c = -transformed_vert.w <= transformed_vert.y && transformed_vert.y <= transformed_vert.w;
 //        bool z_c = 0 <= transformed_vert.z && transformed_vert.z <= transformed_vert.w;
 //        if(!x_c || !y_c || !z_c) return Vec4f(1, 1, 1, 1);
-        varying_tri.set_col(nthvert, dehomogonize(transformed_vert));
-        varying_shadow_tri.set_col(nthvert, dehomogonize(uniform_Mshadow * homogonize(v, 1.)));
+        varying_tri.set_col(nthvert, Vec3f(transformed_vert));
+        varying_shadow_tri.set_col(nthvert, Vec3f(uniform_Mshadow * Vec4f(v, 1.)));
 
         return transformed_vert;
     }
@@ -60,7 +60,7 @@ struct PhongShaderShadow: IShader {
         uv.y = varying_uv[1][0] * bar.x + varying_uv[1][1] * bar.y + varying_uv[1][2] * bar.z;
         // Get shadow position from buffer
         Vec3f p = varying_tri * bar;
-        Vec3f shadow_p = dehomogonize(uniform_Mshadow * homogonize(p, 1.));
+        Vec3f shadow_p = Vec3f(uniform_Mshadow * Vec4f(p, 1.));
         auto shadow_buf_idx = int(shadow_p.x)  + int(shadow_p.y) * depth_buffer.width;
 
         // Get the normal vector of that mesh based on the setting
@@ -73,9 +73,9 @@ struct PhongShaderShadow: IShader {
         }
         /// Insanely costly calculations
         // Transform the normal vector to the mEye space
-        Vec3f n = dehomogonize(uniform_MIT*homogonize(norm, 1.f)).normalize();
+        Vec3f n = Vec3f(uniform_MIT*Vec4f(norm, 1.f)).normalize();
         // Same as above
-        Vec3f l = dehomogonize(uniform_M  *homogonize(uniform_light, 1.f)).normalize();
+        Vec3f l = Vec3f(uniform_M  *Vec4f(uniform_light, 1.f)).normalize();
         l *= -1;// The reflection formula below is for object pointing to the light.
         // Shadow
         float slope_bias = std::max( 0.5f* (1.0f - n * (l*-1)), 1.f );

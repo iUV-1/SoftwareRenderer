@@ -38,6 +38,10 @@ public:
     };
 };
 
+template<class u>
+class Vec4;
+constexpr float EPS = std::numeric_limits<float>::epsilon();
+
 template <class t> class Vec3 {
 public:
     union {
@@ -48,6 +52,8 @@ public:
     Vec3() : x(0), y(0), z(0) {}
     Vec3(t _x, t _y, t _z) : x(_x),y(_y),z(_z) {}
     Vec3(Matrix<t> mat);
+    // Dehomogonize
+    Vec3(Vec4<t> other): x(other.x / (other.w + EPS)), y(other.y / (other.w + EPS)), z(other.z / (other.w + EPS)) {}
     ~Vec3() {}
 
     inline Vec3<t> operator ^(const Vec3<t> &v) const { return Vec3<t>(y*v.z-z*v.y, z*v.x-x*v.z, x*v.y-y*v.x); }
@@ -97,7 +103,8 @@ public:
     }
 };
 
-template <class t> class Vec4 {
+
+ template <class t> class Vec4 {
 public:
      union {
          struct {t x, y, z, w;};
@@ -107,6 +114,7 @@ public:
      Vec4() : x(0), y(0), z(0), w(0) {}
      Vec4(t _x, t _y, t _z, t _w) : x(_x),y(_y),z(_z),w(_z) {}
      Vec4(Matrix<t> mat);
+     Vec4(Vec3<t> v, t h): x(v.x), y(v.y), z(v.z), w(h) {}
 
      inline Vec4<t> operator ^(const Vec4<t> &v) const { return Vec4<t>(y*v.z-z*v.y, z*v.x-x*v.z, x*v.y-y*v.x); }
      inline Vec4<t> operator +(const Vec4<t> &v) const { return Vec4<t>(x+v.x, y+v.y, z+v.z); }
@@ -313,7 +321,7 @@ public:
         Matrix4x4 result;
 
         for (int i = 4; i--; ) {
-         result[i][i] = 1;
+            result[i][i] = 1;
         }
         return result;
     }

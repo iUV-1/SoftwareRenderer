@@ -20,7 +20,7 @@ Vec3f Renderer::rasterize(IShader *shader, int iface, int nthvert)
 {
     // Apply vertex shader
     Vec4f homogonized = shader->vertex(iface, nthvert);
-    Vec3f result = dehomogonize(homogonized);
+    Vec3f result = Vec3f(homogonized);
     // Round the result to apply to screen
 //    result.x = round(result.x);
 //    result.y = round(result.y);
@@ -70,11 +70,12 @@ void Renderer::RenderScene(Scene *scene)
     // Init shader
     Matrix4x4f shadowModelView = LookAt(light, mCamera->Cam, mCamera->Up);
     Matrix4x4f shadowProjection = OrthoProject(0); // Render mLight in orthographic mode
-    auto depth_shader = DepthShaderImage(mViewport, shadowProjection, shadowModelView, model, mCamera->Depth);
     // Render
-
+#pragma omp parallel for schedule(static, 64)
     for(int i = 0; i < model->mMesh.nfaces(); ++i) {
         Vec3f screen_coords[3];
+        auto depth_shader = DepthShaderImage(mViewport, shadowProjection, shadowModelView, model, mCamera->Depth);
+
         for (int j=0; j<3; ++j)
             screen_coords[j] = rasterize(&depth_shader, i, j);
         // calculate normal
@@ -142,14 +143,13 @@ void Renderer::RenderScene(Scene *scene)
 //    Matrix4x4f MVP = mViewport*mProjection*mModelView;
 //    Matrix4x4f MVP = mModelView * mViewport * mProjection;
 //    MVP.invert();
-    PhongShaderShadow shader = PhongShaderShadow(mViewport, mProjection, mModelView, model, light, M_Shadow, *mShadowBuffer);
-    //PhongShader shader = PhongShader();
+#pragma omp parallel for schedule(guided, 64)
     for (int i=0; i< model->mMesh.nfaces(); ++i) {
+        PhongShaderShadow shader = PhongShaderShadow(mViewport, mProjection, mModelView, model, light, M_Shadow, *mShadowBuffer);
         Vec3f screen_coords[3];
 
         for (int j=0; j<3; ++j)
             screen_coords[j] = rasterize(&shader, i, j);
-
 
 //        Vec3f n = (screen_coords[2]-screen_coords[0])^(screen_coords[1]-screen_coords[0]);
 //        n.normalize();
@@ -161,7 +161,6 @@ void Renderer::RenderScene(Scene *scene)
         if (view_dir_intensity<1) {
             //triangle(screen_coords, frame, zbuffer, mScene->Width, shader);
             triangle(screen_coords, mWindow, *mZbuffer, shader);
-            //wireframe_trig(screen_coords, frame, TGAColor(255, 255, 255, 255));
         }
     }
 }

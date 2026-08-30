@@ -27,6 +27,7 @@ void Engine::InitializeUniforms()
 
 void Engine::ResizeWindow(int width, int height)
 {
+    mWindow->Resize(width, height);
     mCamera->Width = width;
     mCamera->Height = height;
     dynamic_cast<Renderer*>(mRenderer)->SetupBuffers(mWindow->mWidth, mWindow->mHeight);
@@ -35,16 +36,12 @@ void Engine::ResizeWindow(int width, int height)
 void Engine::Initialize(int argc, char *argv[])
 {
     double setupTimeTaken = CycleTimer::currentSeconds();
-    // --- WINDOW SETUP ---
-    mWindow = new Window("Software Renderer", window_width, window_height);
-    keystate = mWindow->GetKeyboardState();
-    mRelativeMouse = mWindow->GetRelativeMouse();
+
     // --- SCENE SETUP ---
     string modelPath = "../obj/african_head.obj";
     if(argc >= 2) {
         modelPath = argv[1];
     }
-    Mesh mesh(modelPath.c_str());
 
     string diffPath = "../obj/UV Grid.tga";
     string normalPath;
@@ -56,23 +53,42 @@ void Engine::Initialize(int argc, char *argv[])
         normalPath = argv[3];
     if(argc >= 5)
         specularPath = argv[4];
-
-    Material material(diffPath, normalPath, specularPath);
-    mCamera = new Camera(
-            Vec3f(1, 1, 3),
-            Vec3f(0, 1, 0),
-            Vec3f(-1, 1, -1),
-            60
+    Model *model;
+#pragma omp parallel
+    {
+#pragma omp master
+        {
+            // --- WINDOW SETUP ---
+            mWindow = new Window("Software Renderer", window_width, window_height);
+            keystate = mWindow->GetKeyboardState();
+            mRelativeMouse = mWindow->GetRelativeMouse();
+        }
+#pragma omp single
+        {
+            // --- SCENE SETUP ---
+            Mesh mesh(modelPath.c_str());
+            Material material(diffPath, normalPath, specularPath);
+            model = new Model(Vec3f(0, 0, 0), mesh, material);
+            mCamera = new Camera(
+                    Vec3f(1, 1, 5.5),
+                    Vec3f(0, 1, 0),
+                    Vec3f(-0.209, -0.076, -1),
+                    60
             );
+        };
+#pragma omp single
+        {
+            // --- RENDERER SETUP ---
+            mRenderer = new Renderer(mWindow);
+            dynamic_cast<Renderer*>(mRenderer)->SetupBuffers(mWindow->mWidth, mWindow->mHeight);
+        }
+    }
 
-    Model* model = new Model(Vec3f(0, 0, 0), mesh, material);
     mScene = new Scene();
     mScene->AddModel( model );
     mScene->SetCamera(mCamera);
     mScene->SetLight(Vec3f(1, -1, 0));
-    // --- RENDERER SETUP ---
-    mRenderer = new Renderer(mWindow);
-    dynamic_cast<Renderer*>(mRenderer)->SetupBuffers(mWindow->mWidth, mWindow->mHeight);
+
     // Timing
     setupTimeTaken = CycleTimer::currentSeconds() - setupTimeTaken;
     SDL_Log("Setup time: %.2f ms\n", 1000.f * setupTimeTaken);
@@ -85,9 +101,14 @@ void Engine::RenderIMGUI()
     ImGui::Text("Render time/FPS: %.3f ms/frame (%.1f FPS)", mRenderTime * 1000, 1/mRenderTime);
     ImGui::Text("Update time/FPS: %.3f ms/frame (%.1f FPS)", mUpdateTime * 1000, 1/mUpdateTime);
 
-    // Since Light is a continuous array, &rScene->Light.x works
+    // Since Light is a continuous array, this works
     Vec3f *light = mScene->GetLight();
+    Vec3f *cam_look = &mCamera->Cam;
+    Vec3f *cam_pos = &mCamera->Eye;
     ImGui::DragFloat3("Light", &light->x, 0.1, -1.0, 1.0, "%.3f");
+    ImGui::DragFloat3("Camera eye", &cam_look->x, 0.05, -10.0, 10.0, "%.3f");
+    ImGui::DragFloat3("Camera pos", &cam_pos->x, 0.05, -10.0, 10.0, "%.3f");
+
     ImGui::End();
 }
 
@@ -103,6 +124,10 @@ void Engine::HandleInput()
     mCamera->Cam.x += 0.1f * result.x - mouse.x * 0.001;
     mCamera->Cam.z += 0.1f * result.y;
     mCamera->Cam.y -= mouse.y * 0.001;
+
+    if(keystate[SDL_SCANCODE_ESCAPE]) {
+        mWindow->ToggleRelativeMouse();
+    }
 }
 
 void Engine::Update()

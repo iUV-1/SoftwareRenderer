@@ -15,6 +15,7 @@ private:
     SDL_Window *mWindow;
     SDL_Renderer *mSDLRenderer;
     SDL_Surface *mSurface;
+    SDL_Texture *mTex;
 //    /// What will be rendered
 //    ScreenBuffer *frontBuffer;
 //    ScreenBuffer *backBuffer;
@@ -23,6 +24,7 @@ private:
     ImGuiIO io;
     Vec2f mRelativeMouse;
     const bool *mKeyboardState;
+    bool mMouseState = true;
 public:
     int mWidth;
     int mHeight;
@@ -32,6 +34,7 @@ public:
     void Update();
     void StartUpdate();
     void EndUpdate();
+    void Resize(int width, int height);
     /// The global state of the input.
     /// Technically not handled by the window but since
     /// the backend is in SDL3, the window hold it for clarity
@@ -43,6 +46,8 @@ public:
     {
         return &mRelativeMouse;
     }
+
+    void ToggleRelativeMouse();
 };
 
 

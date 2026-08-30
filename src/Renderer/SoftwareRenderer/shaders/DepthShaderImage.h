@@ -26,8 +26,8 @@ struct DepthShaderImage: IShader {
     Vec4f vertex(int iface, int nthvert) override{
         Vec3f v = uniform_Model->mMesh.vert(iface, nthvert);
         // Set the column of varying_uv to texture position in Vec2f
-        Vec4f transformed_vert = Viewport*uniform_M*homogonize(v, 1.);
-        varying_tri.set_col(nthvert, dehomogonize(transformed_vert));
+        Vec4f transformed_vert = Viewport*uniform_M*Vec4f(v, 1.);
+        varying_tri.set_col(nthvert, Vec3f(transformed_vert));
         return transformed_vert;
     }
 
