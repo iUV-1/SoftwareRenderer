@@ -1,12 +1,17 @@
 //
 // Created by iUV on 1/25/2026.
 //
+#pragma once
+
 #include <algorithm>
 #include <stdexcept>
 #include "Math/geometry.h"
 #include <iostream>
 
-#pragma once
+/*
+ * A 2D float buffer. Mainly for depth
+ * A default value element is added at the end so out of range access will return that value instead
+ * */
 class RectBuffer {
 public:
     RectBuffer() = delete;
