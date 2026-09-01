@@ -14,6 +14,8 @@
 #include "./shaders/PhongShadowShader.h"
 #include "./shaders/DepthShaderImage.h"
 
+#include <omp.h>
+
 using namespace std;
 
 Vec3f Renderer::rasterize(IShader *shader, int iface, int nthvert)
@@ -63,6 +65,7 @@ void Renderer::RenderIMGUI()
 void Renderer::RenderScene(Scene *scene)
 {
     /* Depth map */
+//    omp_set_num_threads(16); // Sets default for subsequent regions
     mScene = scene;
     mCamera = scene->GetCamera();
     Model *model = mScene->GetModels()[0];
@@ -72,8 +75,10 @@ void Renderer::RenderScene(Scene *scene)
     // Init shader
     Matrix4x4f shadowModelView = LookAt(light, mCamera->Cam, mCamera->Up);
     Matrix4x4f shadowProjection = OrthoProject(0); // Render mLight in orthographic mode
+    omp_set_dynamic(0);
+    omp_set_num_threads( omp_get_num_procs() );
     // Render
-#pragma omp parallel for schedule(static, 64)
+#pragma omp parallel for schedule(static, 32)
     for(int i = 0; i < model->mMesh.nfaces(); ++i) {
         Vec3f screen_coords[3];
         auto depth_shader = DepthShaderImage(mViewport, shadowProjection, shadowModelView, model, mCamera->Depth);
@@ -145,7 +150,7 @@ void Renderer::RenderScene(Scene *scene)
 //    Matrix4x4f MVP = mViewport*mProjection*mModelView;
 //    Matrix4x4f MVP = mModelView * mViewport * mProjection;
 //    MVP.invert();
-#pragma omp parallel for schedule(static, 64)
+#pragma omp parallel for schedule(static, 32)
     for (int i=0; i< model->mMesh.nfaces(); ++i) {
         Vec3f screen_coords[3];
         PhongShaderShadow shader = PhongShaderShadow(mViewport, mProjection, mModelView, model, light, M_Shadow, *mShadowBuffer);

@@ -167,7 +167,7 @@ void triangle(Vec3f *pts, Window *window, RectBuffer &zbuffer, IShader &shader) 
             }
             auto idx = static_cast<size_t>(P.x + P.y * zbuffer.width);
             if(zbuffer[idx] < P.z) {
-#pragma omp atomic write
+//#pragma omp atomic write
                 zbuffer[idx] = P.z;
                 // Use shader
                 TGAColor color;
@@ -192,7 +192,6 @@ void triangle(Vec3f *pts, int w, int h, RectBuffer &zbuffer) {
         }
     }
 
-//#pragma omp parallel for schedule(guided, 64)
     for(int j = static_cast<int>(bboxmin.y); j <= static_cast<int>(bboxmax.y); j++) {
         for(int i = static_cast<int>(bboxmin.x); i <= static_cast<int>(bboxmax.x); i++) {
             Vec3f P(i, j, 0);
@@ -204,7 +203,7 @@ void triangle(Vec3f *pts, int w, int h, RectBuffer &zbuffer) {
             }
             auto idx = static_cast<size_t>(P.x + P.y * zbuffer.width);
             if(zbuffer[idx] < P.z) {
-#pragma omp atomic write
+//#pragma omp atomic write
                 zbuffer[idx] = P.z;
             }
         }

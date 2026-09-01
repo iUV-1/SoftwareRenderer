@@ -18,13 +18,21 @@ struct DepthShaderImage: IShader {
     Matrix3x3<float> varying_tri; // 3x3 matrix containing vertex position of a trig
     // Typical vertex rendering
     float mDepth;
+    Matrix4x4f uniform_M;
+    Matrix<float> varying_uv = Matrix<float>(2, 3);
+    Matrix4x4f uniform_MIT; // Invert transpose
+    Matrix4x4f Viewport;
+    Mesh *uniform_mesh;
     DepthShaderImage(Matrix4x4f viewport, Matrix4x4f projection, Matrix4x4f modelview, Model *model, float depth):
-        IShader(viewport, projection, modelview, model),  mDepth(depth)
+        Viewport(viewport),  mDepth(depth)
     {
-
+        uniform_M = projection*modelview;
+        uniform_MIT = uniform_M;
+        uniform_MIT.inverseTranspose();
+        uniform_mesh = &model->mMesh;
     }
     Vec4f vertex(int iface, int nthvert) override{
-        Vec3f v = uniform_Model->mMesh.vert(iface, nthvert);
+        Vec3f v = uniform_mesh->vert(iface, nthvert);
         // Set the column of varying_uv to texture position in Vec2f
         Vec4f transformed_vert = Viewport*uniform_M*Vec4f(v, 1.);
         varying_tri.set_col(nthvert, Vec3f(transformed_vert));

@@ -10,23 +10,21 @@
 
 /* Interface for both vertex and fragment shader */
 class IShader {
-public:
-    IShader() = delete;
+protected:
+    IShader() = default;
+    virtual ~IShader() = default;
 
-    IShader(Matrix4x4f viewport, Matrix4x4f projection, Matrix4x4f modelview, Model *model)
-            : Viewport(viewport), uniform_Model(model){
-//    :width(w){
-        //input = i;
-        uniform_M = projection*modelview;
-        uniform_MIT = uniform_M;
-        uniform_MIT.inverseTranspose();
-    };
-    Matrix4x4f Viewport;
-    Matrix4x4f uniform_M;
-    Matrix<float> varying_uv = Matrix<float>(2, 3);
-    Matrix4x4f uniform_MIT; // Invert transpose
-    Model *uniform_Model = nullptr;
-    //virtual ~IShader() = default;
+public:
+
+//    IShader(Matrix4x4f viewport, Matrix4x4f projection, Matrix4x4f modelview, Model *model)
+//            : Viewport(viewport), uniform_Model(model){
+////    :width(w){
+//        //input = i;
+//        uniform_M = projection*modelview;
+//        uniform_MIT = uniform_M;
+//        uniform_MIT.inverseTranspose();
+//    };
+
     virtual Vec4f vertex(int iface, int nthvert) = 0;
     virtual bool fragment(Vec3f bar, TGAColor &color) = 0;
 };

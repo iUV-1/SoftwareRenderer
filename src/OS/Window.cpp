@@ -44,6 +44,11 @@ Window::Window(std::string title, int width, int height): mTitle(title), mWidth(
 
 /// No guard checking for performance. Good luck!
 void Window::Plot(int x, int y, int r, int g, int b, int a) {
+#ifndef NDEBUG
+    if((y * mWidth + x) >= (mWidth * mHeight) ) {
+        throw new std::exception("No");
+    }
+#endif
     static_cast<uint32_t*>(mSurface->pixels)[y * mWidth + x] =
             a << 24 | r << 16 | g << 8 | b;
 }
@@ -74,10 +79,6 @@ void Window::StartUpdate()
 
 void Window::EndUpdate()
 {
-    //SDL_UpdateWindowSurface(mWindow);
-
-    // Creating a texture from the surface and rendering it
-//    mTex = SDL_CreateTextureFromSurface(mSDLRenderer, mSurface);
     SDL_UpdateTexture(mTex, nullptr, mSurface->pixels, mSurface->pitch);
     SDL_RenderTexture(mSDLRenderer, mTex, nullptr, nullptr);
     // ImGUI Render
@@ -85,13 +86,10 @@ void Window::EndUpdate()
     SDL_SetRenderScale(mSDLRenderer, io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
     ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), mSDLRenderer);
 
-    // disabled due to interfering with my software renderer. Will think up of a solution
     SDL_RenderPresent(mSDLRenderer);
 }
 
 void Window::Update() {
-
-
 
 }
 

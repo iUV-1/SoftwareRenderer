@@ -19,13 +19,20 @@ struct PhongShaderShadow: IShader {
     Matrix4x4f uniform_Mshadow; // Shadow transformation
     Vec3f uniform_light;
     RectBuffer &depth_buffer; // for shadow
+    Matrix4x4f Viewport;
+    Matrix4x4f uniform_M;
+    Matrix<float> varying_uv = Matrix<float>(2, 3);
+    Matrix4x4f uniform_MIT; // Invert transpose
+
     Mesh *mesh;
     Material *mat;
     PhongShaderShadow(Matrix4x4f viewport, Matrix4x4f projection, Matrix4x4f modelview,
                       Model *model, Vec3f light,
                       Matrix4x4f uniform_shadow, RectBuffer &depth_buffer)
-    : IShader(viewport, projection, modelview, model), depth_buffer(depth_buffer), uniform_light(light) {
-
+    : Viewport(viewport), depth_buffer(depth_buffer), uniform_light(light) {
+        uniform_M = projection*modelview;
+        uniform_MIT = uniform_M;
+        uniform_MIT.inverseTranspose();
         Matrix4x4f M = (viewport*projection*modelview);
         M.invert();
         uniform_Mshadow = uniform_shadow*M;

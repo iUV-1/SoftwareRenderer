@@ -84,10 +84,11 @@ Vec3<T> Matrix3x3<T>::operator*(const Vec3<T> &other) {
 
 template<typename T>
 Matrix<T> Matrix<T>::operator*(const Vec2<T> &other) {
+#ifndef NDEBUG
     if(cols != 2) {
         throw std::invalid_argument("Invalid matrix size");
     }
-
+#endif
     Matrix<T> result(rows, 1);
     const auto& A = this->data;
     for(int i = 0; i < rows; i++) {
@@ -98,9 +99,11 @@ Matrix<T> Matrix<T>::operator*(const Vec2<T> &other) {
 
 template<typename T>
 Matrix<T> Matrix<T>::operator*(const Vec3<T> &other) {
+#ifndef NDEBUG
     if(cols != 3) {
         throw std::invalid_argument("Invalid matrix size");
     }
+#endif
     Matrix<T> result(rows, 1);
     const auto& A = this->data;
     for(int i = 0; i < rows; i++) {

@@ -11,7 +11,8 @@ class RectBuffer {
 public:
     RectBuffer() = delete;
     RectBuffer(int const w, const int h): width(w), size(w*h) {
-        data = new float[size];
+        data = new float[size+1];
+        data[size] = 1;
         resetBuffer();
     }
     ~RectBuffer() {
@@ -21,7 +22,11 @@ public:
     float &operator[] (size_t const i) {
 //        if (i >= size) throw std::out_of_range("out of range!");
         //if (i >= size) std::cerr << "out of range!\n";
-        size_t idx = std::min(i, size - 1);
+#ifndef NDEBUG
+if(i >= size)
+    std::cerr << "out of range!\n";
+#endif
+        size_t idx = std::min(i, size);
 
         return data[idx];
     }

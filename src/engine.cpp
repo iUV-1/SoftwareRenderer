@@ -37,7 +37,6 @@ void Engine::ResizeWindow(int width, int height)
 void Engine::Initialize(int argc, char *argv[])
 {
     double setupTimeTaken = CycleTimer::currentSeconds();
-    omp_set_num_threads(16); // Sets default for subsequent regions
     // --- SCENE SETUP ---
     string modelPath = "../obj/african_head.obj";
     if(argc >= 2) {
