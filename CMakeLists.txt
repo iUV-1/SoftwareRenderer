@@ -11,7 +11,6 @@ set(SOURCE_FILE
         src/Resources/tgaimage.cpp
         src/Resources/Mesh.cpp src/Resources/Mesh.h
         src/Utilities/Math/geometry.h
-        src/Utilities/Math/geometry.cpp
         src/Renderer/SoftwareRenderer/my_gl.hpp
         src/Renderer/SoftwareRenderer/my_gl.cpp
         src/Utilities/Interfaces/IShader.hpp

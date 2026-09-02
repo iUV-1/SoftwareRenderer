@@ -19,16 +19,12 @@ struct DepthShaderImage: IShader {
     // Typical vertex rendering
     float mDepth;
     Matrix4x4f uniform_M;
-    Matrix<float> varying_uv = Matrix<float>(2, 3);
-    Matrix4x4f uniform_MIT; // Invert transpose
     Matrix4x4f Viewport;
     Mesh *uniform_mesh;
     DepthShaderImage(Matrix4x4f viewport, Matrix4x4f projection, Matrix4x4f modelview, Model *model, float depth):
         Viewport(viewport),  mDepth(depth)
     {
         uniform_M = projection*modelview;
-        uniform_MIT = uniform_M;
-        uniform_MIT.inverseTranspose();
         uniform_mesh = &model->mMesh;
     }
     Vec4f vertex(int iface, int nthvert) override{

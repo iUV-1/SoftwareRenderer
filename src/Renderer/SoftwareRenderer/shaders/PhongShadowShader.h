@@ -21,7 +21,7 @@ struct PhongShaderShadow: IShader {
     RectBuffer &depth_buffer; // for shadow
     Matrix4x4f Viewport;
     Matrix4x4f uniform_M;
-    Matrix<float> varying_uv = Matrix<float>(2, 3);
+    Matrix<float, 3, 2> varying_uv;
     Matrix4x4f uniform_MIT; // Invert transpose
 
     Mesh *mesh;
@@ -63,8 +63,8 @@ struct PhongShaderShadow: IShader {
 //        Vec2f uv(varying_uv * bar);
 
         Vec2f uv{};
-        uv.x = varying_uv[0][0] * bar.x + varying_uv[0][1] * bar.y + varying_uv[0][2] * bar.z;
-        uv.y = varying_uv[1][0] * bar.x + varying_uv[1][1] * bar.y + varying_uv[1][2] * bar.z;
+        uv.x = varying_uv(0,0) * bar.x + varying_uv(1, 0) * bar.y + varying_uv(2, 0) * bar.z;
+        uv.y = varying_uv(0, 1) * bar.x + varying_uv(1, 1) * bar.y + varying_uv(2, 1) * bar.z;
         // Get shadow position from buffer
         Vec3f p = varying_tri * bar;
         Vec3f shadow_p = Vec3f(uniform_Mshadow * Vec4f(p, 1.));

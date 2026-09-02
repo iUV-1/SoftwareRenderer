@@ -176,18 +176,18 @@ struct PhongShader: IShader {
 
 // The famous Rainbow Triangle
 // vertex shader is discarded entirely
-struct RainbowShader: IShader {
-    Vec4f vertex(int iface, int nthvert) override {
-        Matrix<float> dummy = Matrix4x4f();
-        return dummy;
-    }
-
-    bool fragment(Vec3f bar, TGAColor &color) override{
-        TGAColor rainbow(bar.x * 255, bar.y * 255, bar.z * 255, 255);
-        color = rainbow;
-        return false;
-    }
-};
+//struct RainbowShader: IShader {
+//    Vec4f vertex(int iface, int nthvert) override {
+//        Matrix<float> dummy = Matrix4x4f();
+//        return dummy;
+//    }
+//
+//    bool fragment(Vec3f bar, TGAColor &color) override{
+//        TGAColor rainbow(bar.x * 255, bar.y * 255, bar.z * 255, 255);
+//        color = rainbow;
+//        return false;
+//    }
+//};
 
 //// Copy zbuffer to a framebuffer (Image in this case)
 //struct DepthShaderImage: IShader {
