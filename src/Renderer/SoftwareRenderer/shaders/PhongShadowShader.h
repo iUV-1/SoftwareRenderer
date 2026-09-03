@@ -3,15 +3,12 @@
 //
 #pragma once
 #include <iostream>
-#include <random>
-#include <algorithm>
 
 #include "../../../Resources/Mesh.h"
 #include "../../../Utilities/Interfaces/IShader.hpp"
 #include "../../../Utilities/Math/geometry.h"
 
-
-// Like above but includes a shadow pass
+// Like Phong but includes a shadow pass
 struct PhongShaderShadow: IShader {
     Matrix3x3<float> varying_tri; // 3x3 matrix containing verticies of a trig
     Matrix3x3<float> varying_shadow_tri; // 3x3 matrix containing verticies of a shadow trig
@@ -67,7 +64,6 @@ struct PhongShaderShadow: IShader {
         // Get shadow position from buffer
         Vec3f p = varying_tri * bar;
         Vec3f shadow_p = Vec3f(uniform_Mshadow * Vec4f(p, 1.));
-        auto shadow_buf_idx = int(shadow_p.x)  + int(shadow_p.y) * depth_buffer.width;
 
         // Get the normal vector of that mesh based on the setting
         Vec3f norm;
@@ -86,7 +82,7 @@ struct PhongShaderShadow: IShader {
         // Shadow
         float slope_bias = std::max( 0.5f* (1.0f - n * (l*-1)), 1.f );
         //slope_bias = 43.34f;
-        float depth_p = depth_buffer[shadow_buf_idx];
+        float depth_p = depth_buffer(shadow_p.x, shadow_p.y);
         if(depth_p != -MAX_FLOAT) {
             depth_p -= slope_bias;
         }

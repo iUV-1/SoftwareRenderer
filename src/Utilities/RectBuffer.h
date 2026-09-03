@@ -36,6 +36,15 @@ if(i >= size)
         return data[idx];
     }
 
+    float &operator() (size_t const x, size_t const y) {
+        size_t idx = std::min(y * width + x, size);
+#ifndef NDEBUG
+    if((y * width + x) >= size)
+        std::cerr << "out of range!\n";
+#endif
+        return data[idx];
+    }
+
     void resetBuffer() {
         std::fill(data, data + size, -MAX_FLOAT); // set every value in zbuffer to -inf
     }

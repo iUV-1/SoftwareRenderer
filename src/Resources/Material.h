@@ -61,6 +61,21 @@ public:
             NormalFile = new TGAImage(*other.NormalFile);
         }
     }
+
+    Material operator= (const Material &other) {
+        if(other.SpecularFile) {
+            SpecularFile = new TGAImage(*other.SpecularFile);
+        }
+
+        if(other.TexFile) {
+            TexFile = new TGAImage(*other.TexFile);
+        }
+
+        if (other.NormalFile) {
+            NormalFile = new TGAImage(*other.NormalFile);
+        }
+        return *this;
+    }
     TGAImage *NormalFile;
     TGAImage *TexFile;
     TGAImage *SpecularFile;

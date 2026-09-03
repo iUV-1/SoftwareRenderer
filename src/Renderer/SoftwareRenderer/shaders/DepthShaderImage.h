@@ -4,14 +4,10 @@
 
 #pragma once
 #include <iostream>
-#include <random>
-#include <algorithm>
 
 #include "../../../Resources/Mesh.h"
 #include "../../Utilities/Interfaces/IShader.hpp"
 #include "../../Utilities/Math/geometry.h"
-#include "../my_gl.hpp"
-#include "../render.hpp"
 
 // Copy zbuffer to a framebuffer (Image in this case)
 struct DepthShaderImage: IShader {

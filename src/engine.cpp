@@ -75,6 +75,10 @@ void Engine::Initialize(int argc, char *argv[])
                     Vec3f(-0.209, -0.076, -1),
                     60
             );
+            mScene = new Scene();
+            mScene->AddModel( std::move(model) );
+            mScene->SetCamera(mCamera);
+            mScene->SetLight(Vec3f(1, -1, 0));
         };
 #pragma omp single
         {
@@ -84,10 +88,7 @@ void Engine::Initialize(int argc, char *argv[])
         }
     }
 
-    mScene = new Scene();
-    mScene->AddModel( model );
-    mScene->SetCamera(mCamera);
-    mScene->SetLight(Vec3f(1, -1, 0));
+
 
     // Timing
     setupTimeTaken = CycleTimer::currentSeconds() - setupTimeTaken;

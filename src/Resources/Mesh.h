@@ -11,7 +11,7 @@
 class Mesh {
 private:
     std::vector<Vec3f> verts_;
-    std::vector<std::vector<int> > faces_;
+    std::vector<std::vector<int>> faces_;
     std::vector<std::vector<int>> faces_texture;
     std::vector<std::vector<int>> faces_normal;
     std::vector<Vec2f> texcoords_;
