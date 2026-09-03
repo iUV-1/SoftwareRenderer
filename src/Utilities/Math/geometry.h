@@ -389,7 +389,6 @@ public:
 
         return result;
     }
-
     // create a 4x4 identity matrix
     constexpr static Matrix4x4 create_identity() {
         Matrix4x4 result;
@@ -399,7 +398,6 @@ public:
         }
         return result;
     }
-
     // Invert its own matrix
     // from chatGPT
     void invert() {
@@ -542,6 +540,9 @@ Matrix<T,w ,h> operator* ( Matrix4x4<T> const &cur,  Matrix<T, w, h> const &othe
 }
 
 typedef Matrix4x4<float> Matrix4x4f;
+// This is the best I could do, sorry.
+// If you put this into the class it will scream about Constexpr variable cannot have non-literal type.
+// Circular dependencies I guess.
 static constexpr Matrix4x4f mat4x4_identity = {1., 0., 0., 0.,
                                            0., 1., 0., 0.,
                                            0., 0., 1., 0.,
