@@ -9,15 +9,14 @@
 #include "../../../Resources/Mesh.h"
 #include "../../../Utilities/Interfaces/IShader.hpp"
 #include "../../../Utilities/Math/geometry.h"
-#include "../my_gl.hpp"
-#include "../render.hpp"
+
 
 // Like above but includes a shadow pass
 struct PhongShaderShadow: IShader {
     Matrix3x3<float> varying_tri; // 3x3 matrix containing verticies of a trig
     Matrix3x3<float> varying_shadow_tri; // 3x3 matrix containing verticies of a shadow trig
     Matrix4x4f uniform_Mshadow; // Shadow transformation
-    Vec3f uniform_light;
+    Vec3f &uniform_light;
     RectBuffer &depth_buffer; // for shadow
     Matrix4x4f Viewport;
     Matrix4x4f uniform_M;
@@ -27,7 +26,7 @@ struct PhongShaderShadow: IShader {
     Mesh *mesh;
     Material *mat;
     PhongShaderShadow(Matrix4x4f viewport, Matrix4x4f projection, Matrix4x4f modelview,
-                      Model *model, Vec3f light,
+                      Model *model, Vec3f &light,
                       Matrix4x4f uniform_shadow, RectBuffer &depth_buffer)
     : Viewport(viewport), depth_buffer(depth_buffer), uniform_light(light) {
         uniform_M = projection*modelview;

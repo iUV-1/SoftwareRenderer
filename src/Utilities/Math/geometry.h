@@ -192,14 +192,18 @@ class Matrix4x4;
 // Matrix is row major
 template <typename T, size_t w, size_t h>
 class Matrix {
-public:
+protected:
     /* Data */
     size_t rows, cols;
     std::array<T, w*h> data {};
+public:
     /* Initializers */
-    Matrix(): rows(w), cols(h) {}
+    constexpr Matrix(): rows(w), cols(h) {}
+    constexpr Matrix(std::initializer_list<T> list): rows(w), cols(h) {
+        std::copy(list.begin(), list.end(), data.begin());
+    }
     // init a row Matrix from a 3D vector
-    explicit Matrix(Vec3<T> vec): Matrix(3, 1){
+    explicit Matrix(Vec3<T> vec) {
         data[0] = vec.x;
         data[1 * rows + 0] = vec.y;
         data[2 * rows + 0] = vec.z;
@@ -212,11 +216,11 @@ public:
     T &operator() (size_t x, size_t y) {
 #ifndef NDEBUG
         if(x >= rows) {
-            std::cerr << "Out of range access\n";
+            std::cerr << "Out of range access for x\n";
         }
 
         if(y >= cols) {
-            std::cerr << "Out of range access\n";
+            std::cerr << "Out of range access for y\n";
         }
 #endif
         return data[y * rows + x];
@@ -258,7 +262,7 @@ public:
         Matrix<T, other_w, h> result;
         for(int i = 0; i < other_w; i++) {
             for (int j = 0; j < h; j++){
-                for (int k = 0; k < cols; k++) {
+                for (int k = 0; k < h; k++) {
                     result(i, j) += data[i * rows + k] * matrix(k, j);
                 }
             }
@@ -369,8 +373,8 @@ typedef Matrix3x3<float> Matrix3x3f;
 template <typename T>
 class Matrix4x4: public Matrix<T, 4, 4> {
 public:
-    Matrix4x4() : Matrix<T,4 ,4>() {}
-
+    constexpr Matrix4x4() {}
+    constexpr Matrix4x4(std::initializer_list<T> list): Matrix<T, 4, 4>(list) {}
     // optimized calculation just for 4x4
     Matrix4x4 multiply4x4(const Matrix4x4 &other) {
         Matrix4x4 result;
@@ -387,7 +391,7 @@ public:
     }
 
     // create a 4x4 identity matrix
-    static constexpr Matrix4x4 identity() {
+    constexpr static Matrix4x4 create_identity() {
         Matrix4x4 result;
 
         for (int i = 4; i--; ) {
@@ -442,7 +446,7 @@ public:
 
         if (std::abs(det) < EPS) {
             std::cerr << "Matrix is not invertible!\n";
-            *this = Matrix4x4<T>::identity();
+            *this = Matrix4x4<T>::create_identity();
             return;
         }
 
@@ -480,7 +484,7 @@ public:
 
         if (std::abs(det) < std::numeric_limits<T>::epsilon() * std::abs(det)) {
             std::cerr << "Matrix is not invertible!\n";
-            *this = Matrix4x4<T>::identity();
+            *this = Matrix4x4<T>::create_identity();
             return;
         }
 
@@ -513,7 +517,6 @@ public:
     Vec4<T> operator* (Vec4<T> const &other) {
         Vec4<T> result;
         for(int i = 0; i < 4; i++) {
-            // Raw access: index = row * width + col
             result[i] = other.x * this->data[i * 4 + 0] +
                         other.y * this->data[i * 4 + 1] +
                         other.z * this->data[i * 4 + 2] +
@@ -526,7 +529,6 @@ public:
 
     template <typename U, size_t w, size_t h>
     friend Matrix<U, w, h> operator* ( Matrix4x4<U> const &cur,  Matrix<U, w, h> const &other);
-
 };
 
 template <typename T, size_t w, size_t h>
@@ -540,3 +542,7 @@ Matrix<T,w ,h> operator* ( Matrix4x4<T> const &cur,  Matrix<T, w, h> const &othe
 }
 
 typedef Matrix4x4<float> Matrix4x4f;
+static constexpr Matrix4x4f mat4x4_identity = {1., 0., 0., 0.,
+                                           0., 1., 0., 0.,
+                                           0., 0., 1., 0.,
+                                           0., 0., 0., 1.};

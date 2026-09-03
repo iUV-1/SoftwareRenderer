@@ -3,11 +3,11 @@
 //
 
 #pragma once
-#include "../../Resources/Camera.h"
+//#include "../../Resources/Camera.h"
 //#include <iostream>
 //#include <random>
 //#include <algorithm>
-
+#define TEX2D(tex, uv) (tex->get(uv.u * tex->get_width(), uv.v * tex->get_height()))
 /* Interface for both vertex and fragment shader */
 class IShader {
 protected:

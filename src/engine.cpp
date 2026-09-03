@@ -154,6 +154,7 @@ void Engine::Update()
 }
 
 Engine::~Engine() {
+    SDL_Log("Last recorded FPS: %.3f", 1/mUpdateTime);
     delete mWindow;
     delete mRenderer;
     delete mScene;

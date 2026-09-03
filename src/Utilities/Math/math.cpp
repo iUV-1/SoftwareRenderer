@@ -33,7 +33,7 @@ Matrix4x4f Project(float fov, float width, float height, float near, float far) 
 /// depth: depth
 Matrix4x4f SetViewport(int x, int y, float w, float h, float depth) {
     Matrix4x4f Viewport;
-    Viewport = Matrix4x4f::identity();
+    Viewport = mat4x4_identity;
     Viewport(3, 0) = x + w / 2.f;
     Viewport(3, 1) = y + h / 2.f;
     Viewport(3, 2) = depth / 2.f;
@@ -52,9 +52,9 @@ Matrix4x4f LookAt(Vec3f eye, Vec3f center, Vec3f up) {
     Vec3f x = (up^z).normalize();
     Vec3f y = (z^x).normalize();
     // Inverse rotation matrix
-    auto Minv = Matrix4x4f::identity();
+    auto Minv = mat4x4_identity;
     // Translation matrix
-    auto Tr = Matrix4x4f::identity();
+    auto Tr = mat4x4_identity;
     for (int i = 0; i < 3; i++) {
         Minv(i, 0) = x[i];
         Minv(i ,1) = y[i];
@@ -67,7 +67,7 @@ Matrix4x4f LookAt(Vec3f eye, Vec3f center, Vec3f up) {
 
 Matrix4x4f OrthoProject(float coeff) {
     Matrix4x4f Projection;
-    Projection = Matrix4x4f ::identity();
+    Projection = mat4x4_identity;
     Projection(2, 3) = coeff;
     return Projection;
 }
